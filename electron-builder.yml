@@ -42,6 +42,7 @@ extraResources:
       - "*.db"
       - "*.db-shm"
       - "*.db-wal"
+      - "seed/*.json"
 
 # Windows-specific settings
 win:
@@ -83,9 +84,9 @@ fileAssociations:
     icon: icon.ico
 
 # Publish configuration for auto-updates
-# GitHub Releases provider (recommended)
+# GitHub Releases provider with organization
 publish:
   provider: github
-  owner: bruno-barbosa
+  owner: akzios
   repo: bpsr-tools
-  private: true
+  private: false

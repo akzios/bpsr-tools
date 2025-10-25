@@ -416,9 +416,9 @@ async function fetchDataAndRender() {
 
     // Debug: Log first user's profession data
     if (userArray.length > 0) {
-      console.log('[GUI Debug] Sample user data:', {
+      console.log("[GUI Debug] Sample user data:", {
         name: userArray[0].name,
-        professionDetails: userArray[0].professionDetails
+        professionDetails: userArray[0].professionDetails,
       });
     }
     userArray = userArray.filter(

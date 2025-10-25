@@ -19,15 +19,15 @@ let cliWindow = null;
 logToFile("==== ELECTRON CLI MODULE LOADED ====");
 
 // Global error handlers for debugging
-process.on('uncaughtException', (error) => {
+process.on("uncaughtException", (error) => {
   logToFile(`CLI UNCAUGHT EXCEPTION: ${error.message}`);
   logToFile(`Stack: ${error.stack}`);
-  console.error('CLI Uncaught Exception:', error);
+  console.error("CLI Uncaught Exception:", error);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on("unhandledRejection", (reason, promise) => {
   logToFile(`CLI UNHANDLED REJECTION: ${reason}`);
-  console.error('CLI Unhandled Rejection:', reason);
+  console.error("CLI Unhandled Rejection:", reason);
 });
 
 function createCLIWindow() {
@@ -72,16 +72,21 @@ function createCLIWindow() {
     });
 
     // Log any load failures
-    cliWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-      logToFile(`CLI window failed to load: ${errorCode} - ${errorDescription}`);
-    });
+    cliWindow.webContents.on(
+      "did-fail-load",
+      (event, errorCode, errorDescription) => {
+        logToFile(
+          `CLI window failed to load: ${errorCode} - ${errorDescription}`,
+        );
+      },
+    );
 
     logToFile("CLI window created successfully");
     return cliWindow;
   } catch (error) {
     logToFile(`ERROR in createCLIWindow: ${error.message}`);
     logToFile(`Stack: ${error.stack}`);
-    console.error('Error creating CLI window:', error);
+    console.error("Error creating CLI window:", error);
     throw error;
   }
 }
@@ -98,7 +103,7 @@ function stopCLI() {
     logToFile("CLI stopped");
   } catch (error) {
     logToFile(`ERROR in stopCLI: ${error.message}`);
-    console.error('Error stopping CLI:', error);
+    console.error("Error stopping CLI:", error);
   }
 }
 

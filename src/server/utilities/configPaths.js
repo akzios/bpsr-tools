@@ -118,7 +118,9 @@ function initializeUserConfigs() {
   // Handle database: Copy on first run, or merge seed data on updates
   // In packaged apps, extraResources are in process.resourcesPath
   let dbSrcPath;
-  if (isElectron && app && app.isPackaged) {
+  const isPackaged = isElectron && app && app.isPackaged;
+
+  if (isPackaged) {
     dbSrcPath = path.join(process.resourcesPath, "db", "bpsr-tools.db");
   } else {
     dbSrcPath = path.join(appPath, "db", "bpsr-tools.db");
@@ -129,16 +131,22 @@ function initializeUserConfigs() {
   if (fs.existsSync(dbSrcPath)) {
     // First run: copy entire database
     if (!fs.existsSync(dbDestPath)) {
-      if (copyIfNotExists(dbSrcPath, dbDestPath, true)) { // true = binary file
+      if (copyIfNotExists(dbSrcPath, dbDestPath, true)) {
+        // true = binary file
         console.log("[configPaths] Copied pre-seeded database to userData");
       }
     } else {
       // Subsequent runs: merge seed data from installation database
-      console.log("[configPaths] Database exists, merging seed data from update...");
-      mergeSeedData(dbSrcPath, dbDestPath);
+      console.log(
+        "[configPaths] Database exists, merging seed data from update...",
+      );
+      mergeSeedData(dbSrcPath, dbDestPath, isPackaged);
     }
   } else {
-    console.log("[configPaths] No pre-seeded database found. Looked in:", dbSrcPath);
+    console.log(
+      "[configPaths] No pre-seeded database found. Looked in:",
+      dbSrcPath,
+    );
   }
 
   console.log("User config initialization complete");
@@ -174,24 +182,27 @@ function getUserDataPath() {
 
 /**
  * Merge seed data from source database to destination database
- * Only merges professions, monsters, and skills (not user data like players)
+ * Only merges professions, monsters, and skills in production
+ * In dev mode, also merges players for testing
  */
-function mergeSeedData(srcDbPath, destDbPath) {
+function mergeSeedData(srcDbPath, destDbPath, isPackaged = true) {
   try {
-    const Database = require('better-sqlite3');
+    const Database = require("better-sqlite3");
 
-    console.log(`[configPaths] Merging seed data from ${path.basename(srcDbPath)}`);
+    console.log(
+      `[configPaths] Merging seed data from ${path.basename(srcDbPath)}`,
+    );
 
     // Open both databases
     const srcDb = new Database(srcDbPath, { readonly: true });
     const destDb = new Database(destDbPath);
 
     // Begin transaction for performance
-    destDb.exec('BEGIN TRANSACTION');
+    destDb.exec("BEGIN TRANSACTION");
 
     try {
       // Merge professions (INSERT OR IGNORE to avoid overwriting)
-      const professions = srcDb.prepare('SELECT * FROM professions').all();
+      const professions = srcDb.prepare("SELECT * FROM professions").all();
       const insertProf = destDb.prepare(`
         INSERT OR IGNORE INTO professions (id, name_cn, name_en, icon, role)
         VALUES (?, ?, ?, ?, ?)
@@ -199,7 +210,13 @@ function mergeSeedData(srcDbPath, destDbPath) {
 
       let newProfessions = 0;
       for (const prof of professions) {
-        const result = insertProf.run(prof.id, prof.name_cn, prof.name_en, prof.icon, prof.role);
+        const result = insertProf.run(
+          prof.id,
+          prof.name_cn,
+          prof.name_en,
+          prof.icon,
+          prof.role,
+        );
         if (result.changes > 0) newProfessions++;
       }
       if (newProfessions > 0) {
@@ -207,7 +224,7 @@ function mergeSeedData(srcDbPath, destDbPath) {
       }
 
       // Merge monsters
-      const monsters = srcDb.prepare('SELECT * FROM monsters').all();
+      const monsters = srcDb.prepare("SELECT * FROM monsters").all();
       const insertMon = destDb.prepare(`
         INSERT OR IGNORE INTO monsters (id, name_cn, name_en)
         VALUES (?, ?, ?)
@@ -223,7 +240,7 @@ function mergeSeedData(srcDbPath, destDbPath) {
       }
 
       // Merge skills
-      const skills = srcDb.prepare('SELECT * FROM skills').all();
+      const skills = srcDb.prepare("SELECT * FROM skills").all();
       const insertSkill = destDb.prepare(`
         INSERT OR IGNORE INTO skills (id, name_cn, name_en)
         VALUES (?, ?, ?)
@@ -238,19 +255,50 @@ function mergeSeedData(srcDbPath, destDbPath) {
         console.log(`[configPaths] Added ${newSkills} new skills`);
       }
 
-      destDb.exec('COMMIT');
-      console.log('[configPaths] Seed data merge complete');
+      // Merge players (dev mode only)
+      if (!isPackaged) {
+        console.log("[configPaths] Dev mode: Merging player data...");
+        const players = srcDb.prepare("SELECT * FROM players").all();
+        const insertPlayer = destDb.prepare(`
+          INSERT OR IGNORE INTO players (player_id, name, profession_id, fight_point, max_hp, player_level)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
 
+        let newPlayers = 0;
+        for (const player of players) {
+          const result = insertPlayer.run(
+            player.player_id,
+            player.name,
+            player.profession_id,
+            player.fight_point,
+            player.max_hp,
+            player.player_level,
+          );
+          if (result.changes > 0) newPlayers++;
+        }
+        if (newPlayers > 0) {
+          console.log(`[configPaths] Added ${newPlayers} new players`);
+        }
+      } else {
+        console.log(
+          "[configPaths] Production mode: Skipping player merge (preserves user data)",
+        );
+      }
+
+      destDb.exec("COMMIT");
+      console.log("[configPaths] Seed data merge complete");
     } catch (err) {
-      destDb.exec('ROLLBACK');
-      console.error('[configPaths] Error during merge, rolled back:', err.message);
+      destDb.exec("ROLLBACK");
+      console.error(
+        "[configPaths] Error during merge, rolled back:",
+        err.message,
+      );
     } finally {
       srcDb.close();
       destDb.close();
     }
-
   } catch (error) {
-    console.error('[configPaths] Failed to merge seed data:', error.message);
+    console.error("[configPaths] Failed to merge seed data:", error.message);
   }
 }
 

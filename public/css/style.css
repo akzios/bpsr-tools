@@ -1171,7 +1171,7 @@ input[type="text"] {
 /* Skill Analysis Modal */
 .modal {
   display: none;
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -1186,7 +1186,7 @@ input[type="text"] {
 }
 
 .modal-backdrop {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -1194,8 +1194,8 @@ input[type="text"] {
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
-  border-radius: 8px;
-  -webkit-border-radius: 8px;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
 }
 
 .modal-container {
@@ -1246,6 +1246,8 @@ input[type="text"] {
   justify-content: center;
   transition: all 0.3s ease;
   box-shadow: var(--shadow-sm);
+  -webkit-app-region: no-drag;
+  pointer-events: auto;
 }
 
 .modal-close-button:hover {
@@ -1350,6 +1352,32 @@ body.launcher-root * {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+}
+
+/* Allow text selection in specific areas */
+.launcher-root .config-textarea,
+.launcher-root .action-status,
+.launcher-root .section-description,
+.launcher-root .setting-description,
+.launcher-root .info-box,
+.launcher-root .json-status,
+.launcher-root .modal-message,
+.launcher-root .success-message,
+.launcher-root .update-info,
+.launcher-root .version {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text;
+}
+
+/* Ensure textarea content is always selectable */
+.launcher-root textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
 }
 
 .launcher-root .container {
@@ -1763,6 +1791,20 @@ body.launcher-root * {
 
 .launcher-root .action-status.info {
   color: #667eea;
+}
+
+.launcher-root .info-box {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-tertiary);
+}
+
+.launcher-root .info-box strong {
+  color: var(--text-secondary);
 }
 
 .launcher-root .save-btn {

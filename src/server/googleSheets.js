@@ -234,7 +234,9 @@ class GoogleSheetsService {
             data: updateRequests,
           },
         });
-        this.logger.info(`Updated ${updateRequests.length} rows with increased GS`);
+        this.logger.info(
+          `Updated ${updateRequests.length} rows with increased GS`,
+        );
       }
 
       // Append new players (if any)

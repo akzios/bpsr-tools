@@ -565,7 +565,11 @@ class UserDataManager {
       this.users.set(uid, user);
 
       // Fetch from API if name, fight point, or profession is missing (async, non-blocking)
-      if (!user.name || !user.fightPoint || user.profession?.toLowerCase() === "unknown") {
+      if (
+        !user.name ||
+        !user.fightPoint ||
+        user.profession?.toLowerCase() === "unknown"
+      ) {
         this.fetchAndUpdatePlayerData(uid, user);
       }
     }
@@ -737,7 +741,9 @@ class UserDataManager {
 
     if (user.profession !== normalizedProfession) {
       user.setProfession(normalizedProfession);
-      this.logger.info(`Found profession ${normalizedProfession} for uid ${uid}${profession !== normalizedProfession ? ` (normalized from ${profession})` : ''}`);
+      this.logger.info(
+        `Found profession ${normalizedProfession} for uid ${uid}${profession !== normalizedProfession ? ` (normalized from ${profession})` : ""}`,
+      );
 
       // Save to database
       this.playerDb.savePlayer({
@@ -759,7 +765,12 @@ class UserDataManager {
     const user = this.getUser(uid);
 
     // Never save placeholder names
-    if (!name || name === "" || name === "You" || name?.toLowerCase() === "unknown") {
+    if (
+      !name ||
+      name === "" ||
+      name === "You" ||
+      name?.toLowerCase() === "unknown"
+    ) {
       return;
     }
 
@@ -771,7 +782,8 @@ class UserDataManager {
       this.playerDb.savePlayer({
         player_id: uid,
         name: name,
-        profession: user.profession?.toLowerCase() !== "unknown" ? user.profession : null,
+        profession:
+          user.profession?.toLowerCase() !== "unknown" ? user.profession : null,
         fight_point: user.fightPoint || 0,
         max_hp: user.attr.max_hp || null,
         player_level: null,
@@ -813,7 +825,10 @@ class UserDataManager {
         this.playerDb.savePlayer({
           player_id: uid,
           name: user.name || null,
-          profession: user.profession?.toLowerCase() !== "unknown" ? user.profession : null,
+          profession:
+            user.profession?.toLowerCase() !== "unknown"
+              ? user.profession
+              : null,
           fight_point: fightPoint,
           max_hp: user.attr.max_hp || null,
           player_level: null,
@@ -852,8 +867,12 @@ class UserDataManager {
     if (!user) return null;
 
     // Get profession details (works with both Chinese and English names)
-    const mainClass = user.profession ? user.profession.split(/\s*[-·]\s*/)[0].trim() : null;
-    const professionDetails = mainClass ? this.professionDb.getByName(mainClass) : null;
+    const mainClass = user.profession
+      ? user.profession.split(/\s*[-·]\s*/)[0].trim()
+      : null;
+    const professionDetails = mainClass
+      ? this.professionDb.getByName(mainClass)
+      : null;
 
     return {
       uid: user.uid,
@@ -862,7 +881,7 @@ class UserDataManager {
         name_cn: mainClass || "Unknown",
         name_en: mainClass || "Unknown",
         icon: "unknown.png",
-        role: "dps"
+        role: "dps",
       },
       skills: user.getSkillSummary(),
       attr: user.attr,

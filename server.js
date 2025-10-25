@@ -13,20 +13,12 @@ const { UserDataManager } = require(
 const Sniffer = require(path.join(__dirname, "src", "server", "sniffer"));
 const initializeApi = require(path.join(__dirname, "src", "server", "api"));
 const PacketProcessor = require(path.join(__dirname, "src", "algo", "packet"));
-const configPaths = require(path.join(
-  __dirname,
-  "src",
-  "server",
-  "utilities",
-  "configPaths",
-));
-const { loadSettings } = require(path.join(
-  __dirname,
-  "src",
-  "server",
-  "utilities",
-  "settings",
-));
+const configPaths = require(
+  path.join(__dirname, "src", "server", "utilities", "configPaths"),
+);
+const { loadSettings } = require(
+  path.join(__dirname, "src", "server", "utilities", "settings"),
+);
 
 // Read version from package.json
 const packageJson = require(path.join(__dirname, "package.json"));
@@ -95,41 +87,21 @@ async function main() {
 
   // Auto-seed database if tables are missing or empty
   try {
-    const PlayerModel = require(path.join(
-      __dirname,
-      "src",
-      "server",
-      "model",
-      "player",
-    ));
-    const MonsterModel = require(path.join(
-      __dirname,
-      "src",
-      "server",
-      "model",
-      "monster",
-    ));
-    const SkillModel = require(path.join(
-      __dirname,
-      "src",
-      "server",
-      "model",
-      "skill",
-    ));
-    const ProfessionModel = require(path.join(
-      __dirname,
-      "src",
-      "server",
-      "model",
-      "profession",
-    ));
-    const DatabaseSeeder = require(path.join(
-      __dirname,
-      "src",
-      "server",
-      "model",
-      "seed",
-    ));
+    const PlayerModel = require(
+      path.join(__dirname, "src", "server", "model", "player"),
+    );
+    const MonsterModel = require(
+      path.join(__dirname, "src", "server", "model", "monster"),
+    );
+    const SkillModel = require(
+      path.join(__dirname, "src", "server", "model", "skill"),
+    );
+    const ProfessionModel = require(
+      path.join(__dirname, "src", "server", "model", "profession"),
+    );
+    const DatabaseSeeder = require(
+      path.join(__dirname, "src", "server", "model", "seed"),
+    );
 
     // Create seeding logger
     const seedLogger = {

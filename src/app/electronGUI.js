@@ -20,15 +20,15 @@ let mainWindow;
 logToFile("==== STARTING ELECTRON OVERLAY ====");
 
 // Global error handlers for debugging
-process.on('uncaughtException', (error) => {
+process.on("uncaughtException", (error) => {
   logToFile(`UNCAUGHT EXCEPTION: ${error.message}`);
   logToFile(`Stack: ${error.stack}`);
-  console.error('Uncaught Exception:', error);
+  console.error("Uncaught Exception:", error);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on("unhandledRejection", (reason, promise) => {
   logToFile(`UNHANDLED REJECTION: ${reason}`);
-  console.error('Unhandled Rejection:', reason);
+  console.error("Unhandled Rejection:", reason);
 });
 
 async function createWindow() {
@@ -36,12 +36,14 @@ async function createWindow() {
     logToFile("createWindow() called");
 
     mainWindow = new BrowserWindow({
-      width: 674,
+      width: 724,
       height: 800,
+      minWidth: 700,
+      minHeight: 400,
       transparent: true,
       frame: false,
       alwaysOnTop: true,
-      resizable: false,
+      resizable: true,
       webPreferences: {
         preload: path.join(__dirname, "preload.js"),
         nodeIntegration: false,
@@ -63,43 +65,50 @@ async function createWindow() {
     console.log(`Loading overlay: ${url}`);
     mainWindow.loadURL(url);
 
-  // Log any load failures
-  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-    logToFile(`Overlay window failed to load: ${errorCode} - ${errorDescription}`);
-    console.error(`Overlay load failed: ${errorCode} - ${errorDescription}`);
-  });
+    // Log any load failures
+    mainWindow.webContents.on(
+      "did-fail-load",
+      (event, errorCode, errorDescription) => {
+        logToFile(
+          `Overlay window failed to load: ${errorCode} - ${errorDescription}`,
+        );
+        console.error(
+          `Overlay load failed: ${errorCode} - ${errorDescription}`,
+        );
+      },
+    );
 
-  mainWindow.on("closed", () => {
-    logToFile("Overlay window closed");
-    mainWindow = null;
-  });
+    mainWindow.on("closed", () => {
+      logToFile("Overlay window closed");
+      mainWindow = null;
+    });
 
-  // Handle event to make window movable/non-movable
-  ipcMain.on("set-window-movable", (event, movable) => {
-    if (mainWindow) {
-      mainWindow.setMovable(movable);
-    }
-  });
+    // Handle event to make window movable/non-movable
+    ipcMain.on("set-window-movable", (event, movable) => {
+      if (mainWindow) {
+        mainWindow.setMovable(movable);
+      }
+    });
 
-  // Handle event to close window
-  ipcMain.on("close-window", () => {
-    if (mainWindow) {
-      mainWindow.close();
-    }
-  });
+    // Handle event to close window
+    ipcMain.on("close-window", () => {
+      if (mainWindow) {
+        mainWindow.close();
+      }
+    });
 
-  // Handle event to resize window
-  ipcMain.on("resize-window", (event, width, height) => {
-    if (mainWindow) {
-      mainWindow.setSize(width, height);
-    }
-  });
+    // Handle event to resize window
+    ipcMain.on("resize-window", (event, width, height) => {
+      if (mainWindow) {
+        mainWindow.setSize(width, height);
+      }
+    });
 
     logToFile("Window created successfully");
   } catch (error) {
     logToFile(`ERROR in createWindow: ${error.message}`);
     logToFile(`Stack: ${error.stack}`);
-    console.error('Error in createWindow:', error);
+    console.error("Error in createWindow:", error);
     throw error;
   }
 }
@@ -108,16 +117,16 @@ async function createWindow() {
 if (require.main === module) {
   logToFile("Running as main module (standalone mode)");
   app.whenReady().then(() => {
-    createWindow().catch(err => {
+    createWindow().catch((err) => {
       logToFile(`ERROR starting standalone: ${err.message}`);
-      console.error('Failed to create window:', err);
+      console.error("Failed to create window:", err);
     });
 
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow().catch(err => {
+        createWindow().catch((err) => {
           logToFile(`ERROR on activate: ${err.message}`);
-          console.error('Failed to create window on activate:', err);
+          console.error("Failed to create window on activate:", err);
         });
       }
     });
@@ -134,19 +143,19 @@ if (require.main === module) {
 
   if (app.isReady()) {
     logToFile("App is already ready, creating window immediately");
-    createWindow().catch(err => {
+    createWindow().catch((err) => {
       logToFile(`ERROR creating window from launcher: ${err.message}`);
       logToFile(`Stack: ${err.stack}`);
-      console.error('Failed to create window from launcher:', err);
+      console.error("Failed to create window from launcher:", err);
     });
   } else {
     logToFile("App not ready yet, waiting...");
     app.whenReady().then(() => {
       logToFile("App now ready, creating window");
-      createWindow().catch(err => {
+      createWindow().catch((err) => {
         logToFile(`ERROR creating window after ready: ${err.message}`);
         logToFile(`Stack: ${err.stack}`);
-        console.error('Failed to create window after ready:', err);
+        console.error("Failed to create window after ready:", err);
       });
     });
   }

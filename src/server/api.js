@@ -60,8 +60,15 @@ function initializeApi(
     }
 
     // Log untranslated - this means database isn't seeded
-    console.log(`[Translation] WARNING: No translation found for profession: "${mainClass}"`);
-    console.log(`[Translation] Available professions:`, userDataManager.professionDb.getAllProfessions().map(p => `${p.name_cn} (${p.name_en})`));
+    console.log(
+      `[Translation] WARNING: No translation found for profession: "${mainClass}"`,
+    );
+    console.log(
+      `[Translation] Available professions:`,
+      userDataManager.professionDb
+        .getAllProfessions()
+        .map((p) => `${p.name_cn} (${p.name_en})`),
+    );
 
     return mainClass;
   }
@@ -71,17 +78,28 @@ function initializeApi(
 
     // Add full profession details to user data
     const modifiedUserData = {};
-    Object.keys(userData).forEach(uid => {
+    Object.keys(userData).forEach((uid) => {
       const user = userData[uid];
 
       // Get profession details (works with both Chinese and English names)
-      const mainClass = user.profession ? user.profession.split(/\s*[-·]\s*/)[0].trim() : null;
-      const professionDetails = mainClass ? userDataManager.professionDb.getByName(mainClass) : null;
+      const mainClass = user.profession
+        ? user.profession.split(/\s*[-·]\s*/)[0].trim()
+        : null;
+      const professionDetails = mainClass
+        ? userDataManager.professionDb.getByName(mainClass)
+        : null;
 
       // Debug logging
       if (!professionDetails && mainClass) {
-        logger.debug(`[Profession Lookup] Failed to find profession for: "${mainClass}" (user: ${user.name})`);
-        logger.debug(`[Profession Lookup] Available professions:`, userDataManager.professionDb.getAllProfessions().map(p => `${p.name_cn} (${p.name_en})`));
+        logger.debug(
+          `[Profession Lookup] Failed to find profession for: "${mainClass}" (user: ${user.name})`,
+        );
+        logger.debug(
+          `[Profession Lookup] Available professions:`,
+          userDataManager.professionDb
+            .getAllProfessions()
+            .map((p) => `${p.name_cn} (${p.name_en})`),
+        );
       }
 
       modifiedUserData[uid] = {
@@ -90,13 +108,13 @@ function initializeApi(
           name_cn: mainClass || "Unknown",
           name_en: mainClass || "Unknown",
           icon: "unknown.png",
-          role: "dps"
-        }
+          role: "dps",
+        },
       };
     });
 
     // Convert user object to array for CLI mode
-    const usersArray = Object.keys(modifiedUserData).map(uid => {
+    const usersArray = Object.keys(modifiedUserData).map((uid) => {
       const user = modifiedUserData[uid];
       return {
         uid: uid,
@@ -120,7 +138,8 @@ function initializeApi(
     const data = {
       code: 0,
       user: modifiedUserData, // For GUI client
-      data: { // For CLI client
+      data: {
+        // For CLI client
         users: usersArray,
         duration: duration,
       },
@@ -401,16 +420,17 @@ function initializeApi(
       // Transform to map format for frontend compatibility
       const professionMap = {};
 
-      professions.forEach(prof => {
+      professions.forEach((prof) => {
         professionMap[prof.name_cn] = {
           name: prof.name_en,
           icon: prof.icon,
-          role: prof.role
+          role: prof.role,
         };
       });
 
       res.json({ code: 0, data: professionMap });
-    } catch (error) {1
+    } catch (error) {
+      1;
       logger.error("Failed to fetch professions:", error);
       res.status(500).json({
         code: 1,
@@ -476,8 +496,10 @@ function initializeApi(
 
       // Filter out players without valid data and translate professions
       const validPlayers = Object.values(userData)
-        .filter(user => user.name && user.name !== "Unknown" && user.fightPoint > 0)
-        .map(user => ({
+        .filter(
+          (user) => user.name && user.name !== "Unknown" && user.fightPoint > 0,
+        )
+        .map((user) => ({
           uid: String(user.uid), // Ensure UID is a string for consistent comparison
           name: user.name,
           fightPoint: user.fightPoint,
@@ -496,11 +518,13 @@ function initializeApi(
       const result = await sheetsService.updatePlayerData(
         sheetsConfig.spreadsheetId,
         sheetsConfig.sheetName || "PlayerInfo",
-        validPlayers
+        validPlayers,
       );
 
       if (result.success) {
-        logger.info(`[Sheets] Synced ${result.total} players (${result.new} new, ${result.updated} updated)`);
+        logger.info(
+          `[Sheets] Synced ${result.total} players (${result.new} new, ${result.updated} updated)`,
+        );
         res.json({
           code: 0,
           msg: `Successfully synced ${result.total} players`,
@@ -540,6 +564,56 @@ function initializeApi(
     }
   });
 
+  // Update database with fresh seed data
+  app.post("/api/update-database", async (req, res) => {
+    try {
+      const { updateDatabase } = require(path.join(
+        __dirname,
+        "utilities",
+        "updateDatabase",
+      ));
+
+      // Get paths
+      const userDbPath = path.join(configPaths.getDbPath(), "bpsr-tools.db");
+      const projectRoot = path.join(__dirname, "..", "..");
+
+      logger.info("[API] Database update requested");
+      console.log("[API] Starting manual database update...");
+
+      // Run the update
+      const stats = await updateDatabase(userDbPath, projectRoot);
+
+      if (stats.success) {
+        logger.info(
+          `[API] Database updated: +${stats.professions} professions, +${stats.monsters} monsters, +${stats.skills} skills, +${stats.players} players`,
+        );
+        res.json({
+          code: 0,
+          msg: "Database updated successfully",
+          data: {
+            professions: stats.professions,
+            monsters: stats.monsters,
+            skills: stats.skills,
+            players: stats.players,
+          },
+        });
+      } else {
+        logger.error(`[API] Database update failed: ${stats.errors.join(", ")}`);
+        res.status(500).json({
+          code: 1,
+          msg: "Database update failed",
+          errors: stats.errors,
+        });
+      }
+    } catch (error) {
+      logger.error(`[API] Database update error: ${error.message}`);
+      res.status(500).json({
+        code: 1,
+        msg: "Error updating database: " + error.message,
+      });
+    }
+  });
+
   io.on("connection", (socket) => {
     console.log("WebSocket client connected: " + socket.id);
 
@@ -554,12 +628,16 @@ function initializeApi(
 
       // Add full profession details to user data
       const modifiedUserData = {};
-      Object.keys(userData).forEach(uid => {
+      Object.keys(userData).forEach((uid) => {
         const user = userData[uid];
 
         // Get profession details (works with both Chinese and English names)
-        const mainClass = user.profession ? user.profession.split(/\s*[-·]\s*/)[0].trim() : null;
-        const professionDetails = mainClass ? userDataManager.professionDb.getByName(mainClass) : null;
+        const mainClass = user.profession
+          ? user.profession.split(/\s*[-·]\s*/)[0].trim()
+          : null;
+        const professionDetails = mainClass
+          ? userDataManager.professionDb.getByName(mainClass)
+          : null;
 
         modifiedUserData[uid] = {
           ...user,
@@ -567,8 +645,8 @@ function initializeApi(
             name_cn: mainClass || "Unknown",
             name_en: mainClass || "Unknown",
             icon: "unknown.png",
-            role: "dps"
-          }
+            role: "dps",
+          },
         };
       });
 
