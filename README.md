@@ -4,7 +4,7 @@ A real-time DPS (Damage Per Second) meter for Blue Protocol that captures and de
 
 **Forked from:** [mrsnakke/BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter)
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)
 
@@ -32,7 +32,7 @@ A real-time DPS (Damage Per Second) meter for Blue Protocol that captures and de
 
 ### Download
 
-1. Go to [Releases](https://github.com/bruno-barbosa/bpsr-tools/releases)
+1. Go to [Releases](https://github.com/akzios/bpsr-tools/releases)
 2. Download the latest `BPSR Tools Setup X.X.X.exe`
 3. Run the installer
 4. The app will install to `%LOCALAPPDATA%\bpsr-tools`
@@ -138,19 +138,26 @@ Configure the app through the launcher's Settings page:
 
 **Database Management:**
 
-- Seed database with monster/skill names
-- Update player data from online leaderboard
+- **Seed Database**: Initialize database with monster/skill names from seed files
+- **Update Database**: Manually fetch and merge latest player data from online leaderboard
+  - Fetches fresh player data from external API
+  - Merges professions, monsters, skills, and players into database
+  - Uses INSERT OR IGNORE strategy (preserves existing data, removes duplicates)
+  - Preserves your combat history while adding new entries
+  - Shows statistics: how many new entries were added to each table
 
 ### Configuration Files
 
 **In Development:**
 All configs stored in `config/`:
+
 - `settings.json` - App settings
 - `sheets.json` - Google Sheets credentials (user-specific, not packaged)
 - `dictionary.json` - Translation dictionary
 
 **In Packaged App:**
 Configs stored in `%APPDATA%/BPSR Tools/config/`:
+
 - Default configs copied from app bundle on first run
 - User modifications persist across updates
 - `sheets.json` must be configured manually (not included in installer)
@@ -160,17 +167,20 @@ Configs stored in `%APPDATA%/BPSR Tools/config/`:
 **SQLite Database:** `db/bpsr-tools.db`
 
 **Pre-seeded Data (included in packaged app):**
+
 - ✅ **Professions** (8 main classes): Stormblade, Frost Mage, Wind Knight, Marksman, Heavy Guardian, Shield Knight, Verdant Oracle, Soul Musician
 - ✅ **Monsters**: Common monster names (Chinese with English translations)
 - ✅ **Skills** (447+ skills): Skill IDs mapped to Chinese and English names
 
 **Schema:**
+
 - `professions` - Class data with Chinese/English names, icons, roles (dps/tank/healer)
 - `players` - Player data cache (INTEGER PRIMARY KEY, name, profession, gear score, max HP)
 - `monsters` - Monster name translations
 - `skills` - Skill name translations
 
 **Automatic Handling:**
+
 - In development: Database created in project's `db/` directory
 - In packaged app:
   - **First run**: Pre-seeded database copied to `%APPDATA%/BPSR Tools/db/`
@@ -180,11 +190,17 @@ Configs stored in `%APPDATA%/BPSR Tools/config/`:
 - Dynamically updated as new players/monsters/skills are encountered
 
 **Update Strategy:**
+
 - Installation database in `%LOCALAPPDATA%/Programs/bpsr-tools/resources/db/` (template)
 - Working database in `%APPDATA%/BPSR Tools/db/` (user data)
-- On app start: Merges new seed data using INSERT OR IGNORE
-- Only merges: professions, monsters, skills (not player data)
-- Console logs show what was added (e.g., "Added 2 new professions")
+- **Automatic updates** (on app start): Merges new seed data using INSERT OR IGNORE
+  - Only merges: professions, monsters, skills (not player data)
+  - Console logs show what was added (e.g., "Added 2 new professions")
+- **Manual updates** (via launcher settings): Update Database button
+  - Fetches latest player data from online leaderboard
+  - Merges all seed data (professions, monsters, skills, players)
+  - Provides statistics on how many new entries were added
+  - Accessible via Settings > Database Management > Update Database
 
 ## Development
 
@@ -324,17 +340,20 @@ All three modes share a **single backend server** running on port 8989:
 ### Profession System
 
 **Bilingual Support:**
+
 - All professions stored with Chinese (`name_cn`) and English (`name_en`) names
 - API returns `professionDetails` object: `{id, name_cn, name_en, icon, role}`
 - Frontend uses English names for display
 - Backend accepts both Chinese and English for lookups
 
 **Role-Based Features:**
+
 - **Tank** (cyan): Heavy Guardian, Shield Knight
 - **Healer** (green): Verdant Oracle, Soul Musician
 - **DPS** (red): Stormblade, Frost Mage, Wind Knight, Marksman
 
 **Smart Lookup:**
+
 - `ProfessionModel.getByName()` tries both Chinese and English lookups
 - Handles profession data from game packets (Chinese) and external APIs (English)
 - Sub-profession detection from skill usage patterns
@@ -342,29 +361,35 @@ All three modes share a **single backend server** running on port 8989:
 ## API Endpoints
 
 ### Health Check
+
 - `GET /-/health` - Server readiness check (returns `{ status: "ok" }`)
 
 ### Combat Data
+
 - `GET /api/data` - Current combat data with `professionDetails` objects
 - `GET /api/enemies` - Enemy data
 - `GET /api/skill/:uid` - Player skill breakdown with profession info
 
 ### Settings & Configuration
+
 - `GET /api/settings` - App settings
 - `POST /api/settings` - Update settings
 - `GET /api/professions` - Get profession translation map (Chinese → English)
 - `GET /api/dictionary` - Translation dictionary
 
 ### Google Sheets
+
 - `POST /api/sync-sheets` - Sync player data to Google Sheets
 - `GET /api/sheets-configured` - Check if sheets.json exists
 
 ### Combat Controls
+
 - `GET /api/clear` - Clear combat data
 - `POST /api/pause` - Pause/resume tracking
 - `POST /api/set-username` - Set player username
 
 ### History
+
 - `GET /api/history/list` - List combat history
 - `GET /api/history/:timestamp/summary` - Combat summary
 - `GET /api/history/:timestamp/data` - Full combat data
@@ -372,6 +397,7 @@ All three modes share a **single backend server** running on port 8989:
 - `GET /api/history/:timestamp/download` - Download fight log
 
 ### WebSocket (Socket.IO)
+
 - **Event**: `data` - Real-time combat updates (emitted every 100ms)
 - Clients receive same data structure as `GET /api/data`
 
@@ -434,16 +460,19 @@ Game protocol may change with updates. Check for app updates or report issues.
 ### Database Issues
 
 **Empty Database in Packaged App:**
+
 - Ensure `db/bpsr-tools.db` exists before building
 - Database is copied to `extraResources` (outside asar)
 - First run copies pre-seeded database to `%APPDATA%/BPSR Tools/db/`
 
 **Missing Professions:**
+
 - Database should be pre-seeded with 8 professions
 - Manually seed: Use launcher Settings > Database Management > Seed Database
 - Or run: `node -e "require('./src/server/model/seed.js').seedAll()"`
 
 **Overlay Silently Dying:**
+
 - Check logs: `%APPDATA%/BPSR Tools/debug.log` and `debug-cli.log`
 - Ensure backend server is running on port 8989
 - Overlay uses shared backend (doesn't start its own server)
@@ -479,8 +508,8 @@ See [LICENSE](LICENSE) for details.
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/bruno-barbosa/bpsr-tools/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/bruno-barbosa/bpsr-tools/discussions)
+- **Issues**: [GitHub Issues](https://github.com/akzios/bpsr-tools/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/akzios/bpsr-tools/discussions)
 
 ## Disclaimer
 

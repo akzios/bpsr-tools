@@ -61,7 +61,9 @@ class ProfessionModel {
 
       // Auto-seed professions if table is empty
       if (count.count === 0) {
-        this.logger.info("Profession table is empty, auto-seeding from JSON...");
+        this.logger.info(
+          "Profession table is empty, auto-seeding from JSON...",
+        );
         const seedPath = configPaths.getDbSeedPath("professions.json");
         if (fs.existsSync(seedPath)) {
           this.loadFromJSON(seedPath);
@@ -168,9 +170,7 @@ class ProfessionModel {
       );
       return true;
     } catch (error) {
-      this.logger.error(
-        `Error saving profession ${id}: ${error.message}`,
-      );
+      this.logger.error(`Error saving profession ${id}: ${error.message}`);
       return false;
     }
   }
@@ -186,7 +186,6 @@ class ProfessionModel {
       return [];
     }
   }
-
 
   /** Load professions from JSON file and populate database
    * @param {string} jsonPath - Path to professions.json seed file
@@ -236,11 +235,11 @@ class ProfessionModel {
         .prepare("SELECT COUNT(*) as count FROM professions")
         .get();
 
-      this.logger.info(
-        `Loaded ${newCount.count} professions from JSON`,
-      );
+      this.logger.info(`Loaded ${newCount.count} professions from JSON`);
     } catch (error) {
-      this.logger.error(`Error loading professions from JSON: ${error.message}`);
+      this.logger.error(
+        `Error loading professions from JSON: ${error.message}`,
+      );
     }
   }
 }

@@ -48,6 +48,7 @@ contextBridge.exposeInMainWorld("launcherAPI", {
   getUpdateStatus: () => ipcRenderer.invoke("get-update-status"),
   updateAutoUpdateSetting: (enabled) =>
     ipcRenderer.invoke("update-auto-update-setting", enabled),
+  updateDatabase: () => ipcRenderer.invoke("update-database"),
 });
 
 // Add DOMContentLoaded listener for version display

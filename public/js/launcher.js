@@ -91,7 +91,7 @@ function launchModeWithFeedback(mode, button) {
   button.style.pointerEvents = "none";
 
   // Disable all mode buttons temporarily
-  [cliButton, webButton, electronButton].forEach(btn => {
+  [cliButton, webButton, electronButton].forEach((btn) => {
     btn.style.pointerEvents = "none";
     btn.style.opacity = "0.6";
   });
@@ -102,7 +102,7 @@ function launchModeWithFeedback(mode, button) {
   // Re-enable after delay (2.5 seconds)
   setTimeout(() => {
     isLaunching = false;
-    [cliButton, webButton, electronButton].forEach(btn => {
+    [cliButton, webButton, electronButton].forEach((btn) => {
       btn.style.pointerEvents = "auto";
       btn.style.opacity = "1";
     });
@@ -161,9 +161,7 @@ settingsBtn.addEventListener("click", async () => {
       showExampleTemplate();
     }
   } catch (error) {
-    console.log(
-      "No sheets config found (this is normal if not configured)",
-    );
+    console.log("No sheets config found (this is normal if not configured)");
     showExampleTemplate();
   }
 
@@ -200,8 +198,7 @@ function showExampleTemplate() {
       client_id: "YOUR_CLIENT_ID",
       auth_uri: "https://accounts.google.com/o/oauth2/auth",
       token_uri: "https://oauth2.googleapis.com/token",
-      auth_provider_x509_cert_url:
-        "https://www.googleapis.com/oauth2/v1/certs",
+      auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
       client_x509_cert_url:
         "https://www.googleapis.com/robot/v1/metadata/x509/YOUR_SERVICE_ACCOUNT_EMAIL%40YOUR_PROJECT.iam.gserviceaccount.com",
       universe_domain: "googleapis.com",
@@ -253,13 +250,10 @@ sheetsConfigTextarea.addEventListener("input", validateJSON);
 // Save settings
 saveBtn.addEventListener("click", async () => {
   const settings = {
-    autoUpdateEnabled:
-      document.getElementById("autoUpdateEnabled").checked,
-    autoClearOnServerChange: document.getElementById(
-      "autoClearOnServerChange",
-    ).checked,
-    autoClearOnTimeout:
-      document.getElementById("autoClearOnTimeout").checked,
+    autoUpdateEnabled: document.getElementById("autoUpdateEnabled").checked,
+    autoClearOnServerChange: document.getElementById("autoClearOnServerChange")
+      .checked,
+    autoClearOnTimeout: document.getElementById("autoClearOnTimeout").checked,
     onlyRecordEliteDummy: document.getElementById("onlyRecordEliteDummy")
       .checked,
   };
@@ -280,9 +274,7 @@ saveBtn.addEventListener("click", async () => {
     if (sheetsConfigValue) {
       const sheetsConfig = validateJSON();
       if (!sheetsConfig) {
-        alert(
-          "Cannot save: Google Sheets configuration contains invalid JSON",
-        );
+        alert("Cannot save: Google Sheets configuration contains invalid JSON");
         return;
       }
       // Don't save if it's still the example template
@@ -317,9 +309,7 @@ const updateInfo = document.getElementById("updateInfo");
 // Helper function to set update status
 function setUpdateStatus(message, type = "") {
   updateStatus.textContent = message;
-  updateStatus.className = type
-    ? `action-status ${type}`
-    : "action-status";
+  updateStatus.className = type ? `action-status ${type}` : "action-status";
 }
 
 // Load current version on settings open
@@ -377,5 +367,56 @@ checkUpdatesBtn.addEventListener("click", async () => {
     console.error("Error checking for updates:", error);
     setUpdateStatus(`✗ Error: ${error.message}`, "error");
     checkUpdatesBtn.disabled = false;
+  }
+});
+
+// Database Update functionality
+const updateDbBtn = document.getElementById("update-db-btn");
+const dbUpdateStatus = document.getElementById("dbUpdateStatus");
+
+// Helper function to set database update status
+function setDbUpdateStatus(message, type = "") {
+  dbUpdateStatus.textContent = message;
+  dbUpdateStatus.className = type
+    ? `action-status ${type}`
+    : "action-status";
+}
+
+// Update database
+updateDbBtn.addEventListener("click", async () => {
+  // Show confirmation modal
+  const confirmed = await showConfirm(
+    "Update Database",
+    "This will fetch the latest player data and merge it with your database. This may take a few minutes. Continue?",
+  );
+
+  if (!confirmed) return;
+
+  setDbUpdateStatus("");
+  setDbUpdateStatus("Updating database...", "info");
+  updateDbBtn.disabled = true;
+
+  try {
+    const result = await window.launcherAPI.updateDatabase();
+
+    if (result.code === 0) {
+      const stats = result.data;
+      const message = `✓ Database updated! Added: ${stats.professions} professions, ${stats.monsters} monsters, ${stats.skills} skills, ${stats.players} players`;
+      setDbUpdateStatus(message, "success");
+
+      console.log("[Database Update] Success:", result);
+    } else {
+      setDbUpdateStatus(`✗ Update failed: ${result.msg}`, "error");
+      console.error("[Database Update] Error:", result);
+    }
+
+    // Re-enable button after 3 seconds
+    setTimeout(() => {
+      updateDbBtn.disabled = false;
+    }, 3000);
+  } catch (error) {
+    console.error("Error updating database:", error);
+    setDbUpdateStatus(`✗ Error: ${error.message}`, "error");
+    updateDbBtn.disabled = false;
   }
 });

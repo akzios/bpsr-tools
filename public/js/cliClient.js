@@ -179,7 +179,11 @@ function formatTimeSince(date) {
     const mins = Math.floor(seconds / 60);
     return `${mins}m ago`;
   } else {
-    return date.toLocaleTimeString("en-US", { hour12: true, hour: "numeric", minute: "2-digit" });
+    return date.toLocaleTimeString("en-US", {
+      hour12: true,
+      hour: "numeric",
+      minute: "2-digit",
+    });
   }
 }
 
@@ -210,8 +214,12 @@ function renderTable(data) {
 
   // Convert to array and filter/sort by damage
   let userArray = Object.values(userData);
-  userArray = userArray.filter((u) => u.total_damage && u.total_damage.total > 0);
-  userArray.sort((a, b) => (b.total_damage?.total || 0) - (a.total_damage?.total || 0));
+  userArray = userArray.filter(
+    (u) => u.total_damage && u.total_damage.total > 0,
+  );
+  userArray.sort(
+    (a, b) => (b.total_damage?.total || 0) - (a.total_damage?.total || 0),
+  );
 
   if (userArray.length === 0) {
     return `<div style="color: ${colors.gray}; padding: 20px;">
@@ -251,12 +259,20 @@ function renderTable(data) {
     const dps = formatNumber(user.total_dps || 0);
     const hps = formatNumber(user.total_hps || 0);
     const dt = formatNumber(user.taken_damage || 0);
-    const critPct = user.total_damage?.hitCount > 0
-      ? ((user.total_damage.critHitCount / user.total_damage.hitCount) * 100).toFixed(1)
-      : "0.0";
-    const luckyPct = user.total_damage?.hitCount > 0
-      ? ((user.total_damage.luckHitCount / user.total_damage.hitCount) * 100).toFixed(1)
-      : "0.0";
+    const critPct =
+      user.total_damage?.hitCount > 0
+        ? (
+            (user.total_damage.critHitCount / user.total_damage.hitCount) *
+            100
+          ).toFixed(1)
+        : "0.0";
+    const luckyPct =
+      user.total_damage?.hitCount > 0
+        ? (
+            (user.total_damage.luckHitCount / user.total_damage.hitCount) *
+            100
+          ).toFixed(1)
+        : "0.0";
     const maxHit = formatNumber(user.total_damage?.maxHit || 0);
     const gear = user.fightPoint || 0;
 

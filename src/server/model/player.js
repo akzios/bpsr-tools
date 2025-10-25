@@ -169,7 +169,10 @@ class PlayerModel {
       const validatedData = {
         player_id: playerId,
         name: this.validateName(name, existing?.name),
-        profession_id: this.validateProfessionId(professionId, existing?.profession_id),
+        profession_id: this.validateProfessionId(
+          professionId,
+          existing?.profession_id,
+        ),
         fight_point: this.validateFightPoint(
           fight_point,
           existing?.fight_point,
@@ -307,9 +310,7 @@ class PlayerModel {
         .prepare("SELECT COUNT(*) as count FROM players")
         .get();
       if (count.count > 0) {
-        this.logger.debug(
-          "Player table already populated, skipping JSON load",
-        );
+        this.logger.debug("Player table already populated, skipping JSON load");
         return;
       }
 
@@ -343,7 +344,7 @@ class PlayerModel {
             player.profession_id,
             player.fight_point || 0,
             player.max_hp || 0,
-            player.player_level || null
+            player.player_level || null,
           );
         }
       });

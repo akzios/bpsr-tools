@@ -4,7 +4,11 @@ const { spawn, fork } = require("child_process");
 const fs = require("fs");
 const autoUpdateManager = require("./src/server/utilities/autoUpdate");
 const configPaths = require("./src/server/utilities/configPaths");
-const { loadSettings, saveSettings, DEFAULT_SETTINGS } = require("./src/server/utilities/settings");
+const {
+  loadSettings,
+  saveSettings,
+  DEFAULT_SETTINGS,
+} = require("./src/server/utilities/settings");
 
 let launcherWindow;
 let tray = null;
@@ -33,7 +37,8 @@ function closeMode(mode) {
     activeModes.web.active = false;
   } else if (mode === "electron") {
     try {
-      const electronMain = require.cache[require.resolve("./src/app/electronGUI.js")];
+      const electronMain =
+        require.cache[require.resolve("./src/app/electronGUI.js")];
       if (electronMain && electronMain.exports) {
         const overlayWindow = electronMain.exports.getMainWindow();
         if (overlayWindow && !overlayWindow.isDestroyed()) {
@@ -141,13 +146,23 @@ async function launchMode(mode) {
   // Check if mode is already active
   if (activeModes[mode] && activeModes[mode].active) {
     // Focus the window if it exists
-    if (mode === "electron" && activeModes.electron.window && !activeModes.electron.window.isDestroyed()) {
+    if (
+      mode === "electron" &&
+      activeModes.electron.window &&
+      !activeModes.electron.window.isDestroyed()
+    ) {
       activeModes.electron.window.focus();
-    } else if (mode === "cli" && activeModes.cli.window && !activeModes.cli.window.isDestroyed()) {
+    } else if (
+      mode === "cli" &&
+      activeModes.cli.window &&
+      !activeModes.cli.window.isDestroyed()
+    ) {
       activeModes.cli.window.focus();
     } else if (mode === "web") {
       // Web mode just opens browser again
-      require("electron").shell.openExternal(`http://localhost:${BACKEND_PORT}`);
+      require("electron").shell.openExternal(
+        `http://localhost:${BACKEND_PORT}`,
+      );
     }
     return;
   }
@@ -165,7 +180,7 @@ async function launchMode(mode) {
       isLaunchingMode = false;
       dialog.showErrorBox(
         "Server Not Ready",
-        "The backend server failed to start. Please try again or restart the application."
+        "The backend server failed to start. Please try again or restart the application.",
       );
       return;
     }
@@ -181,7 +196,9 @@ async function launchMode(mode) {
 
     // Open browser to backend server (small delay for UX)
     setTimeout(() => {
-      require("electron").shell.openExternal(`http://localhost:${BACKEND_PORT}`);
+      require("electron").shell.openExternal(
+        `http://localhost:${BACKEND_PORT}`,
+      );
     }, 500);
 
     // Release lock after delay
@@ -265,7 +282,9 @@ function updateTrayMenu() {
       },
     },
     {
-      label: activeModes.electron.active ? "✓ Electron Overlay" : "  Electron Overlay",
+      label: activeModes.electron.active
+        ? "✓ Electron Overlay"
+        : "  Electron Overlay",
       click: () => {
         if (activeModes.electron.active) {
           closeMode("electron");
@@ -407,6 +426,95 @@ ipcMain.handle("save-sheets-config", async (event, config) => {
   }
 });
 
+// Database update handler
+ipcMain.handle("update-database", async () => {
+  try {
+    const { updateDatabase } = require(path.join(
+      __dirname,
+      "src",
+      "server",
+      "utilities",
+      "updateDatabase",
+    ));
+
+    // Get paths - handle both dev and packaged
+    const userDbPath = path.join(configPaths.getDbPath(), "bpsr-tools.db");
+
+    // Seed files location:
+    // - Always use userData for writable access
+    // - In packaged apps: userData/db/seed/
+    // - In dev: __dirname/db/seed/ (for backward compatibility)
+    const seedBasePath = app.isPackaged
+      ? path.join(configPaths.getUserDataPath(), "db", "seed")
+      : path.join(__dirname, "db", "seed");
+
+    // Copy seed template files from installation to userData on first update
+    if (app.isPackaged) {
+      const installSeedPath = path.join(process.resourcesPath, "db", "seed");
+      const userSeedPath = path.join(
+        configPaths.getUserDataPath(),
+        "db",
+        "seed",
+      );
+
+      // Ensure userData seed directory exists
+      if (!fs.existsSync(userSeedPath)) {
+        fs.mkdirSync(userSeedPath, { recursive: true });
+      }
+
+      // Copy seed templates if they don't exist in userData
+      const seedFiles = [
+        "professions.json",
+        "monsters.json",
+        "skills.json",
+      ];
+      for (const file of seedFiles) {
+        const srcFile = path.join(installSeedPath, file);
+        const destFile = path.join(userSeedPath, file);
+        if (fs.existsSync(srcFile) && !fs.existsSync(destFile)) {
+          fs.copyFileSync(srcFile, destFile);
+          console.log(`[IPC] Copied seed file: ${file}`);
+        }
+      }
+    }
+
+    console.log("[IPC] Database update requested");
+    console.log("[IPC] User DB path:", userDbPath);
+    console.log("[IPC] Seed base path:", seedBasePath);
+
+    const stats = await updateDatabase(userDbPath, seedBasePath);
+
+    if (stats.success) {
+      console.log(
+        `[IPC] Database updated: +${stats.professions} professions, +${stats.monsters} monsters, +${stats.skills} skills, +${stats.players} players`,
+      );
+      return {
+        code: 0,
+        msg: "Database updated successfully",
+        data: {
+          professions: stats.professions,
+          monsters: stats.monsters,
+          skills: stats.skills,
+          players: stats.players,
+        },
+      };
+    } else {
+      console.error(`[IPC] Database update failed: ${stats.errors.join(", ")}`);
+      return {
+        code: 1,
+        msg: "Database update failed",
+        errors: stats.errors,
+      };
+    }
+  } catch (error) {
+    console.error("[IPC] Database update error:", error);
+    return {
+      code: 1,
+      msg: "Error updating database: " + error.message,
+    };
+  }
+});
+
 // Auto-update handlers
 ipcMain.handle("check-for-updates", async () => {
   try {
@@ -501,7 +609,11 @@ function startBackendServer() {
       forkOptions.cwd = __dirname;
     }
 
-    backendServerProcess = fork(serverPath, [String(BACKEND_PORT)], forkOptions);
+    backendServerProcess = fork(
+      serverPath,
+      [String(BACKEND_PORT)],
+      forkOptions,
+    );
 
     // Log server output to console (only if stdout is writable to avoid EPIPE)
     backendServerProcess.stdout.on("data", (data) => {
