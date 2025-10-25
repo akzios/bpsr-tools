@@ -52,6 +52,11 @@ async function createWindow() {
       icon: path.join(__dirname, "..", "..", "icon.ico"),
     });
 
+    // Set highest window level to stay on top of fullscreen apps (like games)
+    // 'screen-saver' level ensures overlay stays visible even over fullscreen games
+    mainWindow.setAlwaysOnTop(true, "screen-saver");
+    logToFile("Window level set to 'screen-saver' for fullscreen compatibility");
+
     // Determine if running in development mode
     const isDev = process.defaultApp || process.env.NODE_ENV === "development";
 
