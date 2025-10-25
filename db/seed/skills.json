@@ -1,31 +1,31 @@
 {
   "1201": {
     "name_cn": "雨打潮生",
-    "name_en": "Flowing Surge"
+    "name_en": "Raincall Surge"
   },
   "1202": {
     "name_cn": "雨打潮生-转弯子弹",
-    "name_en": "Flowing Surge - Curved Shot"
+    "name_en": "Rain Tide - Curving Bullet"
   },
   "1203": {
     "name_cn": "雨打潮生-最后一击",
-    "name_en": "Flowing Surge - Final Strike"
+    "name_en": "Rain Tide - Final Strike"
   },
   "1204": {
     "name_cn": "雨打潮生-普攻1段",
-    "name_en": "Flowing Surge - Attack 1"
+    "name_en": "Rain Tide - Basic Attack Stage 1"
   },
   "1210": {
     "name_cn": "水之涡流",
-    "name_en": "Aqua Vortex"
+    "name_en": "Maelstrom"
   },
   "1211": {
     "name_cn": "清滝绕珠",
-    "name_en": "Clear Waterfall"
+    "name_en": "Crystal Veil"
   },
   "1216": {
     "name_cn": "强化清滝绕珠",
-    "name_en": "Enhanced Clear Waterfall"
+    "name_en": "Enhanced Clearfall Orb"
   },
   "1219": {
     "name_cn": "冰龙卷",
@@ -33,7 +33,7 @@
   },
   "1222": {
     "name_cn": "幻影冲锋",
-    "name_en": "Phantom Charge"
+    "name_en": "Phantom Dash"
   },
   "1223": {
     "name_cn": "幻影冲刺",
@@ -41,7 +41,7 @@
   },
   "1238": {
     "name_cn": "水龙卷-被动版",
-    "name_en": "Water Tornado - Passive"
+    "name_en": "Tidal Vortex - Passive Skill"
   },
   "1239": {
     "name_cn": "陨星风暴",
@@ -49,7 +49,7 @@
   },
   "1240": {
     "name_cn": "冻结寒风",
-    "name_en": "Freezing Wind"
+    "name_en": "Frozen Gale"
   },
   "1241": {
     "name_cn": "寒冰射线",
@@ -57,11 +57,11 @@
   },
   "1242": {
     "name_cn": "冰霜之矛",
-    "name_en": "Ice Spear"
+    "name_en": "Frost Lance"
   },
   "1243": {
     "name_cn": "冰之灌注",
-    "name_en": "Ice Infusion"
+    "name_en": "Permafrost"
   },
   "1244": {
     "name_cn": "寒冰风暴",
@@ -69,11 +69,11 @@
   },
   "1245": {
     "name_cn": "寒冰庇护",
-    "name_en": "Ice Barrier"
+    "name_en": "Frost Shelter"
   },
   "1246": {
     "name_cn": "浪潮汇聚-水龙卷",
-    "name_en": "Tidal Surge - Water Tornado"
+    "name_en": "Tidepool"
   },
   "1247": {
     "name_cn": "天赋触发彗星",
@@ -81,23 +81,23 @@
   },
   "1248": {
     "name_cn": "极寒·冰雪颂歌",
-    "name_en": "Extreme Cold: Ice Song"
+    "name_en": "Glacier Hymn"
   },
   "1249": {
     "name_cn": "协同冰晶",
-    "name_en": "Synergy Ice Crystal"
+    "name_en": "Cooperative Crystal"
   },
   "1250": {
     "name_cn": "水之涡流",
-    "name_en": "Aqua Vortex"
+    "name_en": "Water Vortex"
   },
   "1251": {
     "name_cn": "水之涡流",
-    "name_en": "Aqua Vortex"
+    "name_en": "Water Vortex"
   },
   "1256": {
     "name_cn": "浪潮汇聚-水龙卷",
-    "name_en": "Tidal Surge - Water Tornado"
+    "name_en": "Tide Convergence - Water Tornado"
   },
   "1257": {
     "name_cn": "寒冰风暴",
@@ -105,7 +105,7 @@
   },
   "1258": {
     "name_cn": "天赋-冰晶落",
-    "name_en": "Talent - Icicle"
+    "name_en": "Talent - Crystal Fall"
   },
   "1259": {
     "name_cn": "冰霜彗星",
@@ -117,27 +117,27 @@
   },
   "1262": {
     "name_cn": "陨星风暴",
-    "name_en": "Meteor Storm"
+    "name_en": "Ice Meteor Hologram"
   },
   "1263": {
     "name_cn": "极寒·冰雪颂歌",
-    "name_en": "Extreme Cold: Ice Song"
+    "name_en": "Staff Ultimate: Powerful Ice Meteor"
   },
   "1401": {
     "name_cn": "风华翔舞-扫",
-    "name_en": "Tempest Dance - Sweep"
+    "name_en": "Windborne Grace"
   },
   "1402": {
     "name_cn": "风华翔舞-冲/砸",
-    "name_en": "Tempest Dance - Thrust/Slam"
+    "name_en": "Normal Attack"
   },
   "1403": {
     "name_cn": "风华翔舞-转踢",
-    "name_en": "Tempest Dance - Spinning Kick"
+    "name_en": "Normal Attack"
   },
   "1404": {
     "name_cn": "风华翔舞-下砸",
-    "name_en": "Tempest Dance - Down Slam"
+    "name_en": "Normal Attack"
   },
   "1405": {
     "name_cn": "疾风刺",
@@ -145,19 +145,19 @@
   },
   "1406": {
     "name_cn": "风华翔舞",
-    "name_en": "Tempest Dance"
+    "name_en": "Wind Elegance Dance"
   },
   "1407": {
     "name_cn": "风神",
-    "name_en": "Wind God"
+    "name_en": "Typhoon"
   },
   "1409": {
     "name_cn": "风神·破阵之风",
-    "name_en": "Wind God: Breaking Gale"
+    "name_en": "Typhoon Cleave"
   },
   "1410": {
     "name_cn": "风神·破阵之风",
-    "name_en": "Wind God: Breaking Gale"
+    "name_en": "Typhoon Cleave"
   },
   "1411": {
     "name_cn": "疾驰锋刃",
@@ -169,75 +169,75 @@
   },
   "1419": {
     "name_cn": "翔返",
-    "name_en": "Soaring Return"
+    "name_en": "Skyfall"
   },
   "1420": {
     "name_cn": "风姿卓绝",
-    "name_en": "Graceful Stance"
+    "name_en": "Galeform"
   },
   "1421": {
     "name_cn": "螺旋击刺",
-    "name_en": "Spiral Strike"
+    "name_en": "Spiral Thrust"
   },
   "1422": {
     "name_cn": "破追",
-    "name_en": "Pursuit Break"
+    "name_en": "Breach Pursuit"
   },
   "1424": {
     "name_cn": "刹那",
-    "name_en": "Instant"
+    "name_en": "Instant Edge"
   },
   "1425": {
     "name_cn": "飞鸟投",
-    "name_en": "Bird Throw"
+    "name_en": "Falcon Toss"
   },
   "1426": {
     "name_cn": "风神·破阵之风",
-    "name_en": "Wind God: Breaking Gale"
+    "name_en": "Typhoon Cleave"
   },
   "1427": {
     "name_cn": "破追",
-    "name_en": "Pursuit Break"
+    "name_en": "Breach Pursuit"
   },
   "1431": {
     "name_cn": "锐利冲击(风神)",
-    "name_en": "Sharp Impact (Wind God)"
+    "name_en": "Sharp Impact"
   },
   "1433": {
     "name_cn": "极·岚切",
-    "name_en": "Ultimate: Storm Slash"
+    "name_en": "Falcon Strike"
   },
   "1434": {
     "name_cn": "神影螺旋",
-    "name_en": "Divine Shadow Spiral"
+    "name_en": "Vortex Strike"
   },
   "1435": {
     "name_cn": "龙击炮",
-    "name_en": "Dragon Strike Cannon"
+    "name_en": "Drake Cannon"
   },
   "1501": {
     "name_cn": "掌控藤蔓-1段",
-    "name_en": "Vine Control - 1"
+    "name_en": "Vines' Embrace"
   },
   "1502": {
     "name_cn": "掌控藤蔓-2段",
-    "name_en": "Vine Control - 2"
+    "name_en": "Vine Control - Stage 2"
   },
   "1503": {
     "name_cn": "掌控藤蔓-3段",
-    "name_en": "Vine Control - 3"
+    "name_en": "Vine Control - Stage 3"
   },
   "1504": {
     "name_cn": "掌控藤蔓-4段",
-    "name_en": "Vine Control - 4"
+    "name_en": "Vine Control - Stage 4"
   },
   "1509": {
     "name_cn": "希望结界",
-    "name_en": "Barrier of Hope"
+    "name_en": "Divine Circle Bloom"
   },
   "1517": {
     "name_cn": "掌控藤蔓-红光反制",
-    "name_en": "Vine Control - Counter"
+    "name_en": "Vine Control - Red Light Counter"
   },
   "1518": {
     "name_cn": "狂野绽放",
@@ -245,11 +245,11 @@
   },
   "1527": {
     "name_cn": "花语回升",
-    "name_en": "Flowery Recovery"
+    "name_en": "Bloomheal"
   },
   "1529": {
     "name_cn": "盛放注能",
-    "name_en": "Bloom Infusion"
+    "name_en": "Blossom Charge"
   },
   "1541": {
     "name_cn": "狂野绽放",
@@ -257,7 +257,7 @@
   },
   "1550": {
     "name_cn": "不羁之种3段(陨石)",
-    "name_en": "Unbound Seed 3 (Meteor)"
+    "name_en": "Seed Meteor"
   },
   "1551": {
     "name_cn": "狂野之种",
@@ -265,51 +265,51 @@
   },
   "1556": {
     "name_cn": "花语回升",
-    "name_en": "Flowery Recovery"
+    "name_en": "Flourish Seed"
   },
   "1560": {
     "name_cn": "再生脉冲-扩散治疗",
-    "name_en": "Regeneration Pulse - Spread Heal"
+    "name_en": "Healing Ring (Spreads once, heals once)"
   },
   "1561": {
     "name_cn": "再生脉冲-来回伤害治疗",
-    "name_en": "Regeneration Pulse - Bounce Heal"
+    "name_en": "Healing Ring (Damages and heals back and forth)"
   },
   "1562": {
     "name_cn": "再生脉冲-扩散治疗",
-    "name_en": "Regeneration Pulse - Spread Heal"
+    "name_en": "Healing Ring (Spreads once, heals once)"
   },
   "1701": {
     "name_cn": "我流刀法·诛恶",
-    "name_en": "Style: Smite"
+    "name_en": "Judgment Cut"
   },
   "1702": {
     "name_cn": "我流刀法·诛恶2",
-    "name_en": "Style: Smite 2"
+    "name_en": "Way of the Blade: Judgement 2"
   },
   "1703": {
     "name_cn": "我流刀法·诛恶3",
-    "name_en": "Style: Smite 3"
+    "name_en": "Way of the Blade: Judgement 3"
   },
   "1704": {
     "name_cn": "我流刀法·诛恶4",
-    "name_en": "Style: Smite 4"
+    "name_en": "Way of the Blade: Judgement 4"
   },
   "1705": {
     "name_cn": "超高出力",
-    "name_en": "Maximum Output"
+    "name_en": "Overdrive"
   },
   "1711": {
     "name_cn": "我流秘刀法",
-    "name_en": "Secret Style 1"
+    "name_en": "Blade Technique"
   },
   "1712": {
     "name_cn": "我流秘刀法2",
-    "name_en": "Secret Style 2"
+    "name_en": "Blade Technique"
   },
   "1713": {
     "name_cn": "极诣·大破灭连斩",
-    "name_en": "Ultimate: Destructive Chain"
+    "name_en": "Oblivion Combo"
   },
   "1714": {
     "name_cn": "居合斩",
@@ -321,139 +321,139 @@
   },
   "1716": {
     "name_cn": "超高出力",
-    "name_en": "Maximum Output"
+    "name_en": "Overdrive"
   },
   "1717": {
     "name_cn": "一闪",
-    "name_en": "Flash Strike"
+    "name_en": "Flash strike"
   },
   "1718": {
     "name_cn": "飞雷神",
-    "name_en": "Lightning God"
+    "name_en": "Raijin Dash"
   },
   "1719": {
     "name_cn": "镰车",
-    "name_en": "Scythe Spin"
+    "name_en": "Scythe Wheel"
   },
   "1720": {
     "name_cn": "心眼",
-    "name_en": "Mind's Eye"
+    "name_en": "True Sight"
   },
   "1721": {
     "name_cn": "我流秘刀法·壹之型·改",
-    "name_en": "Secret Style Form 1: Modified"
+    "name_en": "Judgment Cut I"
   },
   "1722": {
     "name_cn": "我流秘刀法·贰之型·改",
-    "name_en": "Secret Style Form 2: Modified"
+    "name_en": "Judgment Cut II"
   },
   "1724": {
     "name_cn": "霹雳连斩",
-    "name_en": "Thunder Chain"
+    "name_en": "Thundercut"
   },
   "1725": {
     "name_cn": "霹雳连斩2",
-    "name_en": "Thunder Chain 2"
+    "name_en": "Thundercut"
   },
   "1726": {
     "name_cn": "霹雳连斩3",
-    "name_en": "Thunder Chain 3"
+    "name_en": "Thundercut"
   },
   "1728": {
     "name_cn": "极诣·大破灭连斩(天赋)",
-    "name_en": "Ultimate: Destructive Chain (Talent)"
+    "name_en": "Oblivion Combo"
   },
   "1730": {
     "name_cn": "无穷雷霆之力",
-    "name_en": "Infinite Thunder Power"
+    "name_en": "Volt Surge"
   },
   "1731": {
     "name_cn": "千雷闪影之意",
-    "name_en": "Thousand Thunder Intent"
+    "name_en": "Stormflash"
   },
   "1732": {
     "name_cn": "千雷闪影之意",
-    "name_en": "Thousand Thunder Intent"
+    "name_en": "Olvera Triggers Stormflash"
   },
   "1733": {
     "name_cn": "雷霆之镰",
-    "name_en": "Thunder Scythe"
+    "name_en": "Storm Scythe"
   },
   "1734": {
     "name_cn": "雷霆居合斩",
-    "name_en": "Thunder Iaido"
+    "name_en": "Thunder Iaido Slash"
   },
   "1735": {
     "name_cn": "坠龙闪",
-    "name_en": "Falling Dragon Flash"
+    "name_en": "Dragonhammer"
   },
   "1736": {
     "name_cn": "神影斩",
-    "name_en": "Divine Shadow Slash"
+    "name_en": "Raijin Dash Slash"
   },
   "1737": {
     "name_cn": "神罚之镰",
-    "name_en": "Divine Punishment Scythe"
+    "name_en": "Divine Sickle"
   },
   "1738": {
     "name_cn": "缭乱兜割",
-    "name_en": "Chaotic Sweep"
+    "name_en": "Chaos Breaker"
   },
   "1739": {
     "name_cn": "看破斩",
-    "name_en": "Insight Slash"
+    "name_en": "Piercing Slash"
   },
   "1740": {
     "name_cn": "雷霆之镰(触发霹雳升龙斩时)",
-    "name_en": "Thunder Scythe (Triggered)"
+    "name_en": "Storm Scythe"
   },
   "1741": {
     "name_cn": "雷霆之镰",
-    "name_en": "Thunder Scythe"
+    "name_en": "Storm Scythe"
   },
   "1742": {
     "name_cn": "霹雳升龙斩",
-    "name_en": "Thunder Rising Dragon"
+    "name_en": "Thundercut - Thundercleave"
   },
   "1901": {
     "name_cn": "止战之锋1/岩弹",
-    "name_en": "Peacekeeper 1/Rock Shot"
+    "name_en": "Halberd's Edge"
   },
   "1902": {
     "name_cn": "止战之锋2/岩弹",
-    "name_en": "Peacekeeper 2/Rock Shot"
+    "name_en": "Sword of War End 2 / Rock Bomb"
   },
   "1903": {
     "name_cn": "止战之锋3",
-    "name_en": "Peacekeeper 3"
+    "name_en": "Sword of War End 3"
   },
   "1904": {
     "name_cn": "止战之锋4",
-    "name_en": "Peacekeeper 4"
+    "name_en": "Sword of War End 4"
   },
   "1905": {
     "name_cn": "斩龙式",
-    "name_en": "Dragon Slayer Style"
+    "name_en": "Dragon Slash"
   },
   "1906": {
     "name_cn": "后撤斩",
-    "name_en": "Backstep Slash"
+    "name_en": "Backstep Sweep"
   },
   "1907": {
     "name_cn": "岩御·崩裂回环",
-    "name_en": "Rock Guard: Shattering Ring"
+    "name_en": "Tectonic Ring"
   },
   "1909": {
     "name_cn": "止战之锋（跳跃）",
-    "name_en": "Peacekeeper (Jump)"
+    "name_en": "Sword of War End (Jump)"
   },
   "1912": {
     "name_cn": "止战之锋-红光反制",
-    "name_en": "Peacekeeper - Counter"
+    "name_en": "Sword of War End - Red Light Counter"
   },
   "1917": {
     "name_cn": "巨岩撞击",
-    "name_en": "Boulder Impact"
+    "name_en": "Titan Charge"
   },
   "1922": {
     "name_cn": "护盾猛击",
@@ -461,7 +461,7 @@
   },
   "1924": {
     "name_cn": "碎星冲",
-    "name_en": "Meteor Crush"
+    "name_en": "Star Shatter"
   },
   "1925": {
     "name_cn": "怒爆",
@@ -469,27 +469,27 @@
   },
   "1926": {
     "name_cn": "砂岩之握",
-    "name_en": "Sandstone Grip"
+    "name_en": "Sandgrip"
   },
   "1927": {
     "name_cn": "砂石斗篷（初始）",
-    "name_en": "Sandstone Cloak (Initial)"
+    "name_en": "Sandshroud"
   },
   "1928": {
     "name_cn": "岩之守护",
-    "name_en": "Rock Guard"
+    "name_en": "Jerrad Earh Guard"
   },
   "1929": {
     "name_cn": "不动如山",
-    "name_en": "Immovable Mountain"
+    "name_en": "Unyielding Defense"
   },
   "1930": {
     "name_cn": "格挡冲击",
-    "name_en": "Guard Impact"
+    "name_en": "Countercrush"
   },
   "1931": {
     "name_cn": "格挡冲击",
-    "name_en": "Guard Impact"
+    "name_en": "Countercrush"
   },
   "1932": {
     "name_cn": "护盾猛击",
@@ -497,31 +497,31 @@
   },
   "1933": {
     "name_cn": "止战之锋",
-    "name_en": "Peacekeeper"
+    "name_en": "Halberd's Edge"
   },
   "1934": {
     "name_cn": "格挡冲击",
-    "name_en": "Guard Impact"
+    "name_en": "Countercrush"
   },
   "1935": {
     "name_cn": "格挡冲击-怒击",
-    "name_en": "Guard Impact - Rage Strike"
+    "name_en": "Countercrush"
   },
   "1936": {
     "name_cn": "巨岩躯体",
-    "name_en": "Boulder Body"
+    "name_en": "Stoneform"
   },
   "1937": {
     "name_cn": "岩怒之击",
-    "name_en": "Rock Fury Strike"
+    "name_en": "Granite Fury"
   },
   "1938": {
     "name_cn": "勇者壁垒",
-    "name_en": "Hero's Barrier"
+    "name_en": "Brave Bastion"
   },
   "1939": {
     "name_cn": "岩怒之击",
-    "name_en": "Rock Fury Strike"
+    "name_en": "Granite Fury"
   },
   "1940": {
     "name_cn": "怒爆",
@@ -529,15 +529,15 @@
   },
   "1941": {
     "name_cn": "碎星崩裂",
-    "name_en": "Meteor Shatter"
+    "name_en": "Starfall"
   },
   "1942": {
     "name_cn": "崩裂",
-    "name_en": "Shatter"
+    "name_en": "Rupture"
   },
   "1943": {
     "name_cn": "巨岩轰击",
-    "name_en": "Boulder Slam"
+    "name_en": "Stone Fist"
   },
   "1944": {
     "name_cn": "怒爆",
@@ -549,11 +549,11 @@
   },
   "2201": {
     "name_cn": "弹无虚发",
-    "name_en": "Perfect Shot"
+    "name_en": "Bullseye"
   },
   "2209": {
     "name_cn": "锐眼·光能巨箭",
-    "name_en": "Keen Eye: Photon Giant Arrow"
+    "name_en": "Luminary Bolt"
   },
   "2220": {
     "name_cn": "暴风箭矢",
@@ -561,7 +561,7 @@
   },
   "2221": {
     "name_cn": "暴风箭矢SP",
-    "name_en": "Storm Arrow SP"
+    "name_en": "Storm Arrow"
   },
   "2222": {
     "name_cn": "二连矢",
@@ -569,15 +569,15 @@
   },
   "2224": {
     "name_cn": "夺命射击-四连矢",
-    "name_en": "Deadeye - Quad Shot"
+    "name_en": "Lethal Shot"
   },
   "2230": {
     "name_cn": "怒涛射击",
-    "name_en": "Raging Shot"
+    "name_en": "Torrent Volley"
   },
   "2231": {
     "name_cn": "精神凝聚",
-    "name_en": "Mental Focus"
+    "name_en": "Focus"
   },
   "2232": {
     "name_cn": "箭雨",
@@ -585,35 +585,35 @@
   },
   "2233": {
     "name_cn": "聚能射击",
-    "name_en": "Charged Shot"
+    "name_en": "Powerdraw"
   },
   "2234": {
     "name_cn": "光能轰炸",
-    "name_en": "Photon Bombardment"
+    "name_en": "Radiance Barrage"
   },
   "2235": {
     "name_cn": "威慑射击",
-    "name_en": "Intimidating Shot"
+    "name_en": "Deter Shot"
   },
   "2237": {
     "name_cn": "狂野呼唤",
-    "name_en": "Wildpack"
+    "name_en": "Wildcall"
   },
   "2238": {
     "name_cn": "爆炸射击",
-    "name_en": "Explosive Shot"
+    "name_en": "Blast Shot"
   },
   "2239": {
     "name_cn": "爆炸箭二段",
-    "name_en": "Explosive Arrow 2nd"
+    "name_en": "Explosive Arrow II"
   },
   "2240": {
     "name_cn": "天翔贯星击-强化怒涛射击",
-    "name_en": "Heavenly Pierce - Enhanced Raging Shot"
+    "name_en": "Sky Piercing Star Strike"
   },
   "2241": {
     "name_cn": "天界雄鹰",
-    "name_en": "Falconry"
+    "name_en": "Celestial Eagle"
   },
   "2242": {
     "name_cn": "群兽践踏",
@@ -621,35 +621,35 @@
   },
   "2288": {
     "name_cn": "光能轰炸",
-    "name_en": "Photon Bombardment"
+    "name_en": "Light Bomb"
   },
   "2289": {
     "name_cn": "箭雨",
-    "name_en": "Arrow Rain"
+    "name_en": "Rain of Arrows"
   },
   "2290": {
     "name_cn": "锐眼·光能巨箭-聚怪(天赋)",
-    "name_en": "Keen Eye: Photon Giant Arrow - Gather (Talent)"
+    "name_en": "Sharp Eyes - Light Giant Arrow - Focus Monsters (Talent)"
   },
   "2291": {
     "name_cn": "双星之矢",
-    "name_en": "Twin Star Arrow"
+    "name_en": "Double Star Arrow"
   },
   "2292": {
     "name_cn": "幻影魔狼-扑咬",
-    "name_en": "Phantom Wolf - Bite"
+    "name_en": "Phantom Direwolves"
   },
   "2293": {
     "name_cn": "天赋-光能裂痕",
-    "name_en": "Talent - Photon Rift"
+    "name_en": "Talent: Photon Crack"
   },
   "2294": {
     "name_cn": "光意·四连矢",
-    "name_en": "Photon Intent: Quad Shot"
+    "name_en": "Lethal Shot"
   },
   "2295": {
     "name_cn": "锐眼·光能巨箭（箭阵伤害）",
-    "name_en": "Keen Eye: Photon Giant Arrow (Barrage Damage)"
+    "name_en": "Ultimate - Gravity Gathering Orb"
   },
   "2296": {
     "name_cn": "幻影雄鹰",
@@ -657,19 +657,19 @@
   },
   "2301": {
     "name_cn": "琴弦撩拨-1段",
-    "name_en": "Strum - 1"
+    "name_en": "Resonant Strings"
   },
   "2302": {
     "name_cn": "琴弦撩拨-2段",
-    "name_en": "Strum - 2"
+    "name_en": "Beat Performer ATK_01"
   },
   "2303": {
     "name_cn": "琴弦撩拨-3段",
-    "name_en": "Strum - 3"
+    "name_en": "Beat Performer ATK_03"
   },
   "2304": {
     "name_cn": "琴弦撩拨-4段",
-    "name_en": "Strum - 4"
+    "name_en": "Beat Performer ATK_04"
   },
   "2306": {
     "name_cn": "增幅节拍",
@@ -677,35 +677,35 @@
   },
   "2307": {
     "name_cn": "愈合节拍",
-    "name_en": "Concerto"
+    "name_en": "Healing Beat"
   },
   "2308": {
     "name_cn": "聚合乐章",
-    "name_en": "Convergence Melody"
+    "name_en": "Harmonic Anthem"
   },
   "2309": {
     "name_cn": "烈焰狂想",
-    "name_en": "Flame Rhapsody"
+    "name_en": "Rhapsody of Flame"
   },
   "2310": {
     "name_cn": "鸣奏·英勇乐章",
-    "name_en": "Performance: Heroic Melody"
+    "name_en": "Heroic Melody"
   },
   "2311": {
     "name_cn": "鸣奏·愈合乐章",
-    "name_en": "Performance: Healing Melody"
+    "name_en": "Healing Melody"
   },
   "2312": {
     "name_cn": "激涌五重奏伤害",
-    "name_en": "Surging Quintet Damage"
+    "name_en": "Fivefold Crescendo"
   },
   "2313": {
     "name_cn": "热情挥洒",
-    "name_en": "Passionate Performance"
+    "name_en": "Passion Burst"
   },
   "2314": {
     "name_cn": "升格·劲爆全场",
-    "name_en": "Upgrade: Explosive Stage"
+    "name_en": "Rock the Stage"
   },
   "2315": {
     "name_cn": "安可",
@@ -717,11 +717,11 @@
   },
   "2317": {
     "name_cn": "猛烈挥击1",
-    "name_en": "Fierce Swing 1"
+    "name_en": "Fierce Strike"
   },
   "2318": {
     "name_cn": "完结！愈合乐章",
-    "name_en": "Finale! Healing Melody"
+    "name_en": "Finale! Healing Movement"
   },
   "2319": {
     "name_cn": "音浪潮涌",
@@ -729,23 +729,23 @@
   },
   "2320": {
     "name_cn": "音塔爆炎冲击",
-    "name_en": "Sound Tower Flame Impact"
+    "name_en": "Flame Blast"
   },
   "2321": {
     "name_cn": "琴弦叩击2",
-    "name_en": "String Strike 2"
+    "name_en": "String Strike"
   },
   "2322": {
     "name_cn": "琴弦叩击3",
-    "name_en": "String Strike 3"
+    "name_en": "Beat Performer ATK_02a"
   },
   "2323": {
     "name_cn": "琴弦叩击4",
-    "name_en": "String Strike 4"
+    "name_en": "Beat Performer ATK_03a"
   },
   "2324": {
     "name_cn": "琴弦叩击5",
-    "name_en": "String Strike 5"
+    "name_en": "Beat Performer ATK_04a"
   },
   "2329": {
     "name_cn": "炎舞奏者",
@@ -753,91 +753,91 @@
   },
   "2330": {
     "name_cn": "火柱冲击-炎舞奏者强化",
-    "name_en": "Flame Pillar Impact - Enhanced"
+    "name_en": "Fire Pillar Impact - Flame Dancer Enhancement"
   },
   "2331": {
     "name_cn": "音浪烈焰",
-    "name_en": "Sound Wave Flame"
+    "name_en": "Sonic Flame"
   },
   "2332": {
     "name_cn": "激昂·热情挥洒",
-    "name_en": "Spirited: Passionate Performance"
+    "name_en": "Passion Fury"
   },
   "2335": {
     "name_cn": "升格·无限狂想",
-    "name_en": "Upgrade: Infinite Rhapsody"
+    "name_en": "Infinite Rhapsody"
   },
   "2336": {
     "name_cn": "升格·巡演曲",
-    "name_en": "Upgrade: Tour Melody"
+    "name_en": "Concert Circuit"
   },
   "2352": {
     "name_cn": "天界雄鹰",
-    "name_en": "Falconry"
+    "name_en": "Celestial Eagle - Eagle"
   },
   "2361": {
     "name_cn": "愈合节拍copy",
-    "name_en": "Concerto Copy"
+    "name_en": "Healing Beat copy"
   },
   "2362": {
     "name_cn": "音波裁决",
-    "name_en": "Sonic Judgment"
+    "name_en": "Healing Beat copy"
   },
   "2363": {
     "name_cn": "激涌五重奏copy",
-    "name_en": "Surging Quintet Copy"
+    "name_en": "Healing Beat copy"
   },
   "2364": {
     "name_cn": "升格·劲爆全场copy",
-    "name_en": "Upgrade: Explosive Stage Copy"
+    "name_en": "Rock the Stage copy"
   },
   "2365": {
     "name_cn": "升格·无限狂想copy",
-    "name_en": "Upgrade: Infinite Rhapsody Copy"
+    "name_en": "Infinite Rhapsody copy"
   },
   "2366": {
     "name_cn": "升格·巡演曲copy",
-    "name_en": "Upgrade: Tour Melody Copy"
+    "name_en": "Concert Circuit copy"
   },
   "2399": {
     "name_cn": "音响奶棍",
-    "name_en": "Sound Staff"
+    "name_en": "Sound Healing Staff"
   },
   "2401": {
     "name_cn": "公正之剑-1段",
-    "name_en": "Sword of Justice - 1"
+    "name_en": "Blade of Justice"
   },
   "2402": {
     "name_cn": "公正之剑-2段",
-    "name_en": "Sword of Justice - 2"
+    "name_en": "Sword of Justice - Stage 2"
   },
   "2403": {
     "name_cn": "公正之剑-3段",
-    "name_en": "Sword of Justice - 3"
+    "name_en": "Sword of Justice - Stage 3"
   },
   "2404": {
     "name_cn": "公正之剑-4段",
-    "name_en": "Sword of Justice - 4"
+    "name_en": "Sword of Justice - Stage 4"
   },
   "2405": {
     "name_cn": "英勇盾击",
-    "name_en": "Heroic Shield Strike"
+    "name_en": "Valor Bash"
   },
   "2406": {
     "name_cn": "先锋打击/先锋追击",
-    "name_en": "Vanguard Strike/Pursuit"
+    "name_en": "Vanguard Strike"
   },
   "2407": {
     "name_cn": "凛威·圣光灌注",
-    "name_en": "Might: Holy Infusion"
+    "name_en": "Radiant Infusion"
   },
   "2408": {
     "name_cn": "投掷盾牌",
-    "name_en": "Shield Throw"
+    "name_en": "Shield Toss"
   },
   "2409": {
     "name_cn": "圣环",
-    "name_en": "Holy Ring"
+    "name_en": "Divine Circle"
   },
   "2410": {
     "name_cn": "裁决",
@@ -845,7 +845,7 @@
   },
   "2411": {
     "name_cn": "灼热裁决",
-    "name_en": "Burning Judgment"
+    "name_en": "Scorching Judgment"
   },
   "2412": {
     "name_cn": "清算",
@@ -853,71 +853,71 @@
   },
   "2413": {
     "name_cn": "炽热清算",
-    "name_en": "Blazing Reckoning"
+    "name_en": "Inferno Reckon"
   },
   "2414": {
     "name_cn": "神圣壁垒",
-    "name_en": "Divine Barrier"
+    "name_en": "Holy Barrier"
   },
   "2415": {
     "name_cn": "圣光守卫",
-    "name_en": "Holy Guardian"
+    "name_en": "Aegis Ward"
   },
   "2416": {
     "name_cn": "断罪",
-    "name_en": "Conviction"
+    "name_en": "Condemn"
   },
   "2417": {
     "name_cn": "强化断罪",
-    "name_en": "Enhanced Conviction"
+    "name_en": "Enhanced Condemn"
   },
   "2419": {
     "name_cn": "冷酷征伐",
-    "name_en": "Ruthless Crusade"
+    "name_en": "Zeal Crusade"
   },
   "2420": {
     "name_cn": "光明决心",
-    "name_en": "Light's Resolve"
+    "name_en": "Radiance"
   },
   "2421": {
     "name_cn": "圣剑",
-    "name_en": "Holy Sword"
+    "name_en": "Sacred Blade"
   },
   "2425": {
     "name_cn": "投掷盾牌",
-    "name_en": "Shield Throw"
+    "name_en": "Shield Toss"
   },
   "2450": {
     "name_cn": "光明冲击",
-    "name_en": "Light Impact"
+    "name_en": "Bright Blast"
   },
   "2451": {
     "name_cn": "裁决(神圣触发)",
-    "name_en": "Judgment (Divine Trigger)"
+    "name_en": "Judgment (Holy Trigger)"
   },
   "2452": {
     "name_cn": "灼热裁决圣剑",
-    "name_en": "Burning Judgment Holy Sword"
+    "name_en": "Scorching Judgment Sacred Blade"
   },
   "3698": {
     "name_cn": "风哥布林王(被动)",
-    "name_en": null
+    "name_en": "Wind Goblin King (Passive)"
   },
   "3901": {
     "name_cn": "奥义！琉火咆哮(火魔)",
-    "name_en": null
+    "name_en": "Arcane! Flame Roar"
   },
   "3925": {
     "name_cn": "绝技！无形冲击(巨魔)",
-    "name_en": null
+    "name_en": "Stunt! Invisible Impact"
   },
   "20301": {
     "name_cn": "生命绽放",
-    "name_en": "Life Bloom"
+    "name_en": "Life Blossom"
   },
   "21402": {
     "name_cn": "狂野绽放",
-    "name_en": "Wild Bloom"
+    "name_en": "Wild Blossom"
   },
   "21404": {
     "name_cn": "滋养",
@@ -929,7 +929,7 @@
   },
   "21414": {
     "name_cn": "希望结界持续",
-    "name_en": "Barrier of Hope Duration"
+    "name_en": "Holy Barrier Lasts"
   },
   "21418": {
     "name_cn": "鹿之奔袭",
@@ -945,79 +945,83 @@
   },
   "21427": {
     "name_cn": "惩击奶空A1段",
-    "name_en": "Punish Basic Attack 1"
+    "name_en": "Smite Healing Misses A1"
   },
   "21428": {
     "name_cn": "惩击奶空A2段",
-    "name_en": "Punish Basic Attack 2"
+    "name_en": "Smite Healing Misses A2"
   },
   "21429": {
     "name_cn": "惩击奶空A3段",
-    "name_en": "Punish Basic Attack 3"
+    "name_en": "Smite Healing Misses A3"
   },
   "21430": {
     "name_cn": "惩击奶空A4段",
-    "name_en": "Punish Basic Attack 4"
+    "name_en": "Smite Healing Misses A4"
   },
   "27009": {
     "name_cn": "冰箱BUFF",
-    "name_en": "Ice Barrier Buff"
+    "name_en": "Ice Buff"
   },
   "31901": {
     "name_cn": "勇气风环",
-    "name_en": "Courage Wind Ring"
+    "name_en": "Wind Ring of Courage"
   },
   "44701": {
     "name_cn": "月刃",
     "name_en": "Moon Blade"
   },
+  "50033": {
+    "name_cn": null,
+    "name_en": "Gather Monsters"
+  },
   "50036": {
     "name_cn": "弱点打击",
-    "name_en": "Weak Point Strike"
+    "name_en": "Weak Spot Strike"
   },
   "50037": {
     "name_cn": "格挡反击",
-    "name_en": "Guard Counter"
+    "name_en": "Block Counterattack"
   },
   "50049": {
     "name_cn": "砂石斗篷（持续）",
-    "name_en": "Sandstone Cloak (Duration)"
+    "name_en": "Sandstone Cloak (Persistent)"
   },
   "50068": {
     "name_cn": "格挡反击--强",
-    "name_en": "Guard Counter - Strong"
+    "name_en": "Block Counterattack - Strong"
   },
   "55231": {
     "name_cn": "爆炸箭BUFF引爆",
-    "name_en": "Explosive Arrow Buff Detonation"
+    "name_en": "Explosive Arrow Buff Detonates"
   },
   "55235": {
     "name_cn": "光意·四连矢（溅射伤害）",
-    "name_en": "Photon Intent: Quad Shot (Splash)"
+    "name_en": "Light Will - Quadruple Arrow (Splash Damage)"
   },
   "55236": {
     "name_cn": "强化特攻最后一击虚拟体",
-    "name_en": "Enhanced Special Attack Final"
+    "name_en": "Strengthened Special Attack Final Attack Avatar"
   },
   "55238": {
     "name_cn": "弓-大招引力",
-    "name_en": "Bow - Ultimate Gravity"
+    "name_en": "Bow - Ultimate Attraction"
   },
   "55239": {
     "name_cn": "光能凝滞定身BUFF",
-    "name_en": "Photon Stasis Root"
+    "name_en": "Light Stasis Immobilization Buff"
   },
   "55240": {
     "name_cn": "光能轰炸伤害区域BUFF",
-    "name_en": "Photon Bombardment Damage Zone"
+    "name_en": "Light Bombardment Area-of-effect Buff"
   },
   "55301": {
     "name_cn": "烈焰狂想",
-    "name_en": "Flame Rhapsody"
+    "name_en": "Flame Fantasy"
   },
   "55302": {
     "name_cn": "愈合节拍",
-    "name_en": "Concerto"
+    "name_en": "Healing Rhythm"
   },
   "55304": {
     "name_cn": "激涌五重奏",
@@ -1025,7 +1029,7 @@
   },
   "55311": {
     "name_cn": "安可曲转化",
-    "name_en": "Encore Conversion"
+    "name_en": "Encore Transformation"
   },
   "55314": {
     "name_cn": "安可",
@@ -1033,35 +1037,35 @@
   },
   "55328": {
     "name_cn": "万众瞩目激涌五重奏弹奏翻倍",
-    "name_en": "Center Stage Surging Quintet Double"
+    "name_en": "Double Play of the Highly Anticipated Surge Quintet"
   },
   "55335": {
     "name_cn": "万众瞩目热情挥洒3阶段",
-    "name_en": "Center Stage Passionate Performance 3"
+    "name_en": "Highly Anticipated Passionate Stage 3"
   },
   "55339": {
     "name_cn": "升格·巡演曲",
-    "name_en": "Upgrade: Tour Melody"
+    "name_en": "Upgrade - Tour Song"
   },
   "55341": {
     "name_cn": "英勇乐章",
-    "name_en": "Heroic Melody"
+    "name_en": "Heroic Movement"
   },
   "55342": {
     "name_cn": "愈合乐章",
-    "name_en": "Healing Melody"
+    "name_en": "Healing Movement"
   },
   "55344": {
     "name_cn": "升格·劲爆全场",
-    "name_en": "Upgrade: Explosive Stage"
+    "name_en": "Upgrade: Blast the Field"
   },
   "55346": {
     "name_cn": "升格·无限狂想",
-    "name_en": "Upgrade: Infinite Rhapsody"
+    "name_en": "Upgrade: Infinite Fantasy"
   },
   "55355": {
     "name_cn": "休止的治愈",
-    "name_en": "Rest Healing"
+    "name_en": "Ceasing Healing"
   },
   "55404": {
     "name_cn": "圣环BUFF",
@@ -1085,39 +1089,39 @@
   },
   "55432": {
     "name_cn": "冷冷酷征伐伤害buff",
-    "name_en": "Cold Ruthless Crusade Damage Buff"
+    "name_en": "Cold and Ruthless Crusade Damage Buff"
   },
   "100730": {
     "name_cn": "哥布林弩手主动",
-    "name_en": null
+    "name_en": "Goblin Crossbowman Active"
   },
   "101112": {
     "name_cn": "宠物雄鹰快速回旋",
-    "name_en": null
+    "name_en": "Companion Eagle Quick Spin"
   },
   "102640": {
     "name_cn": "绝技！猪突猛进(威猛野猪)",
-    "name_en": null
+    "name_en": "Stunt! Boarrier Rush"
   },
   "120201": {
     "name_cn": "雨打潮生-转弯子弹",
-    "name_en": "Flowing Surge - Curved Shot"
+    "name_en": "Rain and Tide - Curved Bullet"
   },
   "120301": {
     "name_cn": "雨打潮生-最后一击",
-    "name_en": "Flowing Surge - Final Strike"
+    "name_en": "Rain and Tide - Final Blow"
   },
   "120401": {
     "name_cn": "雨打潮生-普攻1段",
-    "name_en": "Flowing Surge - Attack 1"
+    "name_en": "Rain and Tide - Normal Attack Stage 1"
   },
   "120501": {
     "name_cn": "雨打潮生",
-    "name_en": "Flowing Surge"
+    "name_en": "Rain and Tide"
   },
   "120901": {
     "name_cn": "贯穿冰矛",
-    "name_en": "Piercing Ice Spear"
+    "name_en": "Ice Spear Piercing"
   },
   "120902": {
     "name_cn": "冰矛",
@@ -1129,7 +1133,7 @@
   },
   "121501": {
     "name_cn": "清滝绕珠",
-    "name_en": "Clear Waterfall"
+    "name_en": "Kiyaki Roping Pearl"
   },
   "140301": {
     "name_cn": "神影螺旋",
@@ -1137,7 +1141,7 @@
   },
   "140401": {
     "name_cn": "龙击炮",
-    "name_en": "Dragon Strike Cannon"
+    "name_en": "Dragon Blast Cannon"
   },
   "140501": {
     "name_cn": "龙卷风",
@@ -1145,7 +1149,7 @@
   },
   "141104": {
     "name_cn": "变异蜂主动a1",
-    "name_en": null
+    "name_en": "Mutant Bee Active A1"
   },
   "149901": {
     "name_cn": "风螺旋/螺旋引爆",
@@ -1153,11 +1157,11 @@
   },
   "149902": {
     "name_cn": "长矛贯穿",
-    "name_en": "Spear Pierce"
+    "name_en": "Spear Piercing"
   },
   "149904": {
     "name_cn": "蒂娜龙卷",
-    "name_en": "Tina's Tornado"
+    "name_en": "Tina Tornado"
   },
   "149905": {
     "name_cn": "飞鸟投",
@@ -1165,7 +1169,7 @@
   },
   "149906": {
     "name_cn": "极·岚切",
-    "name_en": "Ultimate: Storm Slash"
+    "name_en": "Extreme Storm Cut"
   },
   "149907": {
     "name_cn": "锐利冲击(风神)",
@@ -1177,11 +1181,11 @@
   },
   "150103": {
     "name_cn": "不羁之种1段",
-    "name_en": "Unbound Seed 1"
+    "name_en": "Unruly Seed Stage 1"
   },
   "150104": {
     "name_cn": "不羁之种2段",
-    "name_en": "Unbound Seed 2"
+    "name_en": "Unruly Seed Stage 2"
   },
   "150106": {
     "name_cn": "灌注(左手)",
@@ -1193,51 +1197,51 @@
   },
   "150110": {
     "name_cn": "灌注(双重灌注额外部分)",
-    "name_en": "Infusion (Dual Extra)"
+    "name_en": "Infusion (Double Infusion Extra)"
   },
   "155101": {
     "name_cn": "雷切",
-    "name_en": "Thunder Slash"
+    "name_en": "Thundercut - Iai"
   },
   "155102": {
     "name_cn": "雷切-最后一击",
-    "name_en": "Thunder Slash - Final Strike"
+    "name_en": "Thundercut - Final Attack"
   },
   "179904": {
     "name_cn": "神影斩-最后一击",
-    "name_en": "Divine Shadow Slash - Final Strike"
+    "name_en": "Divine Shadow Slash - Final Attack"
   },
   "179906": {
     "name_cn": "月刃回旋",
-    "name_en": "Moonstrike Spin"
+    "name_en": "Moon Blade Spin"
   },
   "179907": {
     "name_cn": "刃风界域",
-    "name_en": "Blade Wind Domain"
+    "name_en": "Blade Wind Realm"
   },
   "179908": {
     "name_cn": "刀意雷击",
-    "name_en": "Blade Intent Thunder"
+    "name_en": "Thunder Strike"
   },
   "199902": {
     "name_cn": "地崩山摧",
-    "name_en": "Earth Crusher"
+    "name_en": "Rage Burst Stone"
   },
   "199903": {
     "name_cn": "巨岩轰击",
-    "name_en": "Boulder Slam"
+    "name_en": "Stone Fist"
   },
   "220101": {
     "name_cn": "弹无虚发",
-    "name_en": "Perfect Shot"
+    "name_en": "Every Shot Targets"
   },
   "220102": {
     "name_cn": "怒涛射击",
-    "name_en": "Raging Shot"
+    "name_en": "Raging Wave Shooting"
   },
   "220103": {
     "name_cn": "弹无虚发-最后一击",
-    "name_en": "Perfect Shot - Final Strike"
+    "name_en": "Unerring Hit - Final Blow"
   },
   "220104": {
     "name_cn": "二连矢/暴风箭矢",
@@ -1245,7 +1249,7 @@
   },
   "220105": {
     "name_cn": "光追箭",
-    "name_en": "Light Chase Arrow"
+    "name_en": "Light Pursuit Arrow"
   },
   "220106": {
     "name_cn": "空中射击",
@@ -1269,11 +1273,11 @@
   },
   "220111": {
     "name_cn": "光意·四连矢",
-    "name_en": "Photon Intent: Quad Shot"
+    "name_en": "Light Will - Quadruple Arrow"
   },
   "220112": {
     "name_cn": "光能裂隙",
-    "name_en": "Photon Rift"
+    "name_en": "Light Rift"
   },
   "220113": {
     "name_cn": "幻影猎鹰",
@@ -1281,35 +1285,35 @@
   },
   "220203": {
     "name_cn": "光意·四连矢",
-    "name_en": "Photon Intent: Quad Shot"
+    "name_en": "Light Will - Quadruple Arrow"
   },
   "220301": {
     "name_cn": "锐眼·光能巨箭（箭矢伤害）",
-    "name_en": "Keen Eye: Photon Giant Arrow (Arrow Damage)"
+    "name_en": "Sharp Eyes - Light Giant Arrow (Arrow Damage)"
   },
   "221101": {
     "name_cn": "弹无虚发-红光反制",
-    "name_en": "Perfect Shot - Counter"
+    "name_en": "Unerring Hit - Red Light Counter"
   },
   "230101": {
     "name_cn": "聚合乐章单段",
-    "name_en": "Convergence Melody 1"
+    "name_en": "Aggregate Melody Single Segment"
   },
   "230102": {
     "name_cn": "聚合乐章二段",
-    "name_en": "Convergence Melody 2"
+    "name_en": "Aggregate Movement Section 2"
   },
   "230103": {
     "name_cn": "聚合乐章三段",
-    "name_en": "Convergence Melody 3"
+    "name_en": "Aggregate Movement Section 3"
   },
   "230104": {
     "name_cn": "聚合乐章四段",
-    "name_en": "Convergence Melody 4"
+    "name_en": "Aggregate Movement Section 4"
   },
   "230105": {
     "name_cn": "炎律狂踏伤害",
-    "name_en": "Flame Rhythm Stomp Damage"
+    "name_en": "Flame Rhythm Stomping Damage"
   },
   "230106": {
     "name_cn": "烈焰音符伤害",
@@ -1321,7 +1325,7 @@
   },
   "230501": {
     "name_cn": "无限连奏安可伤害",
-    "name_en": "Infinite Performance Encore"
+    "name_en": "Infinite Legato Encore Damage"
   },
   "231001": {
     "name_cn": "烈焰狂想伤害",
@@ -1329,231 +1333,259 @@
   },
   "240101": {
     "name_cn": "投掷盾牌",
-    "name_en": "Shield Throw"
+    "name_en": "Throw Shield"
   },
   "240102": {
     "name_cn": "光明决心",
-    "name_en": "Light's Resolve"
+    "name_en": "Bright Resolve"
   },
   "391001": {
     "name_cn": "绝技! 纷乱飞弹(虚蚀食人魔)1",
-    "name_en": null
+    "name_en": "Special Skill! Chaos Missiles (Void Ogre) 1"
   },
   "391002": {
     "name_cn": "绝技! 纷乱飞弹(虚蚀食人魔)2",
-    "name_en": null
+    "name_en": "Special Skill! Chaos Missiles (Void Ogre) 2"
   },
   "391003": {
     "name_cn": "绝技! 纷乱飞弹(虚蚀食人魔)3",
-    "name_en": null
+    "name_en": "Special Skill! Chaos Missiles (Void Ogre) 3"
   },
   "391004": {
     "name_cn": "绝技! 纷乱飞弹(虚蚀食人魔)4",
-    "name_en": null
+    "name_en": "Special Skill! Chaos Missiles (Void Ogre) 4"
   },
   "391005": {
     "name_cn": "绝技! 纷乱飞弹(虚蚀食人魔)5",
-    "name_en": null
+    "name_en": "Special Skill! Chaos Missiles (Void Ogre) 5"
   },
   "391006": {
     "name_cn": "绝技! 纷乱飞弹(虚蚀食人魔)6",
-    "name_en": null
+    "name_en": "Special Skill! Chaos Missiles (Void Ogre) 6"
   },
   "391007": {
     "name_cn": "哥布林弩手被动",
-    "name_en": null
+    "name_en": "Goblin Crossbowman Passive"
   },
   "391008": {
     "name_cn": "变异蜂被动",
-    "name_en": null
+    "name_en": "Mutant Bee Passive"
   },
   "391301": {
     "name_cn": "绝技! 电磁爆弹(枪手)",
-    "name_en": null
+    "name_en": "Special Skill! Electromagnetic Bomb (Gunner)"
   },
   "391401": {
     "name_cn": "虚蚀脉冲",
-    "name_en": null
+    "name_en": "Void Pulse"
+  },
+  "683624": {
+    "name_cn": null,
+    "name_en": "Continuous Health Regeneration BUFF"
+  },
+  "700013": {
+    "name_cn": null,
+    "name_en": "Dark Eclipse"
   },
   "701001": {
     "name_cn": "虚蚀之影爆炸",
-    "name_en": null
+    "name_en": "Void Shadow Explosion"
   },
   "701002": {
     "name_cn": "虚蚀波动爆炸",
-    "name_en": null
+    "name_en": "Void Wave Explosion"
   },
   "1002440": {
     "name_cn": "绝技！超会心(姆克兵长)",
-    "name_en": null
+    "name_en": "Stunt! Super Critical"
   },
   "1002830": {
     "name_cn": "奥义！冰霜震荡(冰魔)",
-    "name_en": null
+    "name_en": "Arcane! Frostquake"
   },
   "1005240": {
     "name_cn": "绝技! 追猎猛斩(尖兵)",
-    "name_en": null
+    "name_en": "Stunt! Predator Slash"
   },
   "1005940": {
     "name_cn": "姆克狂战士-旋风冲锋",
-    "name_en": null
+    "name_en": "Muku Vanguard - Whirlwind Charge"
   },
   "1006940": {
     "name_cn": "奥义! 茧房术(蜘蛛)",
-    "name_en": null
+    "name_en": "Arcane! Cocoon Tech"
   },
   "1007601": {
     "name_cn": "变异蜂技能12",
-    "name_en": null
+    "name_en": "Void Bzzar Basic Attack"
   },
   "1007602": {
     "name_cn": "变异蜂技能3",
-    "name_en": null
+    "name_en": "Void Bzzar - Big Explosion"
   },
   "1007741": {
     "name_cn": "剧毒蜂巢（初始）",
-    "name_en": null
+    "name_en": "Arcane! Poison Explosion Avatar"
   },
   "1008040": {
     "name_cn": "绝技! 雷光球(雷光野猪)",
-    "name_en": null
+    "name_en": "Stunt! Thunder Ball"
   },
   "1008140": {
     "name_cn": "奥义！地狱突刺(铁牙)",
-    "name_en": null
+    "name_en": "Ultimate - Hell Stab"
   },
   "1008440": {
     "name_cn": "奥义! 沧澜风啸(飞鱼)",
-    "name_en": null
+    "name_en": "Arcane! Azure Gale"
   },
   "1008540": {
     "name_cn": "奥义！静默潮汐(蜥蜴人王)",
-    "name_en": null
+    "name_en": "Arcane! Silent Tide"
   },
   "1008641": {
     "name_cn": "绝技！旋风打击(小风哥)",
-    "name_en": null
+    "name_en": "Stunt! Whirlwind Strike"
   },
   "1010440": {
     "name_cn": "绝技！强压之雷(蜥蜴人猎手)(主动)",
-    "name_en": null
+    "name_en": "Stunt! Thunder Suppress"
   },
   "1700440": {
     "name_cn": "奥义！重锤狂袭（姆头）",
-    "name_en": null
+    "name_en": "Arcane! Furious Hammer"
   },
   "1700820": {
     "name_cn": "狼协同攻击",
-    "name_en": "Wolf Cooperative Attack"
+    "name_en": "Wolf Coordinated Attack"
   },
   "1700824": {
     "name_cn": "甩尾",
-    "name_en": "Tail Swipe"
+    "name_en": "Tail Drift"
   },
   "1700825": {
     "name_cn": "狼突击",
-    "name_en": "Wolf Rush"
+    "name_en": "Companion - Foxen Pounce"
   },
   "1700826": {
     "name_cn": "狂野召唤",
-    "name_en": "Wild Summon"
+    "name_en": "Companion - Powerful Pounce"
   },
   "1700827": {
     "name_cn": "狼普攻",
-    "name_en": "Wolf Basic Attack"
+    "name_en": "Companion - Basic Attack"
   },
   "2001740": {
     "name_cn": "绝技！瞬步奇袭（山贼斥候）",
-    "name_en": null
+    "name_en": "Stunt! Blink Ambush"
   },
   "2002440": {
     "name_cn": "奥义！雷霆天牢引（雷魔）",
-    "name_en": null
+    "name_en": "Arcane! Thunderfall Grasp"
   },
   "2002853": {
     "name_cn": "绝技！碎星陨落（火哥）",
-    "name_en": null
+    "name_en": "Special Skill! Falling Stars (Fire Brother)"
   },
   "2031101": {
     "name_cn": "幸运一击(太刀)",
-    "name_en": "Lucky Hit (Stormblade)"
+    "name_en": "Lucky Strike (Stormblade)"
   },
   "2031102": {
     "name_cn": "幸运一击(冰法)",
-    "name_en": "Lucky Hit (Frost Mage)"
+    "name_en": "Lucky Strike (Frost Mage)"
   },
   "2031104": {
     "name_cn": "幸运一击(长枪)",
-    "name_en": "Lucky Hit (Wind Knight)"
+    "name_en": "Lucky Strike (Wind Knight)"
   },
   "2031105": {
     "name_cn": "幸运一击(森语)",
-    "name_en": "Lucky Hit (Verdant Oracle)"
+    "name_en": "Lucky Strike (Verdant Oracle)"
   },
   "2031106": {
     "name_cn": "幸运一击(手炮)",
-    "name_en": "Lucky Hit (Heavy Guardian)"
+    "name_en": "Lucky Strike (Hand Cannon)"
   },
   "2031107": {
     "name_cn": "幸运一击(巨刃)",
-    "name_en": "Lucky Hit (Fire Axe)"
+    "name_en": "Lucky Strike (Heavy Guardian)"
   },
   "2031108": {
     "name_cn": "幸运一击(仪刀)",
-    "name_en": "Lucky Hit (Spirit Dancer)"
+    "name_en": "Lucky Strike (Ceremony Sword)"
   },
   "2031109": {
     "name_cn": "幸运一击(弓箭)",
-    "name_en": "Lucky Hit (Marksman)"
+    "name_en": "Lucky Strike (Marksman)"
   },
   "2031110": {
     "name_cn": "幸运一击(剑盾)",
-    "name_en": "Lucky Hit (Shield Knight)"
+    "name_en": "Lucky Strike (Shield Knight)"
   },
   "2031111": {
     "name_cn": "幸运一击(吉他)",
-    "name_en": "Lucky Hit (Beat Performer)"
+    "name_en": "Lucky Strike (Beat Performer)"
   },
   "2110012": {
     "name_cn": "奥义！脉冲祝祷（姆克王）",
-    "name_en": null
+    "name_en": "Ultimate! Pulse Blessing (King M'k)"
+  },
+  "2110062": {
+    "name_cn": null,
+    "name_en": "Roaring Command (Goblin King Summons Greataxe Goblins)"
   },
   "2110066": {
     "name_cn": "绝技！大地之盾(山贼护卫队长)",
-    "name_en": null
+    "name_en": "Special Skill! Earth Shield (Bandit Guard Captain)"
+  },
+  "2110071": {
+    "name_cn": null,
+    "name_en": "Boar King's Chain Lightning Primary Buff"
+  },
+  "2110072": {
+    "name_cn": null,
+    "name_en": "Boar King's Chain Lightning Variable A"
+  },
+  "2110073": {
+    "name_cn": null,
+    "name_en": "Boar King's Chain Lightning Variable B"
+  },
+  "2110074": {
+    "name_cn": null,
+    "name_en": "Boar King's Chain Lightning Variable C - Hit Effect"
   },
   "2110083": {
     "name_cn": "火魔治疗",
-    "name_en": null
+    "name_en": "Fire Healing"
   },
   "2110085": {
     "name_cn": "雷电之种(奥尔维拉)",
-    "name_en": null
+    "name_en": "Thunder Seed (Olvera)"
   },
   "2110090": {
     "name_cn": "虚蚀食人魔",
-    "name_en": null
+    "name_en": "Void Ogre"
   },
   "2110091": {
     "name_cn": "虚蚀伤害",
-    "name_en": null
+    "name_en": "Void Damage Converted to Healing"
   },
   "2110096": {
     "name_cn": "奥义！雷霆咆哮(金牙)(雷击)",
-    "name_en": null
+    "name_en": "Ultimate! Thunder Roar (Gold Fang) (Thunder Strike)"
   },
   "2110099": {
     "name_cn": "剧毒蜂巢（持续）",
-    "name_en": null
+    "name_en": "Toxic Hive (Persistent)"
   },
   "2201070": {
     "name_cn": "格挡减伤",
-    "name_en": "Guard Damage Reduction"
+    "name_en": "Block Damage Reduction"
   },
   "2201080": {
     "name_cn": "格挡回复",
-    "name_en": "Guard Recovery"
+    "name_en": "Block Recovery"
   },
   "2201172": {
     "name_cn": "坚毅之息",
@@ -1577,35 +1609,35 @@
   },
   "2201570": {
     "name_cn": "岩护",
-    "name_en": "Rock Guard"
+    "name_en": "Rock Shield"
   },
   "2202091": {
     "name_cn": "治疗:治疗链接",
-    "name_en": "Healing: Chain Link"
+    "name_en": "Healing: Heal Link"
   },
   "2202120": {
     "name_cn": "艾露娜护盾",
-    "name_en": "Eluna Shield"
+    "name_en": "Eluna's Shield"
   },
   "2202211": {
     "name_cn": "绿意之爆发（治疗）",
-    "name_en": "Verdant Burst (Healing)"
+    "name_en": "Green Burst (Healing)"
   },
   "2202262": {
     "name_cn": "复苏光环回血BUFF",
-    "name_en": "Recovery Aura HP Regen"
+    "name_en": "Recovery Aura Health Buff"
   },
   "2202271": {
     "name_cn": "天降圣光生效BUFF",
-    "name_en": "Descending Holy Light"
+    "name_en": "Holy Light from Heaven Activates Buff"
   },
   "2202291": {
     "name_cn": "生命馈赠-治疗子buff",
-    "name_en": "Life Gift - Sub Buff"
+    "name_en": "Life Gift - Healing Sub-Buff"
   },
   "2202311": {
     "name_cn": "治疗:滋养之种",
-    "name_en": "Healing: Seed of Nourishment"
+    "name_en": "Healing: Nourishing Seed"
   },
   "2202581": {
     "name_cn": "坍缩！boom~",
@@ -1617,7 +1649,7 @@
   },
   "2203091": {
     "name_cn": "生命流失（扑咬引爆）",
-    "name_en": "Life Drain (Bite Trigger)"
+    "name_en": "Life Drain (Bite Detonation)"
   },
   "2203101": {
     "name_cn": "生命流失",
@@ -1625,15 +1657,15 @@
   },
   "2203102": {
     "name_cn": "生命流失（协同攻击引爆）",
-    "name_en": "Life Drain (Cooperative Attack Trigger)"
+    "name_en": "Life Drain (Coordinated Attack Detonation)"
   },
   "2203141": {
     "name_cn": "生命流失（光追箭引爆）",
-    "name_en": "Life Drain (Light Chase Arrow Trigger)"
+    "name_en": "Life Drain (Ray Arrow Detonation)"
   },
   "2203181": {
     "name_cn": "闪电冲击",
-    "name_en": "Lightning Impact"
+    "name_en": "Lightning Shock"
   },
   "2203291": {
     "name_cn": "猎鹰出击",
@@ -1641,7 +1673,7 @@
   },
   "2203302": {
     "name_cn": "生命流失（扫尾引爆）",
-    "name_en": "Life Drain (Tail Swipe Trigger)"
+    "name_en": "Life Drain (Tail Sweep Detonation)"
   },
   "2203311": {
     "name_cn": "爆炸箭矢（溅射）",
@@ -1649,7 +1681,7 @@
   },
   "2203512": {
     "name_cn": "践踏",
-    "name_en": "Trample"
+    "name_en": "Trampled"
   },
   "2203521": {
     "name_cn": "内爆(钢制喙触发)",
@@ -1657,71 +1689,83 @@
   },
   "2203621": {
     "name_cn": "光棱",
-    "name_en": "Light Prism"
+    "name_en": "Prism"
   },
   "2203622": {
     "name_cn": "光棱溅射",
-    "name_en": "Light Prism Splash"
+    "name_en": "Prism Splash"
   },
   "2204081": {
     "name_cn": "冰箭爆炸",
-    "name_en": "Ice Arrow Explosion"
+    "name_en": "Frostbolt Explosion"
   },
   "2204241": {
     "name_cn": "冰霜冲击",
-    "name_en": "Frost Impact"
+    "name_en": "Frost Blast"
   },
   "2204320": {
     "name_cn": "冰冷脉冲",
-    "name_en": "Frost Pulse"
+    "name_en": "Icy Pulse"
+  },
+  "2205060": {
+    "name_cn": null,
+    "name_en": "Fierce Strike"
   },
   "2205071": {
     "name_cn": "撕裂",
-    "name_en": "Rend"
+    "name_en": "Rip"
   },
   "2205450": {
     "name_cn": "勇气风环吸血",
-    "name_en": "Courage Wind Ring Lifesteal"
+    "name_en": "Wind Ring of Courage Lifesteal"
   },
   "2206240": {
     "name_cn": "神圣光辉",
-    "name_en": "Divine Radiance"
+    "name_en": "Holy Radiance"
   },
   "2206241": {
     "name_cn": "神圣印记",
-    "name_en": "Divine Mark"
+    "name_en": "Holy Mark"
+  },
+  "2206243": {
+    "name_cn": null,
+    "name_en": "Holy Mark Damage"
   },
   "2206401": {
     "name_cn": "神圣之击",
-    "name_en": "Divine Strike"
+    "name_en": "Holy Strike"
+  },
+  "2206460": {
+    "name_cn": null,
+    "name_en": "Shield Ward"
   },
   "2206552": {
     "name_cn": "光明核心",
-    "name_en": "Light Core"
+    "name_en": "Core of Light"
   },
   "2207141": {
     "name_cn": "音符",
-    "name_en": "Musical Note"
+    "name_en": "Musical Notes"
   },
   "2207151": {
     "name_cn": "炽焰治愈",
-    "name_en": "Blazing Heal"
+    "name_en": "Fiery Healing"
   },
   "2207431": {
     "name_cn": "炎律狂踏治疗",
-    "name_en": "Flame Rhythm Stomp Healing"
+    "name_en": "Flame Law Healing"
   },
   "2207500": {
     "name_cn": "极意万众瞩目",
-    "name_en": "Ultimate Center Stage"
+    "name_en": "Ultimate Attention"
   },
   "2207620": {
     "name_cn": "活力解放",
-    "name_en": "Vitality Release"
+    "name_en": "Energy Release"
   },
   "2207660": {
     "name_cn": "极意万众瞩目",
-    "name_en": "Ultimate Center Stage"
+    "name_en": "Ultimate Attention"
   },
   "2207681": {
     "name_cn": "螺旋演奏",
@@ -1729,11 +1773,11 @@
   },
   "2406140": {
     "name_cn": "获得护盾时造成aoe（套装）",
-    "name_en": "Shield AOE (Set Bonus)"
+    "name_en": "Causes AoE when gaining a shield (Set)"
   },
   "2900540": {
     "name_cn": "奥义！瞬即斩(奥尔维拉)",
-    "name_en": null
+    "name_en": "Arcane! Flash Execution"
   },
   "3001031": {
     "name_cn": "虚蚀光环",
@@ -1741,50 +1785,50 @@
   },
   "3001170": {
     "name_cn": "虚蚀波动回血",
-    "name_en": "Void Wave HP Regen"
+    "name_en": "Void Wave Health Recovery"
   },
   "3081023": {
     "name_cn": "绝技! 超重斩(黯影剑士队长)",
-    "name_en": null
+    "name_en": "Stunt! Heavy Slash"
   },
   "3210021": {
     "name_cn": "奥义！流星陨落(风哥)(主动)",
-    "name_en": null
+    "name_en": "Ultimate! Meteor Fall (Wind Brother) (Active)"
   },
   "3210031": {
     "name_cn": "雷魔被动",
-    "name_en": null
+    "name_en": "Thunder Demon Passive"
   },
   "3210051": {
     "name_cn": "山贼被动",
-    "name_en": null
+    "name_en": "Bandit Passive"
   },
   "3210061": {
     "name_cn": "姆克兵长被动",
-    "name_en": null
+    "name_en": "Captain M'kor Passive"
   },
   "3210081": {
     "name_cn": "蜥蜴人猎手被动",
-    "name_en": null
+    "name_en": "Lizardman Hunter Passive"
   },
   "3210092": {
     "name_cn": "蜥蜴人王被动",
-    "name_en": null
+    "name_en": "Lizardman King Passive"
   },
   "3210101": {
     "name_cn": "姆克王-护盾",
-    "name_en": null
+    "name_en": "King M'kor - Shield"
   },
   "3913001": {
     "name_cn": "绝技! 电磁爆弹(枪手)",
-    "name_en": null
+    "name_en": "Special Skill! Electromagnetic Bomb (Gunner)"
   },
   "3936001": {
     "name_cn": "绝技！静默之水(蜥蜴人法师)",
-    "name_en": null
+    "name_en": "Murloc Mage Silence Pool"
   },
   "10040102": {
     "name_cn": "剑盾哥布林-风刃斩共鸣",
-    "name_en": null
+    "name_en": "Sword and Shield Goblin - Wind Blade Resonance"
   }
 }

@@ -235,7 +235,7 @@ class StatisticData {
 }
 
 class UserData {
-  constructor(uid) {
+  constructor(uid, skillDb = null) {
     this.uid = uid;
     this.name = "";
     this.damageStats = new StatisticData(this, "damage");
@@ -247,6 +247,7 @@ class UserData {
     this.fightPoint = 0;
     this.subProfession = "";
     this.attr = {};
+    this.skillDb = skillDb; // Store skill database reference for skill name lookups
   }
 
   /** Add damage record
@@ -516,7 +517,7 @@ class UserDataManager {
    */
   getUser(uid) {
     if (!this.users.has(uid)) {
-      const user = new UserData(uid);
+      const user = new UserData(uid, this.skillDb);
       const uidStr = String(uid);
 
       // Load from database
