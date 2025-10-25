@@ -1,0 +1,11 @@
+{
+  "autoUpdateEnabled": true,
+  "autoClearOnServerChange": false,
+  "autoClearOnTimeout": true,
+  "onlyRecordEliteDummy": false,
+  "enableFightLog": false,
+  "enableDpsLog": false,
+  "enableHistorySave": false,
+  "isPaused": false,
+  "playerDataSyncProgress": null
+}

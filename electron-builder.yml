@@ -1,0 +1,91 @@
+# Electron Builder Configuration for BPSR Tools
+# DPS Meter with Web, Electron Overlay, and CLI modes
+
+appId: com.bpsr.meter
+productName: BPSR Tools
+copyright: Copyright © 2025 Akzios
+
+# Directories
+directories:
+  output: dist_electron
+  buildResources: .
+
+# Files to include in the build
+files:
+  - main.js
+  - server.js
+  - src/**/*
+  - public/**/*
+  - tables/**/*
+  - config/**/*
+  - "!config/sheets.json"
+  - icon.ico
+  - icon.png
+  - "!**/*.map"
+  - "!**/*.md"
+  - "!.gitignore"
+  - "!.git"
+  - "!dist"
+  - "!dist_electron"
+  - "!scripts"
+  - "!db"
+
+# Extra resources to copy (not inside asar)
+extraResources:
+  - from: node_modules/cap/
+    to: cap/
+    filter:
+      - "**/*"
+  - from: db/
+    to: db/
+    filter:
+      - "*.db"
+      - "*.db-shm"
+      - "*.db-wal"
+
+# Windows-specific settings
+win:
+  icon: icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: "${productName} Setup ${version}.${ext}"
+
+# NSIS installer settings
+nsis:
+  oneClick: true
+  perMachine: false
+  deleteAppDataOnUninstall: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: BPSR Tools
+  include: extra.nsh
+  installerIcon: icon.ico
+  uninstallerIcon: icon.ico
+  installerHeaderIcon: icon.ico
+  runAfterFinish: true
+
+# Compression
+compression: normal
+
+# ASAR archive
+asar: true
+asarUnpack:
+  - "**/*.node"
+  - "**/cap/**/*"
+
+# File associations
+fileAssociations:
+  - ext: bpsr
+    name: BPSR Tools Data
+    description: BPSR Tools combat data file
+    icon: icon.ico
+
+# Publish configuration for auto-updates
+# GitHub Releases provider (recommended)
+publish:
+  provider: github
+  owner: bruno-barbosa
+  repo: bpsr-tools
+  private: true

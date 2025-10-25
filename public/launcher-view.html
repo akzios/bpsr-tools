@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BPSR Tools - Launcher</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="launcher-root">
+    <!-- Single Container for Both Views -->
+    <div class="container">
+      <button class="settings-btn" id="settings-btn" title="Settings">
+        ⚙️
+      </button>
+
+      <!-- Main Launcher View -->
+      <div id="launcher-view">
+        <img src="../icon.png" alt="BPSR Tools Logo" class="logo" />
+        <h1>BPSR Tools</h1>
+        <p class="subtitle">Select your preferred mode</p>
+
+        <div class="mode-buttons">
+          <div class="mode-button" id="cli-mode">
+            <div class="mode-title">
+              <span class="mode-icon">💻</span>
+              CLI
+            </div>
+            <div class="mode-description">
+              Terminal-based interface with real-time stats table. Lightweight
+              and keyboard-friendly.
+            </div>
+          </div>
+
+          <div class="mode-button" id="web-mode">
+            <div class="mode-title">
+              <span class="mode-icon">🌐</span>
+              Web Server
+            </div>
+            <div class="mode-description">
+              Access from iPad, tablet, or any device on your network. Opens in
+              browser.
+            </div>
+          </div>
+
+          <div class="mode-button" id="electron-mode">
+            <div class="mode-title">
+              <span class="mode-icon">🎮</span>
+              Overlay
+            </div>
+            <div class="mode-description">
+              Traditional desktop overlay that floats above your game window.
+            </div>
+          </div>
+        </div>
+
+        <div class="version" id="version">Loading...</div>
+      </div>
+
+      <!-- Settings View -->
+      <div id="settings-view" style="display: none">
+        <button class="back-btn" id="back-btn">←</button>
+        <div class="header">
+          <h1>Settings</h1>
+        </div>
+
+        <div class="settings-group">
+          <div class="collapsible-section">
+            <div class="section-header" data-section="app-updates">
+              <div class="section-title">App Updates</div>
+              <span class="collapse-icon">▼</span>
+            </div>
+            <div class="section-content collapsed">
+              <div class="section-description">
+                Check and install application updates
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-label">
+                  <div class="setting-title">Automatic Updates</div>
+                  <div class="setting-description">
+                    Automatically check for updates every 6 hours
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="autoUpdateEnabled" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div
+                class="update-info"
+                id="updateInfo"
+                style="margin-bottom: 12px; font-size: 13px; color: #6b7280"
+              ></div>
+              <button class="action-btn" id="check-updates-btn">
+                Check for Updates
+              </button>
+              <div class="action-status" id="updateStatus"></div>
+            </div>
+          </div>
+
+          <div class="collapsible-section">
+            <div class="section-header" data-section="dps-settings">
+              <div class="section-title">DPS Meter</div>
+              <span class="collapse-icon">▼</span>
+            </div>
+            <div class="section-content collapsed">
+              <div class="section-description">
+                Configure DPS meter behavior and data tracking
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-label">
+                  <div class="setting-title">Auto Clear on Server Change</div>
+                  <div class="setting-description">
+                    Automatically reset statistics when changing servers or maps
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="autoClearOnServerChange" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-label">
+                  <div class="setting-title">Auto Clear on Timeout</div>
+                  <div class="setting-description">
+                    Reset after 80 seconds of combat inactivity
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="autoClearOnTimeout" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-label">
+                  <div class="setting-title">Only Record Elite Dummy</div>
+                  <div class="setting-description">
+                    Track damage only on elite training dummies
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="onlyRecordEliteDummy" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="collapsible-section">
+            <div class="section-header" data-section="sheets-config">
+              <div class="section-title">Google Sheets</div>
+              <span class="collapse-icon">▼</span>
+            </div>
+            <div class="section-content collapsed">
+              <div class="section-description">
+                Paste your Sheets configuration if you would like to sync player
+                data to Google Sheets (Guild VGL Only)
+              </div>
+              <textarea
+                id="sheetsConfig"
+                class="config-textarea"
+                placeholder='{"credentials": {...}, "spreadsheetId": "...", "sheetName": "PlayerInfo"}'
+              ></textarea>
+              <div class="json-status" id="jsonStatus"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-footer">
+          <button class="save-btn" id="save-btn">Save Settings</button>
+          <div class="success-message" id="success-message">
+            Settings saved successfully!
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirmation Modal -->
+      <div class="modal-overlay" id="confirmModal">
+        <div class="modal-content">
+          <div class="modal-title" id="modalTitle">Confirm Action</div>
+          <div class="modal-message" id="modalMessage">Are you sure?</div>
+          <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" id="modalCancel">
+              Cancel
+            </button>
+            <button class="modal-btn modal-btn-confirm" id="modalConfirm">
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/launcher.js"></script>
+  </body>
+</html>

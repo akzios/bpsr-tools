@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BPSR Tools</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="bpsr-tools">
+      <header class="controls">
+        <div
+          style="
+            position: relative;
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            -webkit-app-region: no-drag;
+          "
+        >
+          <!-- Container for icon and sync button -->
+          <img
+            src="icon.png"
+            alt="Logo"
+            style="height: 40px; position: absolute; top: 0; left: 0"
+          />
+          <div
+            class="sync-button"
+            id="sync-button"
+            style="
+              position: absolute;
+              top: 2.5px;
+              left: 2.5px;
+              z-index: 11;
+              width: 35px;
+              height: 35px;
+            "
+          >
+            <!-- Centered over the icon -->
+            <i class="fa-solid fa-arrows-rotate sync-icon"></i>
+            <span class="sync-timer"></span>
+          </div>
+        </div>
+        <button
+          class="control-button btn-large"
+          id="reset-button"
+          title="Clear Meter"
+        >
+          <i class="fa-solid fa-broom"></i> Clear
+        </button>
+        <div
+          id="dps-timer-btns"
+          class="dps-timer-buttons"
+          style="flex-grow: 1; justify-content: flex-end; display: none"
+        ></div>
+        <!-- Advanced/Lite button -->
+        <button
+          class="control-button btn-large"
+          id="advanced-lite-btn"
+          title="Toggle Advanced/Lite"
+        >
+          Advanced
+        </button>
+        <!-- DPS/Healer button only visible in Lite mode -->
+        <button
+          class="control-button btn-large"
+          id="lite-dps-healer-btn"
+          style="display: none"
+        >
+          DPS
+        </button>
+        <button
+          class="control-button"
+          id="zoom-in-button"
+          title="Increase size"
+        >
+          <i class="fa-solid fa-plus"></i>
+        </button>
+        <button
+          class="control-button"
+          id="zoom-out-button"
+          title="Decrease size"
+        >
+          <i class="fa-solid fa-minus"></i>
+        </button>
+        <!-- Theme toggle button -->
+        <button
+          class="control-button"
+          id="theme-toggle-button"
+          title="Toggle Light/Dark Mode"
+        >
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <button class="control-button" id="close-button" title="Close window">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </header>
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-bottom: 10px;
+        "
+      >
+        <div
+          id="dps-timer"
+          style="
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-top: 4px;
+            min-height: 28px;
+            color: #e0e0e0;
+            display: none;
+            text-shadow: var(--text-shadow);
+          "
+        ></div>
+        <div id="logs-section" style="margin-top: 8px"></div>
+      </div>
+      <div id="loading-indicator">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+      </div>
+      <main
+        id="player-bars-container"
+        style="
+          margin-top: 54px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 4px;
+          padding: 8px;
+          display: none;
+        "
+      ></main>
+
+      <!-- Skill Analysis Modal -->
+      <div id="skill-modal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3 class="modal-title" id="modal-player-name">Skill Analysis</h3>
+            <button
+              class="modal-close-button"
+              id="modal-close-btn"
+              title="Close"
+            >
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="modal-body" id="modal-skill-items">
+            <!-- Skill items will be inserted here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/guiClient.js"></script>
+  </body>
+</html>

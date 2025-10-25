@@ -1,0 +1,40 @@
+# Dependencies
+/node_modules
+
+# Logs
+/logs
+/logs_dps.json
+dist/logs/
+
+# Build output
+/dist
+/dist_electron
+
+# User data (should not be committed)
+/users.json
+/player_map.json
+config/sheets.json
+
+# Environment variables and tokens (NEVER commit)
+.env
+.env.local
+.env.*.local
+*.token
+GH_TOKEN
+
+# SQLite database files (runtime-generated)
+db/bpsr-tools.db
+db/bpsr-tools.db-shm
+db/bpsr-tools.db-wal
+
+# Misc
+.npmrc
+/Prerequisites/npcap-1.83.exe
+pnpm-lock.yaml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

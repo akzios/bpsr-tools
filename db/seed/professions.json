@@ -1,0 +1,60 @@
+{
+  "professions": [
+    {
+      "id": 1,
+      "name_cn": "雷影剑士",
+      "name_en": "Stormblade",
+      "icon": "stormblade.png",
+      "role": "dps"
+    },
+    {
+      "id": 2,
+      "name_cn": "冰魔导师",
+      "name_en": "Frost Mage",
+      "icon": "frost_mage.png",
+      "role": "dps"
+    },
+    {
+      "id": 3,
+      "name_cn": "青岚骑士",
+      "name_en": "Wind Knight",
+      "icon": "wind_knight.png",
+      "role": "dps"
+    },
+    {
+      "id": 4,
+      "name_cn": "森语者",
+      "name_en": "Verdant Oracle",
+      "icon": "verdant_oracle.png",
+      "role": "healer"
+    },
+    {
+      "id": 5,
+      "name_cn": "巨刃守护者",
+      "name_en": "Heavy Guardian",
+      "icon": "heavy_guardian.png",
+      "role": "tank"
+    },
+    {
+      "id": 6,
+      "name_cn": "神射手",
+      "name_en": "Marksman",
+      "icon": "marksman.png",
+      "role": "dps"
+    },
+    {
+      "id": 7,
+      "name_cn": "神盾骑士",
+      "name_en": "Shield Knight",
+      "icon": "shield_knight.png",
+      "role": "tank"
+    },
+    {
+      "id": 8,
+      "name_cn": "灵魂乐手",
+      "name_en": "Soul Musician",
+      "icon": "soul_musician.png",
+      "role": "healer"
+    }
+  ]
+}

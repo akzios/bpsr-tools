@@ -1,0 +1,584 @@
+const express = require("express");
+const http = require("http");
+const cors = require("cors");
+const { Server } = require("socket.io");
+const path = require("path");
+const fsPromises = require("fs").promises;
+const fs = require("fs");
+const { saveSettings } = require(path.join(__dirname, "utilities", "settings"));
+const GoogleSheetsService = require(path.join(__dirname, "googleSheets"));
+const configPaths = require(path.join(__dirname, "utilities", "configPaths"));
+
+const LOGS_DPS_PATH = path.join("./logs_dps.json");
+
+function initializeApi(
+  app,
+  server,
+  io,
+  userDataManager,
+  logger,
+  globalSettings,
+) {
+  app.use(cors());
+  app.use(express.json());
+  app.use(express.static(path.join(__dirname, "..", "..", "public"))); // Adjust the path
+
+  // Health check endpoint
+  app.get("/-/health", (req, res) => {
+    res.status(200).json({ status: "ok" });
+  });
+
+  // Serve gui-view.html as the default page
+  app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "..", "public", "gui-view.html"));
+  });
+
+  app.get("/icon.png", (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "..", "icon.png")); // Adjust the path
+  });
+
+  app.get("/favicon.ico", (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "..", "icon.ico")); // Adjust the path
+  });
+
+  // Helper function to translate profession from Chinese to English
+  function translateProfession(professionCn) {
+    if (!professionCn) return professionCn;
+
+    // Strip sub-profession first (handles both " - " and "·" separators)
+    const mainClass = professionCn.split(/\s*[-·]\s*/)[0].trim();
+
+    // Try to get profession details (works with both Chinese and English)
+    const profession = userDataManager.professionDb.getByName(mainClass);
+    if (profession && profession.name_en) {
+      return profession.name_en;
+    }
+
+    // Fallback: check if already in English
+    if (!/[\u4e00-\u9fa5]/.test(mainClass)) {
+      return mainClass;
+    }
+
+    // Log untranslated - this means database isn't seeded
+    console.log(`[Translation] WARNING: No translation found for profession: "${mainClass}"`);
+    console.log(`[Translation] Available professions:`, userDataManager.professionDb.getAllProfessions().map(p => `${p.name_cn} (${p.name_en})`));
+
+    return mainClass;
+  }
+
+  app.get("/api/data", (req, res) => {
+    const userData = userDataManager.getAllUsersData();
+
+    // Add full profession details to user data
+    const modifiedUserData = {};
+    Object.keys(userData).forEach(uid => {
+      const user = userData[uid];
+
+      // Get profession details (works with both Chinese and English names)
+      const mainClass = user.profession ? user.profession.split(/\s*[-·]\s*/)[0].trim() : null;
+      const professionDetails = mainClass ? userDataManager.professionDb.getByName(mainClass) : null;
+
+      // Debug logging
+      if (!professionDetails && mainClass) {
+        logger.debug(`[Profession Lookup] Failed to find profession for: "${mainClass}" (user: ${user.name})`);
+        logger.debug(`[Profession Lookup] Available professions:`, userDataManager.professionDb.getAllProfessions().map(p => `${p.name_cn} (${p.name_en})`));
+      }
+
+      modifiedUserData[uid] = {
+        ...user,
+        professionDetails: professionDetails || {
+          name_cn: mainClass || "Unknown",
+          name_en: mainClass || "Unknown",
+          icon: "unknown.png",
+          role: "dps"
+        }
+      };
+    });
+
+    // Convert user object to array for CLI mode
+    const usersArray = Object.keys(modifiedUserData).map(uid => {
+      const user = modifiedUserData[uid];
+      return {
+        uid: uid,
+        name: user.name,
+        professionDetails: user.professionDetails,
+        level: user.player_level || null,
+        totalDamage: user.total_damage?.total || 0,
+        dps: user.dps || 0,
+        fightPoint: user.fightPoint || 0,
+        currentHp: user.attr?.current_hp || 0,
+        maxHp: user.attr?.max_hp || 0,
+        critCount: user.total_damage?.critHitCount || 0,
+        luckCount: user.total_damage?.luckHitCount || 0,
+        hitCount: user.total_damage?.hitCount || 0,
+      };
+    });
+
+    // Calculate duration
+    const duration = (Date.now() - userDataManager.startTime) / 1000;
+
+    const data = {
+      code: 0,
+      user: modifiedUserData, // For GUI client
+      data: { // For CLI client
+        users: usersArray,
+        duration: duration,
+      },
+    };
+    res.json(data);
+  });
+
+  app.get("/api/enemies", (req, res) => {
+    const enemiesData = userDataManager.getAllEnemiesData();
+    const data = {
+      code: 0,
+      enemy: enemiesData,
+    };
+    res.json(data);
+  });
+
+  app.get("/api/clear", (req, res) => {
+    userDataManager.clearAll(globalSettings); // Pass globalSettings
+    console.log("Stats Cleared!");
+    res.json({
+      code: 0,
+      msg: "Stats Cleared!",
+    });
+  });
+
+  app.post("/api/clear-logs", async (req, res) => {
+    const logsBaseDir = path.join(__dirname, "..", "..", "logs"); // Adjust the path
+    try {
+      const files = await fsPromises.readdir(logsBaseDir);
+      for (const file of files) {
+        const filePath = path.join(logsBaseDir, file);
+        await fsPromises.rm(filePath, { recursive: true, force: true });
+      }
+      if (fs.existsSync(LOGS_DPS_PATH)) {
+        await fsPromises.unlink(LOGS_DPS_PATH);
+      }
+      console.log("All log files and directories have been cleared!");
+      res.json({
+        code: 0,
+        msg: "All log files and directories have been cleared!",
+      });
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        console.log("The logs directory does not exist, no logs to clear.");
+        res.json({
+          code: 0,
+          msg: "The logs directory does not exist, no logs to clear.",
+        });
+      } else {
+        logger.error("Failed to clear log files:", error);
+        res.status(500).json({
+          code: 1,
+          msg: "Failed to clear log files.",
+          error: error.message,
+        });
+      }
+    }
+  });
+
+  app.post("/api/pause", (req, res) => {
+    const { paused } = req.body;
+    globalSettings.isPaused = paused; // Update pause state in globalSettings
+    console.log(`Stats ${globalSettings.isPaused ? "paused" : "resumed"}!`);
+    res.json({
+      code: 0,
+      msg: `Stats ${globalSettings.isPaused ? "paused" : "resumed"}!`,
+      paused: globalSettings.isPaused,
+    });
+  });
+
+  app.get("/api/pause", (req, res) => {
+    res.json({
+      code: 0,
+      paused: globalSettings.isPaused,
+    });
+  });
+
+  app.post("/api/set-username", (req, res) => {
+    const { uid, name } = req.body;
+    if (uid && name) {
+      const userId = parseInt(uid, 10);
+      if (!isNaN(userId)) {
+        userDataManager.setName(userId, name);
+        console.log(`Manually assigned name '${name}' to UID ${userId}`);
+        res.json({ code: 0, msg: "Username updated successfully." });
+      } else {
+        res.status(400).json({ code: 1, msg: "Invalid UID." });
+      }
+    } else {
+      res.status(400).json({ code: 1, msg: "Missing UID or name." });
+    }
+  });
+
+  app.get("/api/skill/:uid", (req, res) => {
+    const uid = parseInt(req.params.uid);
+    const skillData = userDataManager.getUserSkillData(uid);
+
+    if (!skillData) {
+      return res.status(404).json({
+        code: 1,
+        msg: "User not found",
+      });
+    }
+
+    res.json({
+      code: 0,
+      data: skillData,
+    });
+  });
+
+  app.get("/api/history/:timestamp/summary", async (req, res) => {
+    const { timestamp } = req.params;
+    const historyFilePath = path.join("./logs", timestamp, "summary.json"); // Adjust the path
+
+    try {
+      const data = await fsPromises.readFile(historyFilePath, "utf8");
+      const summaryData = JSON.parse(data);
+      res.json({
+        code: 0,
+        data: summaryData,
+      });
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        logger.warn("History summary file not found:", error);
+        res.status(404).json({
+          code: 1,
+          msg: "History summary file not found",
+        });
+      } else {
+        logger.error("Failed to read history summary file:", error);
+        res.status(500).json({
+          code: 1,
+          msg: "Failed to read history summary file",
+        });
+      }
+    }
+  });
+
+  app.get("/api/history/:timestamp/data", async (req, res) => {
+    const { timestamp } = req.params;
+    const historyFilePath = path.join("./logs", timestamp, "allUserData.json"); // Adjust the path
+
+    try {
+      const data = await fsPromises.readFile(historyFilePath, "utf8");
+      const userData = JSON.parse(data);
+      res.json({
+        code: 0,
+        user: userData,
+      });
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        logger.warn("History data file not found:", error);
+        res.status(404).json({
+          code: 1,
+          msg: "History data file not found",
+        });
+      } else {
+        logger.error("Failed to read history data file:", error);
+        res.status(500).json({
+          code: 1,
+          msg: "Failed to read history data file",
+        });
+      }
+    }
+  });
+
+  app.get("/api/history/:timestamp/skill/:uid", async (req, res) => {
+    const { timestamp, uid } = req.params;
+    const historyFilePath = path.join(
+      "./logs",
+      timestamp,
+      "users",
+      `${uid}.json`,
+    ); // Adjust the path
+
+    try {
+      const data = await fsPromises.readFile(historyFilePath, "utf8");
+      const skillData = JSON.parse(data);
+      res.json({
+        code: 0,
+        data: skillData,
+      });
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        logger.warn("History skill file not found:", error);
+        res.status(404).json({
+          code: 1,
+          msg: "History skill file not found",
+        });
+      } else {
+        logger.error("Failed to read history skill file:", error);
+        res.status(500).json({
+          code: 1,
+          msg: "Failed to load history skill file",
+        });
+      }
+    }
+  });
+
+  app.get("/api/history/:timestamp/download", async (req, res) => {
+    const { timestamp } = req.params;
+    const historyFilePath = path.join("./logs", timestamp, "fight.log"); // Adjust the path
+    res.download(historyFilePath, `fight_${timestamp}.log`);
+  });
+
+  app.get("/api/history/list", async (req, res) => {
+    try {
+      const data = (await fsPromises.readdir("./logs", { withFileTypes: true })) // Adjust the path
+        .filter((e) => e.isDirectory() && /^\d+$/.test(e.name))
+        .map((e) => e.name);
+      res.json({
+        code: 0,
+        data: data,
+      });
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        logger.warn("History path not found:", error);
+        res.status(404).json({
+          code: 1,
+          msg: "History path not found",
+        });
+      } else {
+        logger.error("Failed to load history path:", error);
+        res.status(500).json({
+          code: 1,
+          msg: "Failed to load history path",
+        });
+      }
+    }
+  });
+
+  app.get("/api/settings", async (req, res) => {
+    res.json({ code: 0, data: globalSettings });
+  });
+
+  app.post("/api/settings", async (req, res) => {
+    const newSettings = req.body;
+    Object.assign(globalSettings, newSettings); // Update globalSettings directly
+    saveSettings(globalSettings);
+    res.json({ code: 0, data: globalSettings });
+  });
+
+  app.get("/api/dictionary", async (req, res) => {
+    const dictionaryPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "config",
+      "dictionary.json",
+    ); // Adjust the path
+    try {
+      const data = await fsPromises.readFile(dictionaryPath, "utf8");
+      if (data.trim() === "") {
+        res.json({});
+      } else {
+        res.json(JSON.parse(data));
+      }
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        logger.warn("dictionary.json not found, returning empty object.");
+        res.json({});
+      } else {
+        logger.error("Failed to read or parse dictionary.json:", error);
+        res.status(500).json({
+          code: 1,
+          msg: "Failed to load dictionary",
+          error: error.message,
+        });
+      }
+    }
+  });
+
+  // Profession API endpoints
+  app.get("/api/professions", (req, res) => {
+    try {
+      const professions = userDataManager.professionDb.getAllProfessions();
+
+      // Transform to map format for frontend compatibility
+      const professionMap = {};
+
+      professions.forEach(prof => {
+        professionMap[prof.name_cn] = {
+          name: prof.name_en,
+          icon: prof.icon,
+          role: prof.role
+        };
+      });
+
+      res.json({ code: 0, data: professionMap });
+    } catch (error) {1
+      logger.error("Failed to fetch professions:", error);
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to load professions",
+        error: error.message,
+      });
+    }
+  });
+
+  function saveDpsLog(log) {
+    if (!globalSettings.enableDpsLog) return;
+
+    let logs = [];
+    if (fs.existsSync(LOGS_DPS_PATH)) {
+      logs = JSON.parse(fs.readFileSync(LOGS_DPS_PATH, "utf8"));
+    }
+    logs.unshift(log);
+    fs.writeFileSync(LOGS_DPS_PATH, JSON.stringify(logs, null, 2));
+  }
+
+  app.post("/save-dps-log", (req, res) => {
+    const log = req.body;
+    saveDpsLog(log);
+    res.sendStatus(200);
+  });
+
+  app.get("/logs-dps", (req, res) => {
+    let logs = [];
+    if (fs.existsSync(LOGS_DPS_PATH)) {
+      logs = JSON.parse(fs.readFileSync(LOGS_DPS_PATH, "utf8"));
+    }
+    res.json(logs);
+  });
+
+  // Google Sheets sync endpoint
+  app.post("/api/sync-sheets", async (req, res) => {
+    try {
+      // Check if sheets.json exists
+      const sheetsPath = configPaths.getConfigPath("sheets.json");
+      if (!fs.existsSync(sheetsPath)) {
+        return res.status(404).json({
+          code: 1,
+          msg: "Google Sheets not configured. Please configure sheets.json in settings.",
+        });
+      }
+
+      // Load sheets config
+      const sheetsConfig = JSON.parse(fs.readFileSync(sheetsPath, "utf8"));
+
+      // Initialize Google Sheets service
+      const sheetsService = new GoogleSheetsService(logger);
+      const initialized = await sheetsService.initialize();
+
+      if (!initialized) {
+        return res.status(500).json({
+          code: 1,
+          msg: "Failed to initialize Google Sheets service",
+        });
+      }
+
+      // Get current player data
+      const userData = userDataManager.getAllUsersData();
+
+      // Filter out players without valid data and translate professions
+      const validPlayers = Object.values(userData)
+        .filter(user => user.name && user.name !== "Unknown" && user.fightPoint > 0)
+        .map(user => ({
+          uid: String(user.uid), // Ensure UID is a string for consistent comparison
+          name: user.name,
+          fightPoint: user.fightPoint,
+          profession: translateProfession(user.profession), // Translate to English
+        }));
+
+      if (validPlayers.length === 0) {
+        return res.json({
+          code: 0,
+          msg: "No valid player data to sync",
+          synced: 0,
+        });
+      }
+
+      // Sync to Google Sheets
+      const result = await sheetsService.updatePlayerData(
+        sheetsConfig.spreadsheetId,
+        sheetsConfig.sheetName || "PlayerInfo",
+        validPlayers
+      );
+
+      if (result.success) {
+        logger.info(`[Sheets] Synced ${result.total} players (${result.new} new, ${result.updated} updated)`);
+        res.json({
+          code: 0,
+          msg: `Successfully synced ${result.total} players`,
+          synced: result.total,
+          new: result.new,
+          updated: result.updated,
+        });
+      } else {
+        res.status(500).json({
+          code: 1,
+          msg: result.error || "Failed to sync to Google Sheets",
+        });
+      }
+    } catch (error) {
+      logger.error(`[Sheets] Sync error: ${error.message}`);
+      res.status(500).json({
+        code: 1,
+        msg: "Error syncing to Google Sheets: " + error.message,
+      });
+    }
+  });
+
+  // Check if Google Sheets is configured
+  app.get("/api/sheets-configured", (req, res) => {
+    try {
+      const sheetsPath = configPaths.getConfigPath("sheets.json");
+      const configured = fs.existsSync(sheetsPath);
+      res.json({
+        code: 0,
+        configured: configured,
+      });
+    } catch (error) {
+      res.json({
+        code: 0,
+        configured: false,
+      });
+    }
+  });
+
+  io.on("connection", (socket) => {
+    console.log("WebSocket client connected: " + socket.id);
+
+    socket.on("disconnect", () => {
+      console.log("WebSocket client disconnected: " + socket.id);
+    });
+  });
+
+  setInterval(() => {
+    if (!globalSettings.isPaused) {
+      const userData = userDataManager.getAllUsersData();
+
+      // Add full profession details to user data
+      const modifiedUserData = {};
+      Object.keys(userData).forEach(uid => {
+        const user = userData[uid];
+
+        // Get profession details (works with both Chinese and English names)
+        const mainClass = user.profession ? user.profession.split(/\s*[-·]\s*/)[0].trim() : null;
+        const professionDetails = mainClass ? userDataManager.professionDb.getByName(mainClass) : null;
+
+        modifiedUserData[uid] = {
+          ...user,
+          professionDetails: professionDetails || {
+            name_cn: mainClass || "Unknown",
+            name_en: mainClass || "Unknown",
+            icon: "unknown.png",
+            role: "dps"
+          }
+        };
+      });
+
+      const data = {
+        code: 0,
+        user: modifiedUserData,
+      };
+      io.emit("data", data);
+    }
+  }, 100);
+}
+
+module.exports = initializeApi;
