@@ -1,6 +1,7 @@
 const { google } = require("googleapis");
 const path = require("path");
 const fs = require("fs");
+const configPaths = require(path.join(__dirname, "utilities", "configPaths"));
 
 class GoogleSheetsService {
   constructor(logger) {
@@ -12,78 +13,9 @@ class GoogleSheetsService {
 
   async initialize() {
     try {
-      // Determine sheets config path based on environment
-      let sheetsConfigPath;
-
-      // Check if running in Electron (packaged or dev)
-      try {
-        const electron = require("electron");
-        const app = electron.app || electron.remote?.app;
-
-        if (app) {
-          // Running in Electron
-          const isPackaged = app.isPackaged || __dirname.includes(".asar");
-
-          if (isPackaged) {
-            // Packaged: Look in app resources first, then userData
-            const resourcesPath = path.join(
-              process.resourcesPath,
-              "app.asar",
-              "config",
-              "sheets.json",
-            );
-            const userDataPath = path.join(
-              app.getPath("userData"),
-              "sheets.json",
-            );
-
-            if (fs.existsSync(resourcesPath)) {
-              sheetsConfigPath = resourcesPath;
-            } else if (fs.existsSync(userDataPath)) {
-              sheetsConfigPath = userDataPath;
-            } else {
-              // Try alternative packaged location (unpacked)
-              const unpackedPath = path.join(
-                process.resourcesPath,
-                "config",
-                "sheets.json",
-              );
-              if (fs.existsSync(unpackedPath)) {
-                sheetsConfigPath = unpackedPath;
-              }
-            }
-          } else {
-            // Development mode
-            sheetsConfigPath = path.join(
-              __dirname,
-              "..",
-              "..",
-              "config",
-              "sheets.json",
-            );
-          }
-        }
-      } catch (e) {
-        // Not running in Electron, use standard path
-        sheetsConfigPath = path.join(
-          __dirname,
-          "..",
-          "..",
-          "config",
-          "sheets.json",
-        );
-      }
-
-      // Fallback to standard path if not set
-      if (!sheetsConfigPath) {
-        sheetsConfigPath = path.join(
-          __dirname,
-          "..",
-          "..",
-          "config",
-          "sheets.json",
-        );
-      }
+      // Use configPaths utility to get sheets.json from userData directory
+      // This ensures updates won't overwrite user credentials
+      const sheetsConfigPath = configPaths.getConfigPath("sheets.json");
 
       // Check if config file exists
       if (!fs.existsSync(sheetsConfigPath)) {
@@ -91,7 +23,9 @@ class GoogleSheetsService {
           "Google Sheets config not found. Sheets integration disabled.",
         );
         this.logger.warn(`Looked in: ${sheetsConfigPath}`);
-        this.logger.warn("To enable, create sheets.json in the project root.");
+        this.logger.warn(
+          "To enable, configure sheets.json in the launcher settings.",
+        );
         return false;
       }
 

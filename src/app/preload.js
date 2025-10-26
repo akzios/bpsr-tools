@@ -7,6 +7,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
   closeWindow: () => ipcRenderer.send("close-window"),
   resizeWindow: (width, height) =>
     ipcRenderer.send("resize-window", width, height),
+  setBounds: (bounds) => ipcRenderer.send("set-bounds", bounds),
+  getBounds: () => ipcRenderer.invoke("get-bounds"),
+  openAdvancedSkillWindow: (uid) =>
+    ipcRenderer.send("open-advanced-skill-window", uid),
+  setAlwaysOnTop: (alwaysOnTop) =>
+    ipcRenderer.send("set-always-on-top", alwaysOnTop),
+  getAlwaysOnTop: () => ipcRenderer.invoke("get-always-on-top"),
 });
 
 // Expose API for CLI window

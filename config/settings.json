@@ -7,5 +7,6 @@
   "enableDpsLog": false,
   "enableHistorySave": false,
   "isPaused": false,
-  "playerDataSyncProgress": null
+  "playerDataSyncProgress": null,
+  "theme": "dark"
 }

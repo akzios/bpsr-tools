@@ -5,86 +5,92 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.1] - 2025-01-25
-
-### Fixed
-- Skill analysis modal close button and backdrop now work correctly at all zoom levels
-- Modal positioning changed from absolute to fixed to prevent zoom-related click issues
-- Minimum height constraint (700px) now properly applied to DPS meter overlay
-- Modal elements now properly clickable in Electron overlay mode
+## [1.1.0] - 2025-01-XX
 
 ### Added
-- Automated database rebuild before packaging (dist/publish commands)
-- Smart database merging - new player data merges with existing instead of replacing
-- Duplicate player removal by player_id during database updates
-- New `npm run rebuild-db` command for manual database refresh
-- Detailed merge statistics in console output during database rebuild
+- Dynamic profession icon loading in advanced skill analysis window header
+- Full-window drag support for advanced skill analysis window (drag from anywhere except interactive elements)
+- Additional 100px vertical space in advanced skill analysis window (1400x1000)
 
 ### Changed
-- `fetchPlayerSeed.js` now merges data instead of replacing entire players.json
-- Build workflow now automatically fetches latest player data before packaging
-- Database rebuild script moved to `src/server/utilities/rebuildDatabase.js`
-- Removed min-width constraint from `.bpsr-tools` container
+- Advanced skill analysis window dimensions increased from 1400x900 to 1400x1000
+- Minimum window height increased from 700px to 800px
+- Drag functionality now works from entire window surface instead of just header bar
 
-### Technical
-- Modal CSS: `.modal` and `.modal-backdrop` use `position: fixed`
-- Added `pointer-events: auto` to modal close button
-- Added `-webkit-app-region: no-drag` to modal elements
-- Map-based deduplication logic for player data merging
+### Fixed
+- Inconsistent drag behavior previously limited to header bar only
+- Limited vertical space causing chart visibility issues in skill analysis window
+
+## [1.0.2] - 2025-01-XX
+
+### Added
+- Simplified README.md structure
+
+### Changed
+- README.md streamlined from 519 to 183 lines for better readability
+- Moved detailed documentation to release notes
+
+## [1.0.1] - 2025-01-XX
+
+### Added
+- Manual database update feature via launcher UI
+- "Update Database" button in launcher settings (Database Management section)
+- Real-time status updates during database operations
+- Statistics display showing entries added to each table
+- Player data fetching from external leaderboard API
+- Seed file packaging in extraResources for packaged apps
+- Text selection enabled in launcher settings for informational areas
+- Info box CSS class using brand design variables
+
+### Changed
+- Advanced skill analysis modal positioning from absolute to fixed
+- Modal backdrop positioning to fixed for better interaction
+- fetchPlayerSeed.js now exportable with optional targetPath parameter
+- Seed directory auto-creation if it doesn't exist
+
+### Fixed
+- Skill analysis modal clickability issues with zoom transforms
+- "showModal is not defined" error (changed to showConfirm)
+- fetch("/api/update-database") file:// protocol error (switched to IPC)
+- Hardcoded colors in HTML (migrated to CSS class with brand variables)
+- Seed file path resolution for packaged apps
 
 ## [1.0.0] - 2025-01-XX
 
 ### Added
-- Initial release of BPSR Tools
+- Initial release
+- Real-time DPS/HPS tracking
 - Three operational modes: CLI, Web Server, Electron Overlay
-- Beautiful launcher GUI with mode selection
-- Real-time DPS/HPS tracking from network packets
-- Skill analysis breakdown per player
-- Google Sheets integration for data export
+- Multi-mode support (all modes can run simultaneously)
+- Shared backend server on port 8989
+- Network packet capture using Npcap
+- Profession system with bilingual support (Chinese/English)
+- Pre-seeded SQLite database with professions, monsters, and skills
+- Google Sheets integration for combat data sync
 - Auto-update system via GitHub Releases
-- Bilingual profession system (Chinese/English)
-- Database caching for players, monsters, skills, and professions
-- Advanced and Lite display modes
-- DPS and Healer view toggles
-- Dark/Light theme support
-- Zoom controls (0.5x to 2.0x)
-- System tray integration
-- Multi-mode support (run all modes simultaneously)
+- Advanced skill analysis window with charts and detailed breakdowns
+- Launcher GUI for mode selection and settings
+- Database seeding and update system
+- Multi-device support (accessible from iPad, phone, etc.)
+- Real-time Socket.IO updates (100ms intervals)
+- Sub-profession detection from skill usage
+- Combat history tracking
+- Configurable auto-clear on server change and timeout
+- Role-based class color coding (DPS/Tank/Healer)
 
-### Features
-- **Network Packet Capture**: Uses Npcap to capture and decode Blue Protocol packets
-- **Real-time Metrics**: DPS, HPS, damage taken, crit%, luck%, gear score, HP bars
-- **Skill Breakdown**: Detailed per-player skill analysis with damage, hits, and crit rates
-- **Auto-sync**: Configurable auto-clear on server change and timeout
-- **Database Seeding**: Pre-seeded with 125,000+ players, 447 skills, 8 professions
-- **Health Check Endpoint**: Server readiness verification for mode launching
-- **Launch Throttling**: Prevents rapid concurrent mode launches with visual feedback
-- **Settings UI**: Collapsible sections for Google Sheets, DPS Meter, Auto-Updates, and Database Management
-
-### Technical Details
-- Built with Electron 38, Node.js 22.15.0, Express 5, Socket.IO 4
-- SQLite database with better-sqlite3
+### Technical
+- Electron desktop framework
+- Express HTTP server with Socket.IO WebSocket
+- SQLite database with INTEGER PRIMARY KEYs
 - Protobuf message decoding
-- TCP stream reassembly for packet processing
+- Zstd compression handling
+- TCP stream reassembly
+- BPF packet filtering
+- Chart.js for data visualization
 - Winston logging system
-- NSIS installer for Windows
-- GitHub Releases integration for auto-updates
+- electron-updater for auto-updates
 
----
-
-## Release Links
-
-- [v1.0.1](https://github.com/akzios/bpsr-tools/releases/tag/v1.0.1) - Latest
-- [v1.0.0](https://github.com/akzios/bpsr-tools/releases/tag/v1.0.0) - Initial Release
-
----
-
-## Legend
-
-- `Added` - New features
-- `Changed` - Changes in existing functionality
-- `Deprecated` - Soon-to-be removed features
-- `Removed` - Removed features
-- `Fixed` - Bug fixes
-- `Security` - Vulnerability fixes
-- `Technical` - Internal/developer-focused changes
+[1.1.0]: https://github.com/akzios/bpsr-tools/releases/tag/v1.1.0
+[1.0.2]: https://github.com/akzios/bpsr-tools/releases/tag/v1.0.2
+[1.0.1]: https://github.com/akzios/bpsr-tools/releases/tag/v1.0.1
+[1.0.0]: https://github.com/akzios/bpsr-tools/releases/tag/v1.0.0

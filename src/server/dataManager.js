@@ -885,7 +885,11 @@ class UserDataManager {
         role: "dps",
       },
       skills: user.getSkillSummary(),
-      attr: user.attr,
+      attr: {
+        ...user.attr,
+        fight_point: user.fightPoint,
+        level: user.level,
+      },
     };
   }
 

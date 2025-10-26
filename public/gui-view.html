@@ -14,9 +14,21 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
+    <!-- Resize handles for frameless window -->
+    <div class="resize-handle resize-top"></div>
+    <div class="resize-handle resize-right"></div>
+    <div class="resize-handle resize-bottom"></div>
+    <div class="resize-handle resize-left"></div>
+    <div class="resize-handle resize-top-left"></div>
+    <div class="resize-handle resize-top-right"></div>
+    <div class="resize-handle resize-bottom-left"></div>
+    <div class="resize-handle resize-bottom-right"></div>
+
     <div class="bpsr-tools">
       <header class="controls">
         <div
@@ -101,6 +113,15 @@
         >
           <i class="fa-solid fa-moon"></i>
         </button>
+        <!-- Always on top toggle (Electron only) -->
+        <button
+          class="control-button electron-only"
+          id="always-on-top-button"
+          title="Toggle Always on Top"
+          style="display: none"
+        >
+          <i class="fa-solid fa-thumbtack"></i>
+        </button>
         <button class="control-button" id="close-button" title="Close window">
           <i class="fa-solid fa-xmark"></i>
         </button>
@@ -142,19 +163,24 @@
         "
       ></main>
 
-      <!-- Skill Analysis Modal -->
+      <!-- Skill Analysis Modal (Simple Version) -->
       <div id="skill-modal" class="modal">
         <div class="modal-backdrop"></div>
         <div class="modal-container">
           <div class="modal-header">
-            <h3 class="modal-title" id="modal-player-name">Skill Analysis</h3>
-            <button
-              class="modal-close-button"
-              id="modal-close-btn"
-              title="Close"
-            >
-              <i class="fa-solid fa-xmark"></i>
-            </button>
+            <h3 id="modal-player-name">Skill Breakdown</h3>
+            <div class="modal-header-buttons">
+              <button
+                class="modal-close-button"
+                id="modal-advanced-btn"
+                title="Open Advanced Analysis"
+              >
+                <i class="fa-solid fa-chart-line"></i>
+              </button>
+              <button class="modal-close-button" id="modal-close-btn" title="Close">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
           </div>
           <div class="modal-body" id="modal-skill-items">
             <!-- Skill items will be inserted here -->

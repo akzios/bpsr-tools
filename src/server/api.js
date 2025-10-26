@@ -377,8 +377,15 @@ function initializeApi(
 
   app.post("/api/settings", async (req, res) => {
     const newSettings = req.body;
+    const oldTheme = globalSettings.theme;
     Object.assign(globalSettings, newSettings); // Update globalSettings directly
     saveSettings(globalSettings);
+
+    // Broadcast theme change to all connected clients if theme changed
+    if (newSettings.theme && newSettings.theme !== oldTheme) {
+      io.emit("theme-changed", { theme: newSettings.theme });
+    }
+
     res.json({ code: 0, data: globalSettings });
   });
 
