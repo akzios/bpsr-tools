@@ -5,6 +5,16 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2025-01-XX
+
+### Fixed
+- Skill analysis button not working in web browser mode (iPad, phone, desktop browsers)
+- Skill analysis now opens in centered popup window for web browsers instead of failing silently
+
+### Changed
+- Web browser mode now opens skill analysis in 1400x1000 centered popup window
+- Popup window is resizable and reuses same window when clicked multiple times
+
 ## [1.1.1] - 2025-01-XX
 
 ### Changed
@@ -110,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Winston logging system
 - electron-updater for auto-updates
 
+[1.1.2]: https://github.com/akzios/bpsr-tools/releases/tag/v1.1.2
 [1.1.1]: https://github.com/akzios/bpsr-tools/releases/tag/v1.1.1
 [1.1.0]: https://github.com/akzios/bpsr-tools/releases/tag/v1.1.0
 [1.0.2]: https://github.com/akzios/bpsr-tools/releases/tag/v1.0.2
