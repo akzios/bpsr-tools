@@ -162,6 +162,36 @@
   --brand-accent: #764ba2;
   --brand-accent-dark: #5d3a82;
 
+  /* Brand Dark Theme Colors */
+  --brand-dark-bg-primary: #0f1419;
+  --brand-dark-bg-secondary: #1a1f2e;
+  --brand-dark-bg-card: #1e2533;
+  --brand-dark-bg-card-body: rgba(20, 20, 30, 0.4);
+  --brand-dark-text-primary: #e0e0e0;
+  --brand-dark-text-secondary: #b0b0b0;
+  --brand-dark-text-tertiary: #9ca3af;
+  --brand-dark-border-default: rgba(255, 255, 255, 0.1);
+  --brand-dark-border-strong: rgba(255, 255, 255, 0.2);
+  --brand-dark-scrollbar-track: rgba(255, 255, 255, 0.05);
+  --brand-dark-scrollbar-thumb: rgba(102, 126, 234, 0.3);
+  --brand-dark-scrollbar-thumb-hover: rgba(102, 126, 234, 0.5);
+  --brand-dark-scrollbar-thumb-active: rgba(102, 126, 234, 0.6);
+
+  /* Brand Light Theme Colors */
+  --brand-light-bg-primary: #f5f7fa;
+  --brand-light-bg-secondary: #ffffff;
+  --brand-light-bg-card: #ffffff;
+  --brand-light-bg-card-body: #f5f7fa;
+  --brand-light-text-primary: #2d3748;
+  --brand-light-text-secondary: #4a5568;
+  --brand-light-text-tertiary: #718096;
+  --brand-light-border-default: rgba(0, 0, 0, 0.1);
+  --brand-light-border-strong: rgba(0, 0, 0, 0.15);
+  --brand-light-scrollbar-track: rgba(0, 0, 0, 0.05);
+  --brand-light-scrollbar-thumb: rgba(102, 126, 234, 0.4);
+  --brand-light-scrollbar-thumb-hover: rgba(102, 126, 234, 0.6);
+  --brand-light-scrollbar-thumb-active: rgba(102, 126, 234, 0.7);
+
   /* Semantic Colors */
   --success: #10b981;
   --success-dark: #059669;
@@ -247,24 +277,24 @@
 
 /* Dark Mode */
 :root[data-theme="dark"] {
-  /* Surface & Background Colors - Dark Mode */
+  /* Surface & Background Colors - Dark Mode (using brand dark theme) */
   --bg-primary: transparent;
-  --bg-secondary: rgba(31, 41, 55, 0.85);
-  --bg-tertiary: rgba(31, 41, 55, 0.9);
-  --surface-base: rgba(31, 41, 55, 0.85);
-  --surface-raised: rgba(55, 65, 81, 0.9);
-  --surface-overlay: rgba(17, 24, 39, 0.95);
+  --bg-secondary: var(--brand-dark-bg-secondary);
+  --bg-tertiary: var(--brand-dark-bg-card);
+  --surface-base: var(--brand-dark-bg-secondary);
+  --surface-raised: var(--brand-dark-bg-card);
+  --surface-overlay: var(--brand-dark-bg-primary);
 
   /* Border Colors - Dark Mode */
   --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-default: rgba(255, 255, 255, 0.15);
-  --border-strong: rgba(255, 255, 255, 0.25);
+  --border-default: var(--brand-dark-border-default);
+  --border-strong: var(--brand-dark-border-strong);
   --border-brand: rgba(102, 126, 234, 0.4);
 
-  /* Text Colors - Dark Mode */
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
-  --text-tertiary: #9ca3af;
+  /* Text Colors - Dark Mode (using brand dark theme) */
+  --text-primary: var(--brand-dark-text-primary);
+  --text-secondary: var(--brand-dark-text-secondary);
+  --text-tertiary: var(--brand-dark-text-tertiary);
   --text-disabled: #6b7280;
   --text-inverse: #1f2937;
 
@@ -336,7 +366,6 @@ textarea,
 a,
 .player-bar,
 .skill-analysis-btn,
-.modal-close-button,
 [role="button"],
 [onclick] {
   -webkit-app-region: no-drag !important;
@@ -664,7 +693,6 @@ input[type="text"] {
   justify-content: center;
   min-width: 100px; /* Adjust width as needed */
   margin-left: 2px;
-  border-left: 1px solid rgba(255, 255, 255, 0.1); /* Visual separator */
   padding-left: 8px;
 }
 
@@ -980,6 +1008,43 @@ input[type="text"] {
 #player-bars-container::-webkit-scrollbar-thumb:active {
   background: var(--btn-secondary-active);
 }
+
+/* Light mode scrollbar*/
+:root[data-theme="light"] #player-bars-container::-webkit-scrollbar-track {
+  background: var(--brand-light-scrollbar-track);
+}
+
+:root[data-theme="light"] #player-bars-container::-webkit-scrollbar-thumb {
+  background: var(--brand-light-scrollbar-thumb);
+  border: none;
+}
+
+:root[data-theme="light"] #player-bars-container::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-light-scrollbar-thumb-hover);
+}
+
+:root[data-theme="light"] #player-bars-container::-webkit-scrollbar-thumb:active {
+  background: var(--brand-light-scrollbar-thumb-active);
+}
+
+/* Dark mode scrollbar*/
+:root[data-theme="dark"] #player-bars-container::-webkit-scrollbar-track {
+  background: var(--brand-dark-scrollbar-track);
+}
+
+:root[data-theme="dark"] #player-bars-container::-webkit-scrollbar-thumb {
+  background: var(--brand-dark-scrollbar-thumb);
+  border: none;
+}
+
+:root[data-theme="dark"] #player-bars-container::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-dark-scrollbar-thumb-hover);
+}
+
+:root[data-theme="dark"] #player-bars-container::-webkit-scrollbar-thumb:active {
+  background: var(--brand-dark-scrollbar-thumb-active);
+}
+
 .player-bar {
   background: var(--surface-base);
   backdrop-filter: blur(5px);
@@ -1260,237 +1325,6 @@ input[type="text"] {
   margin-bottom: 0;
 }
 
-/* Skill Analysis Modal */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-  -webkit-app-region: no-drag;
-  cursor: default;
-}
-
-.modal.active {
-  display: flex;
-}
-
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  cursor: pointer;
-  -webkit-app-region: no-drag;
-}
-
-.modal-container {
-  position: relative;
-  width: 90%;
-  max-width: 650px;
-  max-height: 90%;
-  background: var(--surface-base);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 2px solid var(--border-default);
-  border-radius: 8px;
-  box-shadow: var(--shadow-xl);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  z-index: 1001;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: var(--surface-overlay);
-  border-bottom: 2px solid var(--border-strong);
-  flex-shrink: 0;
-}
-
-.modal-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.modal-close-button {
-  background: var(--error);
-  border: none;
-  color: #ffffff;
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-sm);
-  -webkit-app-region: no-drag;
-  pointer-events: auto;
-}
-
-.modal-close-button:hover {
-  background: var(--error-dark);
-  box-shadow: var(--shadow-md), var(--glow-error);
-  transform: translateY(-2px);
-}
-
-.modal-close-button:active {
-  transform: translateY(0);
-}
-
-.modal-header-buttons {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.modal-header-buttons #modal-advanced-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.modal-header-buttons #modal-advanced-btn:hover {
-  background: linear-gradient(135deg, #5568d3 0%, #653a8a 100%);
-  box-shadow: var(--shadow-md), 0 0 15px rgba(102, 126, 234, 0.5);
-}
-
-.modal-body {
-  padding: 20px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  flex: 1;
-}
-
-.modal-body::-webkit-scrollbar {
-  width: 10px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-  background: var(--surface-base);
-  border-radius: 5px;
-  margin: 4px 0;
-}
-
-.modal-body::-webkit-scrollbar-thumb {
-  background: var(--btn-secondary-bg);
-  border-radius: 5px;
-  border: 2px solid var(--border-default);
-}
-
-.modal-body::-webkit-scrollbar-thumb:hover {
-  background: var(--btn-secondary-hover);
-}
-
-.modal-body::-webkit-scrollbar-thumb:active {
-  background: var(--btn-secondary-active);
-}
-
-/* Large Modal for Skill Analysis */
-.modal-large {
-  max-width: 1400px;
-  width: 95%;
-  max-height: 95vh;
-}
-
-.modal-header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-  flex-shrink: 0;
-}
-
-.modal-header-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.modal-content-wrapper {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-  gap: 16px;
-  padding: 16px;
-  background: rgba(20, 20, 30, 0.95);
-}
-
-/* Sidebar */
-.modal-sidebar {
-  width: 350px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 8px;
-}
-
-.modal-sidebar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.modal-sidebar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-}
-
-.modal-sidebar::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.5);
-  border-radius: 4px;
-}
-
-.modal-sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(102, 126, 234, 0.7);
-}
-
-/* Player Info Card */
-.player-info-card {
-  background: rgba(102, 126, 234, 0.1);
-  border: 1px solid rgba(102, 126, 234, 0.3);
-  border-radius: 6px;
-  padding: 16px;
-}
-
-.player-info-card .player-name {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--text-heading);
-  margin-bottom: 8px;
-}
-
-.player-info-card .player-stats {
-  display: flex;
-  gap: 12px;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-.player-stats span {
-  background: rgba(0, 0, 0, 0.2);
-  padding: 4px 8px;
-  border-radius: 4px;
-}
 
 /* Collapsible Cards */
 .collapsible-card {
@@ -1530,20 +1364,11 @@ input[type="text"] {
 
 .collapsible-card .card-body {
   padding: 16px;
-  background: rgba(20, 20, 30, 0.4);
+  background: var(--sa-bg-card-body);
 }
 
 .collapsible-card.collapsed .card-body {
   display: none;
-}
-
-/* Main Content */
-.modal-main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  overflow: hidden;
 }
 
 /* Summary Cards */
@@ -1634,86 +1459,6 @@ input[type="text"] {
 
 .skills-table td:first-child {
   font-weight: 600;
-  color: #ffffff;
-}
-
-/* Footer Controls */
-.modal-footer-controls {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-shrink: 0;
-  padding: 12px 0 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.footer-btn {
-  width: 48px;
-  height: 48px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-}
-
-.footer-btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-}
-
-.footer-btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
-}
-
-.footer-btn-danger {
-  background: #ef4444;
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-}
-
-.footer-btn-danger:hover {
-  background: #dc2626;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
-}
-
-.footer-btn:active {
-  transform: translateY(0);
-}
-
-.footer-sort-select {
-  flex: 1;
-  padding: 12px 16px;
-  background: rgba(40, 40, 50, 0.8);
-  border: 1px solid rgba(102, 126, 234, 0.3);
-  border-radius: 6px;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.footer-sort-select:hover {
-  border-color: rgba(102, 126, 234, 0.5);
-  background: rgba(40, 40, 50, 0.9);
-}
-
-.footer-sort-select:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-}
-
-.footer-sort-select option {
-  background: #1a1a2e;
   color: #ffffff;
 }
 
@@ -2499,50 +2244,52 @@ body.skill-analysis-window {
     sans-serif;
   overflow: hidden;
 
-  /* Dark theme (default) - matching main overlay */
-  --sa-bg-primary: #1a1a2e;
-  --sa-bg-secondary: #16213e;
-  --sa-bg-card: rgba(255, 255, 255, 0.05);
+  /* Dark theme (default) - using brand dark theme colors */
+  --sa-bg-primary: var(--brand-dark-bg-secondary);
+  --sa-bg-secondary: var(--brand-dark-bg-primary);
+  --sa-bg-card: var(--brand-dark-bg-card);
+  --sa-bg-card-body: var(--brand-dark-bg-card-body);
   --sa-bg-card-hover: rgba(102, 126, 234, 0.1);
   --sa-bg-header: rgba(255, 255, 255, 0.05);
-  --sa-border: rgba(255, 255, 255, 0.12);
-  --sa-border-strong: rgba(255, 255, 255, 0.2);
-  --sa-text-primary: #e0e0e0;
-  --sa-text-secondary: #b0b0b0;
-  --sa-text-tertiary: #9ca3af;
+  --sa-border: var(--brand-dark-border-default);
+  --sa-border-strong: var(--brand-dark-border-strong);
+  --sa-text-primary: var(--brand-dark-text-primary);
+  --sa-text-secondary: var(--brand-dark-text-secondary);
+  --sa-text-tertiary: var(--brand-dark-text-tertiary);
   --sa-text-heading: #ffffff;
-  --sa-scrollbar-track: rgba(255, 255, 255, 0.05);
-  --sa-scrollbar-thumb: rgba(102, 126, 234, 0.3);
-  --sa-scrollbar-thumb-hover: rgba(102, 126, 234, 0.5);
+  --sa-scrollbar-track: var(--brand-dark-scrollbar-track);
+  --sa-scrollbar-thumb: var(--brand-dark-scrollbar-thumb);
+  --sa-scrollbar-thumb-hover: var(--brand-dark-scrollbar-thumb-hover);
   --sa-table-header: rgba(102, 126, 234, 0.15);
   --sa-table-row-hover: rgba(102, 126, 234, 0.08);
   --sa-table-border: rgba(255, 255, 255, 0.08);
-  --surface-overlay: #16213e;
+  --surface-overlay: var(--brand-dark-bg-primary);
 
   background: var(--sa-bg-primary);
   color: var(--sa-text-primary);
 }
 
-/* Light theme - matching main overlay */
+/* Light theme - using brand light theme colors */
 body.skill-analysis-window.light-theme {
-  --sa-bg-primary: #f5f7fa;
-  --sa-bg-secondary: #ffffff;
-  --sa-bg-card: #ffffff;
+  --sa-bg-primary: var(--brand-light-bg-primary);
+  --sa-bg-secondary: var(--brand-light-bg-secondary);
+  --sa-bg-card: var(--brand-light-bg-card);
+  --sa-bg-card-body: var(--brand-light-bg-card-body);
   --sa-bg-card-hover: rgba(102, 126, 234, 0.05);
-  --sa-bg-header: #ffffff;
-  --sa-border: rgba(0, 0, 0, 0.1);
-  --sa-border-strong: rgba(0, 0, 0, 0.15);
-  --sa-text-primary: #2d3748;
-  --sa-text-secondary: #4a5568;
-  --sa-text-tertiary: #718096;
+  --sa-bg-header: var(--brand-light-bg-secondary);
+  --sa-border: var(--brand-light-border-default);
+  --sa-border-strong: var(--brand-light-border-strong);
+  --sa-text-primary: var(--brand-light-text-primary);
+  --sa-text-secondary: var(--brand-light-text-secondary);
+  --sa-text-tertiary: var(--brand-light-text-tertiary);
   --sa-text-heading: #1a202c;
-  --sa-scrollbar-track: rgba(0, 0, 0, 0.05);
-  --sa-scrollbar-thumb: rgba(102, 126, 234, 0.4);
-  --sa-scrollbar-thumb-hover: rgba(102, 126, 234, 0.6);
+  --sa-scrollbar-track: var(--brand-light-scrollbar-track);
+  --sa-scrollbar-thumb: var(--brand-light-scrollbar-thumb);
+  --sa-scrollbar-thumb-hover: var(--brand-light-scrollbar-thumb-hover);
   --sa-table-header: rgba(102, 126, 234, 0.08);
   --sa-table-row-hover: rgba(102, 126, 234, 0.04);
   --sa-table-border: rgba(0, 0, 0, 0.06);
-  --surface-overlay: #ffffff;
+  --surface-overlay: var(--brand-light-bg-secondary);
 }
 
 .skill-analysis-container {
@@ -2629,6 +2376,10 @@ body.skill-analysis-window.light-theme {
   border-radius: 6px;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 125px;
 }
 
 .skill-sidebar .player-name {
@@ -2820,6 +2571,9 @@ body.skill-analysis-window.light-theme .sort-select option {
   width: 100%;
   border-collapse: collapse;
   overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .skills-table thead {
@@ -2827,6 +2581,14 @@ body.skill-analysis-window.light-theme .sort-select option {
   top: 0;
   background: var(--sa-table-header);
   z-index: 10;
+  display: block;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.skills-table thead::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
 }
 
 .skills-table th {
@@ -2840,13 +2602,58 @@ body.skill-analysis-window.light-theme .sort-select option {
   letter-spacing: 0.5px;
 }
 
+/* Column widths - Skill Name 3x larger */
+.skills-table th:nth-child(1),
+.skills-table td:nth-child(1) {
+  width: 20%;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.skills-table th:nth-child(2),
+.skills-table td:nth-child(2) {
+  width: 13.33%;
+  white-space: nowrap;
+}
+
+.skills-table th:nth-child(3),
+.skills-table td:nth-child(3) {
+  width: 10.33%;
+  white-space: nowrap;
+}
+
+.skills-table th:nth-child(4),
+.skills-table td:nth-child(4) {
+  width: 7.33%;
+  white-space: nowrap;
+}
+
+.skills-table th:nth-child(5),
+.skills-table td:nth-child(5) {
+  width: 11.33%;
+  white-space: nowrap;
+}
+
+.skills-table th:nth-child(6),
+.skills-table td:nth-child(6) {
+  width: 11.33%;
+  white-space: nowrap;
+}
+
+.skills-table th:nth-child(7),
+.skills-table td:nth-child(7) {
+  width: 11.33%;
+  white-space: nowrap;
+}
+
 .skills-table tbody {
   display: block;
   overflow-y: auto;
-  max-height: calc(100vh - 450px);
+  flex: 1;
+  height: 100%;
 }
 
-.skills-table thead,
+.skills-table thead tr,
 .skills-table tbody tr {
   display: table;
   width: 100%;

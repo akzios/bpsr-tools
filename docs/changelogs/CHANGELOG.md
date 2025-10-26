@@ -5,6 +5,26 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-01-XX
+
+### Changed
+- Renamed "Advanced Skill Analysis" to "Skill Analysis" throughout the application
+- IPC event renamed: `open-advanced-skill-window` → `open-skill-analysis-window`
+- Function renamed: `createAdvancedSkillWindow` → `createSkillAnalysisWindow`
+- API method renamed: `openAdvancedSkillWindow` → `openSkillAnalysisWindow`
+- Collapsible card body backgrounds now use theme-aware CSS variables
+- Dark mode card bodies: `rgba(20, 20, 30, 0.4)` for visual depth
+- Light mode card bodies: `#f5f7fa` for improved readability
+
+### Added
+- New CSS variables: `--brand-dark-bg-card-body` and `--brand-light-bg-card-body`
+- Theme-specific card body background colors in skill analysis window
+
+### Removed
+- Unused skill modal HTML structure (~24 lines)
+- Unused modal CSS (~450 lines)
+- Legacy modal JavaScript functions
+
 ## [1.1.0] - 2025-01-XX
 
 ### Added
@@ -91,6 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Winston logging system
 - electron-updater for auto-updates
 
+[1.1.1]: https://github.com/akzios/bpsr-tools/releases/tag/v1.1.1
 [1.1.0]: https://github.com/akzios/bpsr-tools/releases/tag/v1.1.0
 [1.0.2]: https://github.com/akzios/bpsr-tools/releases/tag/v1.0.2
 [1.0.1]: https://github.com/akzios/bpsr-tools/releases/tag/v1.0.1
