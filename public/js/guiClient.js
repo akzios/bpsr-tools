@@ -1048,9 +1048,19 @@ function setupSkillAnalysisHandlers() {
 
         // Open skill analysis window directly
         if (window.electronAPI && window.electronAPI.openSkillAnalysisWindow) {
+          // Electron mode - open in new window
           window.electronAPI.openSkillAnalysisWindow(uid);
         } else {
-          console.error("Skill analysis window API not available");
+          // Web browser mode - open in popup window
+          const width = 1400;
+          const height = 1000;
+          const left = (screen.width - width) / 2;
+          const top = (screen.height - height) / 2;
+          window.open(
+            `/gui-skills-view.html?uid=${uid}`,
+            'skillAnalysis',
+            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+          );
         }
       }
     },
