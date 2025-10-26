@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Advanced Skill Analysis - BPSR Tools</title>
+    <title>Skill Analysis - BPSR Tools</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -24,7 +24,7 @@
       <header class="skill-analysis-header">
         <div class="header-left">
           <img id="class-icon" src="icon.png" alt="Class Icon" style="height: 32px" />
-          <h1 id="page-title">Advanced Skill Analysis</h1>
+          <h1 id="page-title">Skill Analysis</h1>
         </div>
         <div class="header-controls">
           <button
@@ -50,16 +50,6 @@
       <div class="skill-analysis-content">
         <!-- Left Sidebar -->
         <aside class="skill-sidebar">
-          <!-- Player Info Card -->
-          <div class="player-info-card">
-            <div class="player-name" id="player-name">Player</div>
-            <div class="player-stats">
-              <span id="player-uid">UID: -</span>
-              <span id="player-power">Power: -</span>
-              <span id="player-level">Lv: -</span>
-            </div>
-          </div>
-
           <!-- DPS/HPS Graph -->
           <div class="collapsible-card">
             <div class="card-header">
@@ -158,24 +148,16 @@
 
           <!-- Skills Table -->
           <div class="skills-table-wrapper">
-            <div class="table-controls">
-              <select class="sort-select" id="sort-select">
-                <option value="damage">Sort by Damage</option>
-                <option value="dps">Sort by DPS</option>
-                <option value="hits">Sort by Hits</option>
-                <option value="crit">Sort by Crit Rate</option>
-              </select>
-            </div>
             <table class="skills-table">
               <thead>
                 <tr>
-                  <th>Skill Name</th>
-                  <th>Damage</th>
-                  <th>Total DPS</th>
-                  <th>Hit Count</th>
-                  <th>Crit Rate</th>
-                  <th>Avg Per Hit</th>
-                  <th>Total DMG %</th>
+                  <th data-sort="name">Skill Name</th>
+                  <th data-sort="damage">Damage/Heal</th>
+                  <th data-sort="dps">DPS/HPS</th>
+                  <th data-sort="hits">Hit</th>
+                  <th data-sort="crit">Crit Rate</th>
+                  <th data-sort="avg">Avg Per Hit</th>
+                  <th data-sort="dmgpercent">Total DMG</th>
                 </tr>
               </thead>
               <tbody id="skill-items">

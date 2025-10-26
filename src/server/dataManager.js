@@ -875,6 +875,9 @@ class UserDataManager {
       ? this.professionDb.getByName(mainClass)
       : null;
 
+    // Calculate combat duration in seconds
+    const combatDuration = (Date.now() - this.startTime) / 1000;
+
     return {
       uid: user.uid,
       name: user.name,
@@ -889,6 +892,7 @@ class UserDataManager {
         ...user.attr,
         fight_point: user.fightPoint,
         level: user.level,
+        combat_duration: combatDuration,
       },
     };
   }

@@ -916,7 +916,7 @@ function createNewBar(u, index, isLiteMode, liteModeType) {
                     <div class="lite-bar-fill" style="width: ${barFillWidth}%; background: ${barFillBackground};"></div>
                     <div class="lite-bar-content" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; justify-content: space-between;">
                         <div class="skill-analysis-button" data-uid="${u.uid}" title="Skill Analysis">
-                            <i class="fa-solid fa-scroll"></i>
+                            <i class="fa-solid fa-chart-line"></i>
                         </div>
                         <div style="display: flex; align-items: center; gap: 5px;">
                             <img class="lite-bar-icon" src="icons/${professionIcon}" alt="icon" style="margin-left:2px; margin-right:5px;" />
@@ -954,7 +954,7 @@ function createNewBar(u, index, isLiteMode, liteModeType) {
                     <div class="progress-fill" style="width: ${u.damagePercent}%; background: ${dpsColor}"></div>
                     <div class="bar-content">
                         <div class="skill-analysis-button" data-uid="${u.uid}" title="Skill Analysis">
-                            <i class="fa-solid fa-scroll"></i>
+                            <i class="fa-solid fa-chart-line"></i>
                         </div>
                         <div class="column name-col">
                             <span class="player-name">${playerName}</span>
@@ -1043,24 +1043,14 @@ function setupSkillAnalysisHandlers() {
 
         if (!uid) {
           console.error("No UID found for skill analysis");
-          alert("No UID found for this player");
           return;
         }
 
-        try {
-          const response = await fetch(`/api/skill/${uid}`);
-          const result = await response.json();
-
-          if (result.code === 0 && result.data) {
-            // Display skill data
-            displaySkillData(result.data, uid);
-          } else {
-            console.error("Failed to load skill data:", result.msg);
-            alert("Skill data not available for this player");
-          }
-        } catch (error) {
-          console.error("Error fetching skill data:", error);
-          alert("Error loading skill data: " + error.message);
+        // Open skill analysis window directly
+        if (window.electronAPI && window.electronAPI.openSkillAnalysisWindow) {
+          window.electronAPI.openSkillAnalysisWindow(uid);
+        } else {
+          console.error("Skill analysis window API not available");
         }
       }
     },
@@ -1072,141 +1062,6 @@ function setupSkillAnalysisHandlers() {
 setTimeout(() => {
   setupSkillAnalysisHandlers();
 }, 100);
-
-// Global variable to store current skill data for advanced window
-let currentSkillData = null;
-
-function displaySkillData(data, uid) {
-  if (!data || !data.skills) {
-    alert("No skill data available for this player");
-    return;
-  }
-
-  // Store data globally for advanced mode
-  currentSkillData = data;
-
-  const playerName = data.name || `Player ${uid}`;
-  const profession = data.professionDetails?.name_en || "Unknown";
-
-  // Open simple modal
-  openSkillModal(playerName, profession, data.skills, uid);
-}
-
-function openSkillModal(playerName, profession, skills, uid) {
-  const modal = document.getElementById("skill-modal");
-  const modalTitle = document.getElementById("modal-player-name");
-  const modalBody = document.getElementById("modal-skill-items");
-
-  if (!modal || !modalTitle || !modalBody) {
-    console.error("Modal elements not found");
-    return;
-  }
-
-  // Set modal title
-  modalTitle.textContent = `${playerName} - ${profession}`;
-
-  // Convert skills object to array and sort by total damage/healing
-  const skillsArray = Object.entries(skills).map(([skillId, skillInfo]) => ({
-    skillId,
-    ...skillInfo,
-  }));
-
-  skillsArray.sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0));
-
-  // Build HTML for skills
-  let html = "";
-
-  if (skillsArray.length === 0) {
-    html =
-      '<div style="text-align:center; padding:40px 20px; color: var(--text-secondary); font-size: 1rem;">No skills recorded yet</div>';
-  } else {
-    skillsArray.forEach((skill, index) => {
-      if (index < 30) {
-        // Show top 30 skills in modal
-        const skillClass =
-          skill.type === "damage" ? "damage-skill" : "healing-skill";
-        const icon = skill.type === "damage" ? "⚔️" : "💚";
-
-        html += `
-                        <div class="skill-item ${skillClass}">
-                            <div class="skill-item-name">
-                                <span class="skill-item-icon">${icon}</span>
-                                <span>${skill.displayName}</span>
-                            </div>
-                            <div class="skill-item-stats">
-                                <div class="skill-stat">
-                                    <span class="skill-stat-label">Total</span>
-                                    <span class="skill-stat-value">${formatStat(skill.totalDamage)}</span>
-                                </div>
-                                <div class="skill-stat">
-                                    <span class="skill-stat-label">Hits</span>
-                                    <span class="skill-stat-value">${skill.totalCount}</span>
-                                </div>
-                                ${
-                                  skill.critCount > 0
-                                    ? `
-                                <div class="skill-stat">
-                                    <span class="skill-stat-label">Crit</span>
-                                    <span class="skill-stat-value">${Math.round(skill.critRate * 100)}%</span>
-                                </div>
-                                `
-                                    : ""
-                                }
-                            </div>
-                        </div>
-                    `;
-      }
-    });
-
-    if (skillsArray.length > 30) {
-      html += `<div style="text-align:center; padding:12px 0; color: var(--text-secondary); font-size:0.85rem;">... and ${skillsArray.length - 30} more skills</div>`;
-    }
-  }
-
-  modalBody.innerHTML = html;
-
-  // Setup advanced mode button
-  const advancedBtn = document.getElementById("modal-advanced-btn");
-  if (advancedBtn) {
-    // Remove old listener and add new one
-    const newAdvancedBtn = advancedBtn.cloneNode(true);
-    advancedBtn.parentNode.replaceChild(newAdvancedBtn, advancedBtn);
-
-    newAdvancedBtn.addEventListener("click", () => {
-      openAdvancedSkillAnalysis(uid);
-    });
-  }
-
-  // Show modal
-  modal.classList.add("active");
-}
-
-function openAdvancedSkillAnalysis(uid) {
-  // Check if we're in Electron or browser
-  if (window.electronAPI) {
-    // In Electron - use IPC to open new window
-    window.electronAPI.openAdvancedSkillWindow(uid);
-  } else {
-    // In browser - open new window/tab
-    const width = 1400;
-    const height = 900;
-    const left = (screen.width - width) / 2;
-    const top = (screen.height - height) / 2;
-
-    window.open(
-      `/gui-skills-view.html?uid=${uid}`,
-      "AdvancedSkillAnalysis",
-      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
-    );
-  }
-}
-
-function closeSkillModal() {
-  const modal = document.getElementById("skill-modal");
-  if (modal) {
-    modal.classList.remove("active");
-  }
-}
 
 // Expose updateWindowSize to window for inline onclick handlers
 window.updateWindowSize = updateWindowSize;

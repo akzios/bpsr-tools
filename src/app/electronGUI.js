@@ -59,10 +59,10 @@ ipcMain.on("resize-window", (event, width, height) => {
   }
 });
 
-// Handle event to open advanced skill analysis window
-ipcMain.on("open-advanced-skill-window", (event, uid) => {
-  logToFile(`Opening advanced skill window for UID: ${uid}`);
-  createAdvancedSkillWindow(uid);
+// Handle event to open skill analysis window
+ipcMain.on("open-skill-analysis-window", (event, uid) => {
+  logToFile(`Opening skill analysis window for UID: ${uid}`);
+  createSkillAnalysisWindow(uid);
 });
 
 // Handle event to toggle always on top
@@ -172,10 +172,10 @@ async function createWindow() {
   }
 }
 
-// Function to create advanced skill analysis window
-function createAdvancedSkillWindow(uid) {
+// Function to create skill analysis window
+function createSkillAnalysisWindow(uid) {
   try {
-    logToFile(`Creating advanced skill window for UID: ${uid}`);
+    logToFile(`Creating skill analysis window for UID: ${uid}`);
 
     const skillWindow = new BrowserWindow({
       width: 1400,
@@ -192,7 +192,7 @@ function createAdvancedSkillWindow(uid) {
         contextIsolation: true,
       },
       icon: path.join(__dirname, "..", "..", "icon.ico"),
-      title: "Advanced Skill Analysis",
+      title: "Skill Analysis",
       backgroundColor: "#1a1a2e",
     });
 
@@ -208,7 +208,7 @@ function createAdvancedSkillWindow(uid) {
     }
 
     const url = `http://localhost:8989/gui-skills-view.html?uid=${uid}`;
-    logToFile(`Loading advanced skill URL: ${url}`);
+    logToFile(`Loading skill analysis URL: ${url}`);
     skillWindow.loadURL(url);
 
     // Log any load failures
@@ -216,24 +216,24 @@ function createAdvancedSkillWindow(uid) {
       "did-fail-load",
       (event, errorCode, errorDescription) => {
         logToFile(
-          `Advanced skill window failed to load: ${errorCode} - ${errorDescription}`,
+          `Skill analysis window failed to load: ${errorCode} - ${errorDescription}`,
         );
         console.error(
-          `Advanced skill window load failed: ${errorCode} - ${errorDescription}`,
+          `Skill analysis window load failed: ${errorCode} - ${errorDescription}`,
         );
       },
     );
 
     skillWindow.on("closed", () => {
-      logToFile("Advanced skill window closed");
+      logToFile("Skill analysis window closed");
     });
 
-    logToFile("Advanced skill window created successfully");
+    logToFile("Skill analysis window created successfully");
     return skillWindow;
   } catch (error) {
-    logToFile(`ERROR in createAdvancedSkillWindow: ${error.message}`);
+    logToFile(`ERROR in createSkillAnalysisWindow: ${error.message}`);
     logToFile(`Stack: ${error.stack}`);
-    console.error("Error in createAdvancedSkillWindow:", error);
+    console.error("Error in createSkillAnalysisWindow:", error);
     throw error;
   }
 }

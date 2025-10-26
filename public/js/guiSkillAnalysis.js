@@ -1,5 +1,5 @@
-// Skill Analysis Client - Advanced view with charts
-// This runs in the advanced skill analysis window
+// Skill Analysis Client - Detailed view with charts
+// This runs in the skill analysis window
 
 let currentData = null;
 let currentCharts = {
@@ -7,6 +7,22 @@ let currentCharts = {
   skillDistribution: null,
   damageDistribution: null,
 };
+
+// DPS history tracking (60 data points for 60 seconds)
+let dpsHistory = {
+  labels: [],
+  dpsValues: [],
+  hpsValues: [],
+  maxPoints: 60,
+};
+
+// Initialize with zeros and labels showing every 5 seconds
+for (let i = 0; i < 60; i++) {
+  // Show labels every 5 seconds, otherwise empty string
+  dpsHistory.labels.push(i % 5 === 0 ? `${i}s` : '');
+  dpsHistory.dpsValues.push(0);
+  dpsHistory.hpsValues.push(0);
+}
 
 // Get UID from URL parameter
 const urlParams = new URLSearchParams(window.location.search);
@@ -48,8 +64,9 @@ function renderSkillAnalysis(data) {
   const profession = data.professionDetails?.name_en || "Unknown";
   const professionIcon = data.professionDetails?.icon || "icon.png";
 
-  // Update page title
-  document.getElementById("page-title").textContent = `${playerName} - ${profession}`;
+  // Update page title with GS
+  const gearScore = data.attr?.fight_point || 0;
+  document.getElementById("page-title").textContent = `${playerName} - ${profession} (${formatStat(gearScore)})`;
 
   // Set class icon in header
   const classIconElement = document.getElementById("class-icon");
@@ -57,12 +74,6 @@ function renderSkillAnalysis(data) {
     classIconElement.src = `icons/${professionIcon}`;
     classIconElement.alt = profession;
   }
-
-  // Set player info card
-  document.getElementById("player-name").textContent = playerName;
-  document.getElementById("player-uid").textContent = `UID: ${data.uid}`;
-  document.getElementById("player-power").textContent = `Power: ${formatStat(data.attr?.fight_point || 0)}`;
-  document.getElementById("player-level").textContent = `Lv: ${data.attr?.level || "-"}`;
 
   // Convert skills to array
   const skillsArray = Object.entries(skills).map(([skillId, skillInfo]) => ({
@@ -76,8 +87,8 @@ function renderSkillAnalysis(data) {
   // Populate summary cards
   populateSummaryCards(summary);
 
-  // Build skills table
-  buildSkillsTable(skillsArray, summary.totalDamage);
+  // Build skills table - pass duration for DPS calculation
+  buildSkillsTable(skillsArray, summary.totalDamage, summary.duration);
 
   // Initialize charts
   initializeCharts(skillsArray, summary);
@@ -119,6 +130,8 @@ function calculateSummaryStats(skillsArray, data) {
   const duration = data.attr?.combat_duration || 1; // Default to 1 second if not available
   const dps = totalDamage / duration;
 
+  console.log('Combat duration:', duration, 'Total damage:', totalDamage, 'Calculated DPS:', dps);
+
   return {
     totalDamage,
     totalHits,
@@ -133,6 +146,7 @@ function calculateSummaryStats(skillsArray, data) {
     avgPerHit,
     dps,
     hitsTaken,
+    duration, // Return duration for per-skill DPS calculation
   };
 }
 
@@ -174,13 +188,15 @@ function populateSummaryCards(summary) {
   );
 }
 
-function buildSkillsTable(skillsArray, totalDamage, skipSort = false) {
+function buildSkillsTable(skillsArray, totalDamage, duration = 1, skipSort = false) {
   const tbody = document.getElementById("skill-items");
 
   if (!tbody) {
     console.error("Skills table body not found");
     return;
   }
+
+  console.log('Building skills table with duration:', duration);
 
   // Sort by damage by default (only if not already sorted)
   if (!skipSort) {
@@ -193,20 +209,29 @@ function buildSkillsTable(skillsArray, totalDamage, skipSort = false) {
     html =
       '<tr><td colspan="7" style="text-align:center; padding:40px 20px; color: #9ca3af;">No skills recorded yet</td></tr>';
   } else {
-    skillsArray.forEach((skill) => {
+    skillsArray.forEach((skill, index) => {
       const damagePercent =
         totalDamage > 0
           ? ((skill.totalDamage / totalDamage) * 100).toFixed(1)
           : 0;
       const avgPerHit =
         skill.totalCount > 0 ? skill.totalDamage / skill.totalCount : 0;
-      const dps = skill.totalDamage; // Could calculate based on duration if available
+
+      // Calculate actual DPS/HPS (damage/healing per second)
+      const dpsHps = duration > 0 ? skill.totalDamage / duration : 0;
+
+      if (index === 0) {
+        console.log('First skill example:', skill.displayName, 'Total:', skill.totalDamage, 'Duration:', duration, 'DPS/HPS:', dpsHps);
+      }
+
+      // Add emoji icon based on skill type
+      const skillIcon = skill.type === "healing" ? "💚 " : "⚔️ ";
 
       html += `
         <tr>
-          <td>${skill.displayName}</td>
+          <td>${skillIcon}${skill.displayName}</td>
           <td>${formatStat(skill.totalDamage)}</td>
-          <td>${formatStat(dps)}</td>
+          <td>${formatStat(dpsHps)}</td>
           <td>${formatStat(skill.totalCount)}</td>
           <td>${Math.round((skill.critRate || 0) * 100)}%</td>
           <td>${formatStat(avgPerHit)}</td>
@@ -235,38 +260,70 @@ function initializeCharts(skillsArray, summary) {
     : "rgba(255, 255, 255, 0.1)";
 
   // DPS/HPS Real-time Graph (Line Chart)
-  // For now, show placeholder data. In future, could track DPS over time
   const dpsGraphCanvas = document.getElementById("dps-graph-chart");
   if (dpsGraphCanvas) {
     currentCharts.dpsGraph = new Chart(dpsGraphCanvas, {
       type: "line",
       data: {
-        labels: ["0s", "10s", "20s", "30s", "40s", "50s", "60s"],
+        labels: dpsHistory.labels,
         datasets: [
           {
             label: "DPS",
-            data: [0, 0, 0, 0, 0, 0, summary.dps], // Placeholder - would need historical data
+            data: dpsHistory.dpsValues,
             borderColor: "#667eea",
             backgroundColor: "rgba(102, 126, 234, 0.1)",
             tension: 0.4,
             fill: true,
+            pointRadius: 0,
+          },
+          {
+            label: "HPS",
+            data: dpsHistory.hpsValues,
+            borderColor: "#28a745",
+            backgroundColor: "rgba(40, 167, 69, 0.1)",
+            tension: 0.4,
+            fill: true,
+            pointRadius: 0,
           },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: {
+          duration: 0, // Disable animation for smoother real-time updates
+        },
         plugins: {
-          legend: { display: false },
+          legend: {
+            display: true,
+            labels: { color: textColor },
+            position: 'bottom',
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${formatStat(context.parsed.y)}`;
+              }
+            }
+          }
         },
         scales: {
           x: {
-            ticks: { color: textColor },
-            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              autoSkip: false, // Show all our manually set labels
+            },
+            grid: { display: false },
           },
           y: {
-            ticks: { color: textColor },
-            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              callback: function(value) {
+                return formatStat(value);
+              }
+            },
+            grid: { display: false },
+            beginAtZero: true,
           },
         },
       },
@@ -367,14 +424,26 @@ function setupCollapsibleCards() {
 }
 
 // Setup sort functionality
-function setupSortFunctionality() {
-  const sortSelect = document.getElementById("sort-select");
+let currentSort = { column: 'damage', ascending: false }; // Default sort by damage descending
 
-  if (sortSelect) {
-    sortSelect.addEventListener("change", (e) => {
+function setupSortFunctionality() {
+  const tableHeaders = document.querySelectorAll('.skills-table th[data-sort]');
+
+  tableHeaders.forEach(header => {
+    header.style.cursor = 'pointer';
+    header.addEventListener('click', () => {
       if (!currentData) return;
 
-      const sortBy = e.target.value;
+      const sortBy = header.dataset.sort;
+
+      // Toggle sort direction if clicking same column
+      if (currentSort.column === sortBy) {
+        currentSort.ascending = !currentSort.ascending;
+      } else {
+        currentSort.column = sortBy;
+        currentSort.ascending = false; // Default to descending for new column
+      }
+
       const skillsArray = Object.entries(currentData.skills).map(
         ([skillId, skillInfo]) => ({
           skillId,
@@ -382,26 +451,80 @@ function setupSortFunctionality() {
         }),
       );
 
+      const summary = calculateSummaryStats(skillsArray, currentData);
+      const duration = summary.duration || 1;
+
       // Sort based on selected criteria
       switch (sortBy) {
-        case "damage":
-          skillsArray.sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0));
+        case 'name':
+          skillsArray.sort((a, b) => {
+            const nameA = a.displayName || '';
+            const nameB = b.displayName || '';
+            return currentSort.ascending ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+          });
           break;
-        case "dps":
-          skillsArray.sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0)); // Same as damage for now
+        case 'damage':
+          skillsArray.sort((a, b) => {
+            const diff = (b.totalDamage || 0) - (a.totalDamage || 0);
+            return currentSort.ascending ? -diff : diff;
+          });
           break;
-        case "hits":
-          skillsArray.sort((a, b) => (b.totalCount || 0) - (a.totalCount || 0));
+        case 'dps':
+          skillsArray.sort((a, b) => {
+            const aDps = (a.totalDamage || 0) / duration;
+            const bDps = (b.totalDamage || 0) / duration;
+            const diff = bDps - aDps;
+            return currentSort.ascending ? -diff : diff;
+          });
           break;
-        case "crit":
-          skillsArray.sort((a, b) => (b.critRate || 0) - (a.critRate || 0));
+        case 'hits':
+          skillsArray.sort((a, b) => {
+            const diff = (b.totalCount || 0) - (a.totalCount || 0);
+            return currentSort.ascending ? -diff : diff;
+          });
+          break;
+        case 'crit':
+          skillsArray.sort((a, b) => {
+            const diff = (b.critRate || 0) - (a.critRate || 0);
+            return currentSort.ascending ? -diff : diff;
+          });
+          break;
+        case 'avg':
+          skillsArray.sort((a, b) => {
+            const aAvg = a.totalCount > 0 ? a.totalDamage / a.totalCount : 0;
+            const bAvg = b.totalCount > 0 ? b.totalDamage / b.totalCount : 0;
+            const diff = bAvg - aAvg;
+            return currentSort.ascending ? -diff : diff;
+          });
+          break;
+        case 'dmgpercent':
+          // Percent is already calculated from damage, so sort by damage
+          skillsArray.sort((a, b) => {
+            const diff = (b.totalDamage || 0) - (a.totalDamage || 0);
+            return currentSort.ascending ? -diff : diff;
+          });
           break;
       }
 
-      const summary = calculateSummaryStats(skillsArray, currentData);
-      buildSkillsTable(skillsArray, summary.totalDamage, true); // Skip default sort
+      // Update header indicators
+      updateSortIndicators();
+
+      buildSkillsTable(skillsArray, summary.totalDamage, summary.duration, true); // Skip default sort
     });
-  }
+  });
+}
+
+function updateSortIndicators() {
+  const tableHeaders = document.querySelectorAll('.skills-table th[data-sort]');
+  tableHeaders.forEach(header => {
+    // Remove existing indicators
+    header.textContent = header.textContent.replace(' ▲', '').replace(' ▼', '');
+
+    // Add indicator to current sort column
+    if (header.dataset.sort === currentSort.column) {
+      header.textContent += currentSort.ascending ? ' ▲' : ' ▼';
+    }
+  });
 }
 
 // Setup refresh button
@@ -515,6 +638,24 @@ function updateThemeIcon(isLight) {
   }
 }
 
+// Update DPS history with new real-time data
+function updateDpsHistory(realtimeDps, realtimeHps) {
+  // Shift data to the left (remove oldest point)
+  dpsHistory.dpsValues.shift();
+  dpsHistory.hpsValues.shift();
+
+  // Add new data point at the end
+  dpsHistory.dpsValues.push(realtimeDps || 0);
+  dpsHistory.hpsValues.push(realtimeHps || 0);
+
+  // Update chart if it exists
+  if (currentCharts.dpsGraph) {
+    currentCharts.dpsGraph.data.datasets[0].data = dpsHistory.dpsValues;
+    currentCharts.dpsGraph.data.datasets[1].data = dpsHistory.hpsValues;
+    currentCharts.dpsGraph.update('none'); // Update without animation
+  }
+}
+
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", () => {
   setupThemeToggle();
@@ -524,8 +665,45 @@ document.addEventListener("DOMContentLoaded", () => {
   setupCloseButton();
   loadSkillData();
 
-  // Setup Socket.IO for real-time theme sync
+  // Initialize sort indicator (default is damage descending)
+  updateSortIndicators();
+
+  // Setup Socket.IO for real-time updates
   const socket = io();
+
+  socket.on("connect", () => {
+    console.log("Socket.IO connected, player UID:", playerUid);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Socket.IO disconnected");
+  });
+
+  // Listen for real-time data updates
+  socket.on("data", (response) => {
+    if (!playerUid) {
+      console.log("No playerUid available");
+      return;
+    }
+
+    // Unwrap API response: { code: 0, user: { uid: {...}, uid2: {...} } }
+    const data = response.user || response;
+
+    // Convert playerUid to number for comparison (data keys are integers)
+    const uid = parseInt(playerUid);
+
+    const playerData = data[uid];
+
+    if (!playerData) {
+      return; // Player not in current data (may have left combat)
+    }
+
+    // Update DPS/HPS graph with real-time values
+    const realtimeDps = playerData.realtime_dps || 0;
+    const realtimeHps = playerData.realtime_hps || 0;
+    updateDpsHistory(realtimeDps, realtimeHps);
+  });
+
   socket.on("theme-changed", (data) => {
     if (data.theme) {
       const body = document.body;
