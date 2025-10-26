@@ -5,6 +5,20 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2025-01-XX
+
+### Fixed
+- Line chart not displaying in skill analysis window when using packaged installer
+- Chart.js CDN loading issues in Electron packaged apps
+
+### Changed
+- Chart.js now bundled locally instead of loaded from CDN
+- Skill analysis window loads Chart.js from `public/libs/chart.umd.min.js`
+
+### Added
+- Local Chart.js bundle in `public/libs/` directory
+- `chart.js@^4.5.1` dependency to package.json
+
 ## [1.1.2] - 2025-01-XX
 
 ### Fixed
@@ -121,6 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Winston logging system
 - electron-updater for auto-updates
 
+[1.1.3]: https://github.com/akzios/bpsr-tools/releases/tag/v1.1.3
 [1.1.2]: https://github.com/akzios/bpsr-tools/releases/tag/v1.1.2
 [1.1.1]: https://github.com/akzios/bpsr-tools/releases/tag/v1.1.1
 [1.1.0]: https://github.com/akzios/bpsr-tools/releases/tag/v1.1.0
