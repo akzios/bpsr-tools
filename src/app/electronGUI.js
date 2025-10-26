@@ -31,6 +31,79 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason);
 });
 
+// Register IPC handlers at module level (only once)
+// This prevents duplicate event listeners when createWindow() is called multiple times
+
+// Handle event to make window movable/non-movable
+ipcMain.on("set-window-movable", (event, movable) => {
+  if (mainWindow) {
+    mainWindow.setMovable(movable);
+  }
+});
+
+// Handle event to close window
+ipcMain.on("close-window", (event) => {
+  // Get the window that sent the event and close it
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window) {
+    window.close();
+  }
+});
+
+// Handle event to resize window
+ipcMain.on("resize-window", (event, width, height) => {
+  // Get the window that sent the event and resize it
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window) {
+    window.setSize(width, height);
+  }
+});
+
+// Handle event to open advanced skill analysis window
+ipcMain.on("open-advanced-skill-window", (event, uid) => {
+  logToFile(`Opening advanced skill window for UID: ${uid}`);
+  createAdvancedSkillWindow(uid);
+});
+
+// Handle event to toggle always on top
+ipcMain.on("set-always-on-top", (event, alwaysOnTop) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window) {
+    if (alwaysOnTop) {
+      window.setAlwaysOnTop(true, "screen-saver");
+    } else {
+      window.setAlwaysOnTop(false);
+    }
+    logToFile(`Window always on top set to: ${alwaysOnTop}`);
+  }
+});
+
+// Handle event to get always on top state
+ipcMain.handle("get-always-on-top", (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window) {
+    return window.isAlwaysOnTop();
+  }
+  return true; // Default to true for overlay
+});
+
+// Handle event to set window bounds (position and size)
+ipcMain.on("set-bounds", (event, bounds) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window) {
+    window.setBounds(bounds);
+  }
+});
+
+// Handle event to get window bounds
+ipcMain.handle("get-bounds", (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window) {
+    return window.getBounds();
+  }
+  return null;
+});
+
 async function createWindow() {
   try {
     logToFile("createWindow() called");
@@ -40,6 +113,8 @@ async function createWindow() {
       height: 800,
       minWidth: 700,
       minHeight: 400,
+      maxWidth: 1400,
+      maxHeight: 1200,
       transparent: true,
       frame: false,
       alwaysOnTop: true,
@@ -88,32 +163,77 @@ async function createWindow() {
       mainWindow = null;
     });
 
-    // Handle event to make window movable/non-movable
-    ipcMain.on("set-window-movable", (event, movable) => {
-      if (mainWindow) {
-        mainWindow.setMovable(movable);
-      }
-    });
-
-    // Handle event to close window
-    ipcMain.on("close-window", () => {
-      if (mainWindow) {
-        mainWindow.close();
-      }
-    });
-
-    // Handle event to resize window
-    ipcMain.on("resize-window", (event, width, height) => {
-      if (mainWindow) {
-        mainWindow.setSize(width, height);
-      }
-    });
-
     logToFile("Window created successfully");
   } catch (error) {
     logToFile(`ERROR in createWindow: ${error.message}`);
     logToFile(`Stack: ${error.stack}`);
     console.error("Error in createWindow:", error);
+    throw error;
+  }
+}
+
+// Function to create advanced skill analysis window
+function createAdvancedSkillWindow(uid) {
+  try {
+    logToFile(`Creating advanced skill window for UID: ${uid}`);
+
+    const skillWindow = new BrowserWindow({
+      width: 1400,
+      height: 1000,
+      minWidth: 1200,
+      minHeight: 800,
+      transparent: false,
+      frame: false,
+      alwaysOnTop: true,
+      resizable: true,
+      webPreferences: {
+        preload: path.join(__dirname, "preload.js"),
+        nodeIntegration: false,
+        contextIsolation: true,
+      },
+      icon: path.join(__dirname, "..", "..", "icon.ico"),
+      title: "Advanced Skill Analysis",
+      backgroundColor: "#1a1a2e",
+    });
+
+    // Set window level higher than main overlay to ensure it stays on top
+    skillWindow.setAlwaysOnTop(true, "floating", 1);
+
+    // Determine if running in development mode
+    const isDev = process.defaultApp || process.env.NODE_ENV === "development";
+
+    // Open DevTools in development mode
+    if (isDev) {
+      skillWindow.webContents.openDevTools();
+    }
+
+    const url = `http://localhost:8989/gui-skills-view.html?uid=${uid}`;
+    logToFile(`Loading advanced skill URL: ${url}`);
+    skillWindow.loadURL(url);
+
+    // Log any load failures
+    skillWindow.webContents.on(
+      "did-fail-load",
+      (event, errorCode, errorDescription) => {
+        logToFile(
+          `Advanced skill window failed to load: ${errorCode} - ${errorDescription}`,
+        );
+        console.error(
+          `Advanced skill window load failed: ${errorCode} - ${errorDescription}`,
+        );
+      },
+    );
+
+    skillWindow.on("closed", () => {
+      logToFile("Advanced skill window closed");
+    });
+
+    logToFile("Advanced skill window created successfully");
+    return skillWindow;
+  } catch (error) {
+    logToFile(`ERROR in createAdvancedSkillWindow: ${error.message}`);
+    logToFile(`Stack: ${error.stack}`);
+    console.error("Error in createAdvancedSkillWindow:", error);
     throw error;
   }
 }

@@ -25,39 +25,113 @@ const syncTimerSpan = document.querySelector("#sync-button .sync-timer");
 const logsSection = document.getElementById("logs-section"); // Declare logsSection here
 const loadingIndicator = document.getElementById("loading-indicator"); // Loading indicator
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   // Theme Management
   const themeToggleBtn = document.getElementById("theme-toggle-button");
   const rootElement = document.documentElement;
 
-  // Load saved theme or default to light
-  const savedTheme = localStorage.getItem("theme") || "light";
-  rootElement.setAttribute("data-theme", savedTheme);
-  updateThemeIcon(savedTheme);
+  // Load theme from settings API
+  async function loadTheme() {
+    try {
+      const response = await fetch("/api/settings");
+      const result = await response.json();
+      // Unwrap API response: { code: 0, data: { theme: "dark" } }
+      const settings = result.data || result;
+      const theme = settings.theme || "dark";
+      rootElement.setAttribute("data-theme", theme);
+      updateThemeIcon(theme);
+    } catch (error) {
+      console.error("Error loading theme:", error);
+      // Fallback to dark theme
+      rootElement.setAttribute("data-theme", "dark");
+      updateThemeIcon("dark");
+    }
+  }
+
+  // Save theme to settings API
+  async function saveTheme(theme) {
+    try {
+      const response = await fetch("/api/settings");
+      let settings = await response.json();
+
+      // Ensure we're working with the actual settings object, not the API response wrapper
+      if (settings.data) {
+        settings = settings.data;
+      }
+
+      settings.theme = theme;
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+    } catch (error) {
+      console.error("Error saving theme:", error);
+    }
+  }
 
   function updateThemeIcon(theme) {
     if (themeToggleBtn) {
       const icon = themeToggleBtn.querySelector("i");
       if (icon) {
         icon.className =
-          theme === "light" ? "fa-solid fa-moon" : "fa-solid fa-sun";
+          theme === "light" ? "fa-solid fa-sun" : "fa-solid fa-moon";
       }
     }
   }
 
+  // Load theme on startup
+  await loadTheme();
+
   if (themeToggleBtn) {
-    themeToggleBtn.addEventListener("click", () => {
-      const currentTheme = rootElement.getAttribute("data-theme") || "light";
+    themeToggleBtn.addEventListener("click", async () => {
+      const currentTheme = rootElement.getAttribute("data-theme") || "dark";
       const newTheme = currentTheme === "light" ? "dark" : "light";
       rootElement.setAttribute("data-theme", newTheme);
-      localStorage.setItem("theme", newTheme);
       updateThemeIcon(newTheme);
+      await saveTheme(newTheme);
     });
   }
 
-  // Hide Electron-only buttons when running in web mode
-  if (!window.electronAPI) {
-    const electronOnlyButtons = ["close-button"];
+  // Setup always on top toggle (Electron only)
+  if (window.electronAPI) {
+    const alwaysOnTopBtn = document.getElementById("always-on-top-button");
+    if (alwaysOnTopBtn) {
+      // Show the button in Electron mode
+      alwaysOnTopBtn.style.display = "";
+
+      // Load initial state
+      window.electronAPI.getAlwaysOnTop().then((isOnTop) => {
+        updateAlwaysOnTopIcon(isOnTop);
+      });
+
+      // Handle button click
+      alwaysOnTopBtn.addEventListener("click", async () => {
+        const currentState = await window.electronAPI.getAlwaysOnTop();
+        const newState = !currentState;
+        window.electronAPI.setAlwaysOnTop(newState);
+        updateAlwaysOnTopIcon(newState);
+      });
+    }
+
+    function updateAlwaysOnTopIcon(isOnTop) {
+      if (alwaysOnTopBtn) {
+        const icon = alwaysOnTopBtn.querySelector("i");
+        if (icon) {
+          // Update icon color/style to indicate state
+          if (isOnTop) {
+            alwaysOnTopBtn.style.color = "#667eea";
+            alwaysOnTopBtn.title = "Always on Top: ON (click to disable)";
+          } else {
+            alwaysOnTopBtn.style.color = "";
+            alwaysOnTopBtn.title = "Always on Top: OFF (click to enable)";
+          }
+        }
+      }
+    }
+  } else {
+    // Hide Electron-only buttons when running in web mode
+    const electronOnlyButtons = ["close-button", "always-on-top-button"];
     electronOnlyButtons.forEach((id) => {
       const element = document.getElementById(id);
       if (element) {
@@ -71,6 +145,16 @@ document.addEventListener("DOMContentLoaded", () => {
       controls.style.cursor = "default";
     }
   }
+
+  // Setup Socket.IO for real-time theme sync
+  const socket = io();
+  socket.on("theme-changed", (data) => {
+    if (data.theme) {
+      rootElement.setAttribute("data-theme", data.theme);
+      updateThemeIcon(data.theme);
+      console.log(`Theme updated to ${data.theme} via Socket.IO`);
+    }
+  });
 
   const resetButton = document.getElementById("reset-button");
   if (resetButton) {
@@ -989,20 +1073,26 @@ setTimeout(() => {
   setupSkillAnalysisHandlers();
 }, 100);
 
+// Global variable to store current skill data for advanced window
+let currentSkillData = null;
+
 function displaySkillData(data, uid) {
   if (!data || !data.skills) {
     alert("No skill data available for this player");
     return;
   }
 
+  // Store data globally for advanced mode
+  currentSkillData = data;
+
   const playerName = data.name || `Player ${uid}`;
   const profession = data.professionDetails?.name_en || "Unknown";
 
-  // Open modal
-  openSkillModal(playerName, profession, data.skills);
+  // Open simple modal
+  openSkillModal(playerName, profession, data.skills, uid);
 }
 
-function openSkillModal(playerName, profession, skills) {
+function openSkillModal(playerName, profession, skills, uid) {
   const modal = document.getElementById("skill-modal");
   const modalTitle = document.getElementById("modal-player-name");
   const modalBody = document.getElementById("modal-skill-items");
@@ -1075,8 +1165,40 @@ function openSkillModal(playerName, profession, skills) {
 
   modalBody.innerHTML = html;
 
+  // Setup advanced mode button
+  const advancedBtn = document.getElementById("modal-advanced-btn");
+  if (advancedBtn) {
+    // Remove old listener and add new one
+    const newAdvancedBtn = advancedBtn.cloneNode(true);
+    advancedBtn.parentNode.replaceChild(newAdvancedBtn, advancedBtn);
+
+    newAdvancedBtn.addEventListener("click", () => {
+      openAdvancedSkillAnalysis(uid);
+    });
+  }
+
   // Show modal
   modal.classList.add("active");
+}
+
+function openAdvancedSkillAnalysis(uid) {
+  // Check if we're in Electron or browser
+  if (window.electronAPI) {
+    // In Electron - use IPC to open new window
+    window.electronAPI.openAdvancedSkillWindow(uid);
+  } else {
+    // In browser - open new window/tab
+    const width = 1400;
+    const height = 900;
+    const left = (screen.width - width) / 2;
+    const top = (screen.height - height) / 2;
+
+    window.open(
+      `/gui-skills-view.html?uid=${uid}`,
+      "AdvancedSkillAnalysis",
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
+    );
+  }
 }
 
 function closeSkillModal() {
@@ -1088,6 +1210,85 @@ function closeSkillModal() {
 
 // Expose updateWindowSize to window for inline onclick handlers
 window.updateWindowSize = updateWindowSize;
+
+// Setup resize handles for Electron frameless window
+if (window.electronAPI) {
+  document.addEventListener("DOMContentLoaded", () => {
+    const resizeHandles = document.querySelectorAll(".resize-handle");
+
+    // Enable resize handles in Electron mode
+    resizeHandles.forEach((handle) => {
+      handle.style.display = "block";
+    });
+
+    resizeHandles.forEach((handle) => {
+      handle.addEventListener("mousedown", async (e) => {
+        e.preventDefault();
+
+        const startX = e.screenX;
+        const startY = e.screenY;
+        const startBounds = await window.electronAPI.getBounds();
+
+        const direction = handle.className.replace("resize-handle resize-", "");
+
+        function onMouseMove(e) {
+          const deltaX = e.screenX - startX;
+          const deltaY = e.screenY - startY;
+
+          let newX = startBounds.x;
+          let newY = startBounds.y;
+          let newWidth = startBounds.width;
+          let newHeight = startBounds.height;
+
+          // Calculate new dimensions and position based on resize direction
+          if (direction.includes("right")) {
+            newWidth = startBounds.width + deltaX;
+          } else if (direction.includes("left")) {
+            const widthDelta = startBounds.width - deltaX;
+            newWidth = widthDelta;
+            newX = startBounds.x + deltaX;
+          }
+
+          if (direction.includes("bottom")) {
+            newHeight = startBounds.height + deltaY;
+          } else if (direction.includes("top")) {
+            const heightDelta = startBounds.height - deltaY;
+            newHeight = heightDelta;
+            newY = startBounds.y + deltaY;
+          }
+
+          // Apply size constraints
+          newWidth = Math.max(700, Math.min(1400, newWidth));
+          newHeight = Math.max(400, Math.min(1200, newHeight));
+
+          // Adjust position if we hit minimum size constraint
+          if (direction.includes("left") && newWidth === 700) {
+            newX = startBounds.x + (startBounds.width - 700);
+          }
+          if (direction.includes("top") && newHeight === 400) {
+            newY = startBounds.y + (startBounds.height - 400);
+          }
+
+          // Set window bounds (position + size)
+          window.electronAPI.setBounds({
+            x: Math.round(newX),
+            y: Math.round(newY),
+            width: Math.round(newWidth),
+            height: Math.round(newHeight),
+          });
+        }
+
+        function onMouseUp() {
+          document.removeEventListener("mousemove", onMouseMove);
+          document.removeEventListener("mouseup", onMouseUp);
+        }
+
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+      });
+    });
+  });
+}
 
 // Update UI every 50ms (fast updates with smart DOM preservation)
 setInterval(fetchDataAndRender, 50);
