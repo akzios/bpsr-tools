@@ -5,6 +5,40 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-01-29
+
+### Added
+
+- Parse Mode for dummy testing with configurable duration (1-5 minutes)
+- PNG export feature for parse results with optional toggle
+- Cryptographic verification system (SHA-256 hash) to prevent tampering
+- Desktop save location for PNG exports in Electron mode
+- Comprehensive anti-tampering visual elements:
+  - Verification hash displayed in header and footer
+  - Subtle background patterns and watermarks
+  - Verification badge watermark in center background
+- Detailed stats in PNG export matching player bar format:
+  - DPS, HPS, DT (Damage Taken)
+  - CRIT%, LUCK%, MAX (Peak DPS)
+  - GS (Gear Score), Total Damage, Total Healing
+  - Class icons with damage percentage overlay
+- Toggle switch component shared across all views
+- Console logging of verification data for manual checking
+
+### Changed
+
+- Parse panel uses collapsible layout with duration slider
+- Parse mode waits for local player damage before starting countdown
+- PNG exports to Desktop folder (Electron) or Downloads folder (Web)
+- Toggle switch styles now global instead of scoped to launcher
+- Player row height increased to 85px in PNG exports for comprehensive stats
+
+### Fixed
+
+- Duplicate `timestamp` variable declaration causing JavaScript errors
+- Collapsible panels using proper flex layout
+- Toggle switch styling consistency across GUI and launcher views
+
 ## [1.2.0] - 2025-01-XX
 
 ### Added

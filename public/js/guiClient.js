@@ -1287,30 +1287,36 @@ function applyMonsterTypeFilter(users) {
     .filter((user) => user.total_damage && user.total_damage.total > 0);
 }
 
-// Initialize filter popup handlers
-function initializeFilterPopup() {
+// Initialize collapsible panels
+function initializeCollapsiblePanels() {
   const filterButton = document.getElementById("filter-button");
-  const filterPopup = document.getElementById("filter-popup");
-  const closeFilterButton = document.getElementById("close-filter-popup");
+  const filterPanel = document.getElementById("filter-panel");
+  const parseButton = document.getElementById("parse-button");
+  const parsePanel = document.getElementById("parse-panel");
+  const collapsiblePanels = document.getElementById("collapsible-panels");
 
-  if (!filterButton || !filterPopup || !closeFilterButton) return;
+  // Toggle filter panel
+  if (filterButton && filterPanel) {
+    filterButton.addEventListener("click", () => {
+      const isHidden = !filterPanel.style.display || filterPanel.style.display === "none";
+      // Close parse panel if opening filter panel
+      if (parsePanel && isHidden) {
+        parsePanel.style.display = "none";
+      }
+      filterPanel.style.display = isHidden ? "flex" : "none";
 
-  // Open popup when filter button is clicked
-  filterButton.addEventListener("click", () => {
-    filterPopup.style.display = "flex";
-  });
+      // Update collapsible panels container class
+      if (collapsiblePanels) {
+        if (isHidden) {
+          collapsiblePanels.classList.add("has-open-panel");
+        } else {
+          collapsiblePanels.classList.remove("has-open-panel");
+        }
+      }
+    });
+  }
 
-  // Close popup when close button is clicked
-  closeFilterButton.addEventListener("click", () => {
-    filterPopup.style.display = "none";
-  });
-
-  // Close popup when clicking outside the content area (on overlay)
-  filterPopup.addEventListener("click", (e) => {
-    if (e.target === filterPopup) {
-      filterPopup.style.display = "none";
-    }
-  });
+  // Toggle parse panel (handled below with parse mode logic)
 }
 
 // Update UI every 50ms (fast updates with smart DOM preservation)
@@ -1318,7 +1324,7 @@ setInterval(fetchDataAndRender, 50);
 fetchDataAndRender();
 updateLogsUI();
 initializeMonsterTypeFilter();
-initializeFilterPopup();
+initializeCollapsiblePanels();
 
 // Script to remove VSCode debug text
 document.addEventListener("DOMContentLoaded", () => {
@@ -1374,3 +1380,592 @@ document.addEventListener("DOMContentLoaded", () => {
   removeDebugText();
   setTimeout(removeDebugText, 500); // Retry after 500ms
 });
+
+// Parse Mode
+let parseMode = "inactive"; // "inactive", "waiting", "active"
+let parseDuration = 0;
+let parseStartTime = null;
+let parseEndTime = null;
+let parseCountdownInterval = null;
+let lastDamageTime = 0;
+
+const parseButton = document.getElementById("parse-button");
+const parsePanel = document.getElementById("parse-panel");
+const filterPanel = document.getElementById("filter-panel");
+const collapsiblePanels = document.getElementById("collapsible-panels");
+const parseDurationSlider = document.getElementById("parse-duration-slider");
+const parseDurationDisplay = document.getElementById("parse-duration-display");
+const parseStartBtn = document.getElementById("parse-start-btn");
+const parseCancelBtn = document.getElementById("parse-cancel-btn");
+
+if (parseButton && parsePanel) {
+  // Update duration display when slider changes
+  parseDurationSlider.addEventListener("input", () => {
+    parseDurationDisplay.textContent = parseDurationSlider.value;
+  });
+
+  // Toggle panel visibility
+  parseButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // If parse is active, cancel it
+    if (parseMode !== "inactive") {
+      endParse();
+      return;
+    }
+
+    const isHidden = parsePanel.style.display === "none" || parsePanel.style.display === "";
+    // Close filter panel if opening parse panel
+    if (filterPanel && isHidden) {
+      filterPanel.style.display = "none";
+    }
+    parsePanel.style.display = isHidden ? "flex" : "none";
+
+    // Update collapsible panels container class
+    if (collapsiblePanels) {
+      if (isHidden) {
+        collapsiblePanels.classList.add("has-open-panel");
+      } else {
+        collapsiblePanels.classList.remove("has-open-panel");
+      }
+    }
+  });
+
+  // Cancel button
+  parseCancelBtn.addEventListener("click", () => {
+    parsePanel.style.display = "none";
+    if (collapsiblePanels) {
+      collapsiblePanels.classList.remove("has-open-panel");
+    }
+  });
+
+  // Start parse
+  parseStartBtn.addEventListener("click", async () => {
+    const duration = parseInt(parseDurationSlider.value);
+    parseDuration = duration * 60; // Convert to seconds
+
+    // Clear current data and ensure tracking is resumed
+    await fetch("/api/clear");
+    await fetch("/api/pause", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paused: false })
+    });
+
+    // Set parse mode to waiting for player damage
+    parseMode = "waiting";
+    parseButton.classList.add("waiting");
+    parseButton.title = "Waiting for your damage...";
+
+    // Disable start button, slider, and update text
+    parseStartBtn.disabled = true;
+    parseDurationSlider.disabled = true;
+    parseStartBtn.textContent = "Waiting for damage...";
+
+    // Update button to show waiting state
+    const icon = parseButton.querySelector("i");
+    if (icon) {
+      icon.className = "fa-solid fa-hourglass-start";
+    }
+
+    // Keep panel open - don't hide or remove class
+  });
+
+  function startParseCountdown() {
+    parseMode = "active";
+    parseStartTime = Date.now();
+    parseEndTime = parseStartTime + (parseDuration * 1000);
+
+    parseButton.classList.remove("waiting");
+    parseButton.classList.add("active");
+
+    // Ensure start button is disabled and update text immediately
+    parseStartBtn.disabled = true;
+
+    // Start countdown display immediately
+    updateCountdown();
+    parseCountdownInterval = setInterval(updateCountdown, 1000);
+  }
+
+  function updateCountdown() {
+    if (parseMode !== "active") return;
+
+    const now = Date.now();
+    const remaining = Math.max(0, Math.ceil((parseEndTime - now) / 1000));
+
+    if (remaining <= 0) {
+      endParse();
+      return;
+    }
+
+    const minutes = Math.floor(remaining / 60);
+    const seconds = remaining % 60;
+    const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+    // Update button text and icon
+    parseButton.title = `Parse Active: ${timeStr}`;
+    parseStartBtn.textContent = `Parsing ${timeStr}`;
+
+    // Update button icon with countdown
+    const icon = parseButton.querySelector("i");
+    if (icon) {
+      icon.className = "fa-solid fa-stopwatch";
+    }
+  }
+
+  // Helper function to download canvas as blob (for web mode)
+  function downloadCanvasAsBlob(canvas, filename) {
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      console.log("Parse results exported to Downloads folder");
+    }, "image/png");
+  }
+
+  // Helper function to generate SHA-256 hash
+  async function generateHash(data) {
+    const encoder = new TextEncoder();
+    const dataBuffer = encoder.encode(data);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function exportParseToPNG() {
+    try {
+      // Fetch current data
+      const response = await fetch("/api/data");
+      const userData = await response.json();
+      const userArray = Object.values(userData.user || {})
+        .filter(u => (u.total_damage && u.total_damage.total > 0) || (u.total_healing && u.total_healing.total > 0))
+        .sort((a, b) => (b.total_damage?.total || 0) - (a.total_damage?.total || 0))
+        .slice(0, 10);
+
+      if (userArray.length === 0) {
+        console.log("No data to export");
+        return;
+      }
+
+      // Generate verification hash from parse data
+      const timestamp = new Date().toISOString();
+      const parseData = userArray.map(u => ({
+        name: u.name,
+        dps: Number(u.total_dps) || 0,
+        damage: u.total_damage?.total || 0,
+        profession: u.professionDetails?.name_en || "Unknown"
+      }));
+      const dataString = JSON.stringify({ timestamp, duration: parseDuration, players: parseData });
+      const verificationHash = await generateHash(dataString);
+      const shortHash = verificationHash.substring(0, 16).toUpperCase();
+
+      // Get current theme
+      const isDarkTheme = document.documentElement.getAttribute("data-theme") === "dark";
+
+      // Create canvas
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // Calculate canvas size based on number of players
+      const width = 950; // Width to fit all stat columns
+      const headerHeight = 120;
+      const playerRowHeight = 85; // Increased for more stats
+      const footerHeight = 60;
+      const badgeHeight = 150; // Space for verification badge
+      const height = headerHeight + Math.max((userArray.length * playerRowHeight), badgeHeight) + footerHeight + 60;
+
+      canvas.width = width;
+      canvas.height = height;
+
+      // Theme colors
+      const bgColor = isDarkTheme ? "#1a1d2e" : "#ffffff";
+      const textColor = isDarkTheme ? "#e4e7eb" : "#1f2937";
+      const subTextColor = isDarkTheme ? "#94a3b8" : "#6b7280";
+      const brandPrimary = "#667eea";
+      const brandSecondary = "#764ba2";
+
+      // Draw background with gradient
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, isDarkTheme ? "#1a1d2e" : "#f9fafb");
+      gradient.addColorStop(1, isDarkTheme ? "#252a41" : "#ffffff");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw subtle anti-tampering pattern in background
+      ctx.save();
+      ctx.globalAlpha = 0.03;
+      ctx.strokeStyle = brandPrimary;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < width; i += 40) {
+        for (let j = 0; j < height; j += 40) {
+          ctx.beginPath();
+          ctx.arc(i, j, 15, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+
+      // Draw header with brand gradient
+      const headerGradient = ctx.createLinearGradient(0, 0, width, 0);
+      headerGradient.addColorStop(0, brandPrimary);
+      headerGradient.addColorStop(1, brandSecondary);
+      ctx.fillStyle = headerGradient;
+      ctx.fillRect(0, 0, width, headerHeight);
+
+      // Draw title
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 42px 'Inter', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("BPSR Tools - Parse Results", width / 2, 45);
+
+      // Draw timestamp and duration
+      const displayTimestamp = new Date(timestamp).toLocaleString();
+      ctx.font = "16px 'Inter', sans-serif";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+      const durationMinutes = Math.floor(parseDuration / 60);
+      ctx.fillText(`${displayTimestamp} • ${durationMinutes} min`, width / 2, 75);
+
+      // Draw verification hash with shield icon
+      ctx.font = "bold 14px 'Courier New', monospace";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+      ctx.fillText(`🛡️ ID: ${shortHash}`, width / 2, 100);
+
+      // Draw player rows
+      let yOffset = headerHeight + 20;
+
+      // Load profession icons (we'll handle errors gracefully)
+      const iconPromises = userArray.map(async (u) => {
+        const professionIcon = u.professionDetails?.icon || "unknown.png";
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve({ user: u, img });
+          img.onerror = () => resolve({ user: u, img: null });
+          img.src = `assets/images/icons/${professionIcon}`;
+        });
+      });
+
+      const iconData = await Promise.all(iconPromises);
+
+      iconData.forEach((data, index) => {
+        const u = data.user;
+        const img = data.img;
+        const dps = Number(u.total_dps) || 0;
+        const hps = Number(u.total_hps) || 0;
+        const dt = u.taken_damage || 0;
+        const totalDamage = u.total_damage?.total || 0;
+        const totalHealing = u.total_healing?.total || 0;
+        const professionName = u.professionDetails?.name_en || "Unknown";
+        const playerName = (u.name && typeof u.name === "string" && u.name.trim() !== "") ? u.name : "Unknown";
+        const totalHits = u.total_count?.total || 0;
+        const crit = (u.total_count?.critical !== undefined && totalHits > 0) ? Math.round((u.total_count.critical / totalHits) * 100) : 0;
+        const lucky = (u.total_count?.lucky !== undefined && totalHits > 0) ? Math.round((u.total_count.lucky / totalHits) * 100) : 0;
+        const peak = u.realtime_dps_max !== undefined ? u.realtime_dps_max : 0;
+        const gs = u.fightPoint || 0;
+        const damagePercent = totalDamage > 0 ? Math.round((totalDamage / userArray.reduce((sum, user) => sum + (user.total_damage?.total || 0), 0)) * 100) : 0;
+
+        // Row background (alternating)
+        ctx.fillStyle = index % 2 === 0
+          ? (isDarkTheme ? "rgba(255, 255, 255, 0.03)" : "rgba(0, 0, 0, 0.02)")
+          : (isDarkTheme ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.04)");
+        ctx.fillRect(20, yOffset, width - 40, playerRowHeight);
+
+        // Rank badge
+        const rankSize = 40;
+        const rankX = 45;
+        const rankY = yOffset + playerRowHeight / 2;
+        ctx.fillStyle = brandPrimary;
+        ctx.beginPath();
+        ctx.arc(rankX, rankY, rankSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 18px 'Inter', sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`${index + 1}`, rankX, rankY);
+
+        // Name column (left side)
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        const nameX = 85;
+
+        // Player name
+        ctx.fillStyle = textColor;
+        ctx.font = "bold 16px 'Inter', sans-serif";
+        ctx.fillText(playerName, nameX, yOffset + 15);
+
+        // Profession name
+        ctx.fillStyle = subTextColor;
+        ctx.font = "12px 'Inter', sans-serif";
+        ctx.fillText(professionName, nameX, yOffset + 62);
+
+        // DPS/HPS/DT column
+        const statsX = 290;
+        ctx.textAlign = "left";
+
+        // DPS
+        ctx.fillStyle = textColor;
+        ctx.font = "bold 14px 'Inter', sans-serif";
+        ctx.fillText(formatStat(dps), statsX, yOffset + 15);
+        ctx.fillStyle = subTextColor;
+        ctx.font = "10px 'Inter', sans-serif";
+        ctx.fillText("DPS", statsX + 60, yOffset + 17);
+
+        // HPS
+        ctx.fillStyle = textColor;
+        ctx.font = "bold 14px 'Inter', sans-serif";
+        ctx.fillText(formatStat(hps), statsX, yOffset + 38);
+        ctx.fillStyle = "#28a745";
+        ctx.font = "10px 'Inter', sans-serif";
+        ctx.fillText("HPS", statsX + 60, yOffset + 40);
+
+        // DT
+        ctx.fillStyle = textColor;
+        ctx.font = "bold 14px 'Inter', sans-serif";
+        ctx.fillText(formatStat(dt), statsX, yOffset + 61);
+        ctx.fillStyle = "#ffc107";
+        ctx.font = "10px 'Inter', sans-serif";
+        ctx.fillText("DT", statsX + 60, yOffset + 63);
+
+        // Class icon with percentage overlay
+        const iconSize = 50;
+        const iconX = 460;
+        const iconY = yOffset + (playerRowHeight - iconSize) / 2;
+        if (img) {
+          ctx.drawImage(img, iconX, iconY, iconSize, iconSize);
+        }
+        // Percentage overlay
+        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.fillRect(iconX, iconY + iconSize - 18, iconSize, 18);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 12px 'Inter', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(`${damagePercent}%`, iconX + iconSize / 2, iconY + iconSize - 8);
+
+        // CRIT/LUCK/MAX column
+        const extraX = 560;
+        ctx.textAlign = "left";
+
+        // CRIT
+        ctx.fillStyle = subTextColor;
+        ctx.font = "10px 'Inter', sans-serif";
+        ctx.fillText("CRIT ✸", extraX, yOffset + 20);
+        ctx.fillStyle = textColor;
+        ctx.font = "bold 13px 'Inter', sans-serif";
+        ctx.fillText(`${crit}%`, extraX + 60, yOffset + 18);
+
+        // LUCK
+        ctx.fillStyle = subTextColor;
+        ctx.font = "10px 'Inter', sans-serif";
+        ctx.fillText("LUCK ☘", extraX, yOffset + 43);
+        ctx.fillStyle = textColor;
+        ctx.font = "bold 13px 'Inter', sans-serif";
+        ctx.fillText(`${lucky}%`, extraX + 60, yOffset + 41);
+
+        // MAX
+        ctx.fillStyle = subTextColor;
+        ctx.font = "10px 'Inter', sans-serif";
+        ctx.fillText("MAX ⚔", extraX, yOffset + 66);
+        ctx.fillStyle = textColor;
+        ctx.font = "bold 13px 'Inter', sans-serif";
+        ctx.fillText(formatStat(peak), extraX + 60, yOffset + 64);
+
+        // Additional stats column (right side)
+        const additionalX = 710;
+
+        // GS
+        ctx.fillStyle = subTextColor;
+        ctx.font = "10px 'Inter', sans-serif";
+        ctx.fillText("GS", additionalX, yOffset + 20);
+        ctx.fillStyle = textColor;
+        ctx.font = "bold 13px 'Inter', sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(formatStat(gs), width - 30, yOffset + 18);
+
+        // Total Damage
+        ctx.textAlign = "left";
+        ctx.fillStyle = subTextColor;
+        ctx.font = "10px 'Inter', sans-serif";
+        ctx.fillText("🔥", additionalX, yOffset + 43);
+        ctx.fillStyle = textColor;
+        ctx.font = "bold 13px 'Inter', sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(formatStat(totalDamage), width - 30, yOffset + 41);
+
+        // Total Healing
+        ctx.textAlign = "left";
+        ctx.fillStyle = subTextColor;
+        ctx.font = "10px 'Inter', sans-serif";
+        ctx.fillText("⛨", additionalX, yOffset + 66);
+        ctx.fillStyle = "#28a745";
+        ctx.font = "bold 13px 'Inter', sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(formatStat(totalHealing), width - 30, yOffset + 64);
+
+        yOffset += playerRowHeight;
+      });
+
+      // Draw subtle verification badge watermark in center background
+      ctx.save();
+      ctx.globalAlpha = 0.04;
+      ctx.translate(width / 2, (headerHeight + yOffset) / 2);
+
+      // Large shield icon
+      ctx.font = "120px 'Inter', sans-serif";
+      ctx.fillStyle = brandPrimary;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🛡️", 0, -20);
+
+      // VERIFIED text
+      ctx.font = "bold 30px 'Inter', sans-serif";
+      ctx.fillText("VERIFIED", 0, 70);
+
+      // Hash code
+      ctx.font = "18px 'Courier New', monospace";
+      ctx.fillText(shortHash, 0, 105);
+
+      ctx.restore();
+
+      // Draw semi-transparent watermarks across data
+      ctx.save();
+      ctx.globalAlpha = 0.015;
+      ctx.font = "bold 80px 'Inter', sans-serif";
+      ctx.fillStyle = brandPrimary;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.rotate(-Math.PI / 12);
+      for (let i = 0; i < 3; i++) {
+        ctx.fillText("BPSR TOOLS", width / 2, (height / 4) * (i + 1));
+      }
+      ctx.restore();
+
+      // Draw footer with verification info
+      ctx.fillStyle = textColor;
+      ctx.font = "14px 'Inter', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("Generated with BPSR Tools • Verification Code: " + shortHash, width / 2, height - 35);
+
+      ctx.font = "11px 'Inter', sans-serif";
+      ctx.fillStyle = subTextColor;
+      ctx.fillText("This parse result contains cryptographic verification. Any modifications will invalidate the code.", width / 2, height - 15);
+
+      // Convert canvas to data URL or blob depending on mode
+      const fileTimestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
+      const filename = `bpsr-parse-${fileTimestamp}.png`;
+
+      if (window.electronAPI && window.electronAPI.saveFileToDesktop) {
+        // Electron mode - save to desktop
+        const dataUrl = canvas.toDataURL("image/png");
+        const result = await window.electronAPI.saveFileToDesktop(filename, dataUrl);
+
+        if (result.success) {
+          console.log(`Parse results exported to Desktop: ${result.path}`);
+          console.log(`Verification Code: ${shortHash}`);
+          console.log(`Full Hash: ${verificationHash}`);
+        } else {
+          console.error(`Error saving to Desktop: ${result.error}`);
+          // Fallback to download
+          downloadCanvasAsBlob(canvas, filename);
+        }
+      } else {
+        // Web mode - download as blob
+        downloadCanvasAsBlob(canvas, filename);
+        console.log(`Parse results exported to Downloads folder`);
+        console.log(`Verification Code: ${shortHash}`);
+        console.log(`Full Hash: ${verificationHash}`);
+      }
+
+      // Log verification data for manual checking
+      console.log("Parse verification data:", {
+        timestamp,
+        duration: `${durationMinutes} minutes`,
+        players: parseData.length,
+        verificationCode: shortHash,
+        fullHash: verificationHash
+      });
+
+    } catch (error) {
+      console.error("Error exporting parse to PNG:", error);
+    }
+  }
+
+  async function endParse() {
+    // Check if PNG export is enabled before pausing
+    const exportCheckbox = document.getElementById("parse-export-checkbox");
+    const shouldExport = exportCheckbox && exportCheckbox.checked;
+
+    if (shouldExport) {
+      // Export to PNG before pausing
+      await exportParseToPNG();
+    }
+
+    // Pause tracking
+    await fetch("/api/pause", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paused: true })
+    });
+
+    // Clear state
+    parseMode = "inactive";
+    parseStartTime = null;
+    parseEndTime = null;
+    parseDuration = 0;
+
+    if (parseCountdownInterval) {
+      clearInterval(parseCountdownInterval);
+      parseCountdownInterval = null;
+    }
+
+    parseButton.classList.remove("waiting", "active");
+    parseButton.title = "Parse Mode";
+
+    // Re-enable start button, slider, and reset text
+    parseStartBtn.disabled = false;
+    parseDurationSlider.disabled = false;
+    parseStartBtn.textContent = "Start";
+
+    // Reset icon
+    const icon = parseButton.querySelector("i");
+    if (icon) {
+      icon.className = "fa-solid fa-crosshairs";
+    }
+  }
+
+  // Monitor for player damage to start countdown
+  setInterval(async () => {
+    if (parseMode === "waiting") {
+      try {
+        const response = await fetch("/api/data");
+        const userData = await response.json();
+
+        // Get user array from userData.user object
+        const userArray = Object.values(userData.user || {});
+
+        // Check if local player has dealt damage
+        if (userArray.length > 0) {
+          // Find local player
+          const playerData = userArray.find(user => user.isLocalPlayer === true);
+
+          if (playerData && playerData.total_damage && playerData.total_damage.total > 0) {
+            startParseCountdown();
+          }
+        }
+      } catch (error) {
+        console.error("Error checking for player damage:", error);
+      }
+    }
+  }, 500);
+} else {
+  console.error("Parse mode elements not found:", {
+    parseButton,
+    parsePanel
+  });
+}
