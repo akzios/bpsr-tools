@@ -5,6 +5,20 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2025-10-29
+
+### Changed
+
+- Collapsible panel scrollbars now match app styling with theme-aware colors
+
+### Fixed
+
+- PNG chunk parsing loop condition preventing IEND chunk detection
+  - Changed loop condition from `pos < bytes.length - 12` to `pos <= bytes.length - 12`
+  - Loop was stopping one position before IEND chunk
+  - Metadata injection now works correctly
+  - Verification system now properly finds embedded metadata
+
 ## [1.2.1] - 2025-01-29
 
 ### Added
@@ -210,6 +224,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Winston logging system
 - electron-updater for auto-updates
 
+[1.2.2]: https://github.com/akzios/bpsr-tools/releases/tag/v1.2.2
+[1.2.1]: https://github.com/akzios/bpsr-tools/releases/tag/v1.2.1
 [1.2.0]: https://github.com/akzios/bpsr-tools/releases/tag/v1.2.0
 [1.1.3]: https://github.com/akzios/bpsr-tools/releases/tag/v1.1.3
 [1.1.2]: https://github.com/akzios/bpsr-tools/releases/tag/v1.1.2

@@ -168,6 +168,19 @@
               <button id="parse-start-btn" class="modal-btn confirm" style="flex: 1;">Start</button>
               <button id="parse-cancel-btn" class="modal-btn cancel" style="flex: 1;">Cancel</button>
             </div>
+
+            <!-- Verification Section -->
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-default);">
+              <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600;">
+                Verify PNG Parse
+              </label>
+              <div id="verify-drop-zone" style="border: 2px dashed var(--border-default); border-radius: 6px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface-base);">
+                <i class="fa-solid fa-file-image" style="font-size: 2rem; color: var(--text-secondary); margin-bottom: 8px;"></i>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">Drop PNG here or click to select</p>
+              </div>
+              <input type="file" id="verify-file-input" accept="image/png" style="display: none;" />
+              <div id="verify-result" style="margin-top: 12px; display: none;"></div>
+            </div>
           </div>
         </div>
       </div>
