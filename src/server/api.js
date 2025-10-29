@@ -23,8 +23,14 @@ function initializeApi(
   sniffer,
 ) {
   app.use(cors());
-  app.use(express.json());
+  app.use(express.json({ charset: 'utf-8' }));
   app.use(express.static(path.join(__dirname, "..", "..", "public"))); // Adjust the path
+
+  // Set UTF-8 charset for all responses
+  app.use((req, res, next) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    next();
+  });
 
   // Health check endpoint
   app.get("/-/health", (req, res) => {

@@ -50,6 +50,13 @@
         >
           <i class="fa-solid fa-pause"></i>
         </button>
+        <button
+          class="control-button btn-medium"
+          id="parse-button"
+          title="Parse Mode"
+        >
+          <i class="fa-solid fa-crosshairs"></i>
+        </button>
         <!-- Advanced/Lite button -->
         <button
           class="control-button btn-large"
@@ -97,24 +104,19 @@
         </button>
       </header>
 
-      <!-- Filter Popup -->
-      <div id="filter-popup" class="filter-popup" style="display: none">
-        <div class="filter-popup-content">
-          <div class="filter-popup-header">
-            <h3>Filter Options</h3>
-            <button class="filter-close-btn" id="close-filter-popup">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-          <div class="filter-popup-body">
+      <div id="logs-section"></div>
+
+      <!-- Collapsible Panels -->
+      <div id="collapsible-panels">
+        <!-- Filter Panel -->
+        <div id="filter-panel" class="collapsible-panel">
+          <div class="panel-content">
             <div class="filter-group">
               <label for="monster-type-filter">Monster Type:</label>
               <div class="filter-multiselect" id="monster-type-filter">
                 <button type="button" class="filter-multiselect-button">
                   <span class="filter-multiselect-text">All Selected</span>
-                  <i
-                    class="fa-solid fa-chevron-down filter-multiselect-arrow"
-                  ></i>
+                  <i class="fa-solid fa-chevron-down filter-multiselect-arrow"></i>
                 </button>
                 <div class="filter-multiselect-dropdown" style="display: none">
                   <div class="filter-checkbox-group">
@@ -140,9 +142,36 @@
             </div>
           </div>
         </div>
+
+        <!-- Parse Panel -->
+        <div id="parse-panel" class="collapsible-panel" style="display: none;">
+          <div class="panel-content">
+            <label style="display: block; margin-bottom: 12px; font-size: 0.85rem;">
+              Parse Duration: <span id="parse-duration-display">3</span> min
+            </label>
+            <input
+              type="range"
+              id="parse-duration-slider"
+              min="1"
+              max="5"
+              value="3"
+              step="1"
+            />
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 12px;">
+              <span style="font-size: 0.85rem; color: var(--text-primary);">Export to PNG</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="parse-export-checkbox" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div style="display: flex; gap: 6px; margin-top: 12px;">
+              <button id="parse-start-btn" class="modal-btn confirm" style="flex: 1;">Start</button>
+              <button id="parse-cancel-btn" class="modal-btn cancel" style="flex: 1;">Cancel</button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div id="logs-section" style="margin-top: 8px"></div>
       <div id="loading-indicator" class="gui-loading-overlay">
         <div class="gui-loading-content">
           <div class="gui-spinner"></div>
@@ -150,16 +179,7 @@
           <p class="gui-loading-hint">Start a fight to see DPS metrics</p>
         </div>
       </div>
-      <main
-        id="player-bars-container"
-        style="
-          margin-top: 54px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 4px;
-          padding: 8px;
-          display: none;
-        "
-      ></main>
+      <main id="player-bars-container"></main>
     </div>
 
     <script src="js/guiClient.js"></script>

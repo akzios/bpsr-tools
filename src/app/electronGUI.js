@@ -110,6 +110,27 @@ ipcMain.handle("get-bounds", (event) => {
   return null;
 });
 
+// Handle event to save file to desktop
+ipcMain.handle("save-file-to-desktop", async (event, filename, dataUrl) => {
+  try {
+    const desktopPath = app.getPath("desktop");
+    const filePath = path.join(desktopPath, filename);
+
+    // Convert data URL to buffer
+    const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
+
+    // Write file to desktop
+    fs.writeFileSync(filePath, buffer);
+
+    logToFile(`File saved to desktop: ${filePath}`);
+    return { success: true, path: filePath };
+  } catch (error) {
+    logToFile(`Error saving file to desktop: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+});
+
 async function createWindow() {
   try {
     logToFile("createWindow() called");
