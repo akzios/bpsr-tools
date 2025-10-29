@@ -14,7 +14,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <script src="libs/chart.umd.min.js"></script>
+    <script src="assets/libs/chart.umd.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="css/style.css" />
   </head>
@@ -23,7 +23,12 @@
       <!-- Header -->
       <header class="skill-analysis-header">
         <div class="header-left">
-          <img id="class-icon" src="icon.png" alt="Class Icon" style="height: 32px" />
+          <img
+            id="class-icon"
+            src="icon.png"
+            alt="Class Icon"
+            style="height: 32px"
+          />
           <h1 id="page-title">Skill Analysis</h1>
         </div>
         <div class="header-controls">
@@ -162,6 +167,24 @@
               </thead>
               <tbody id="skill-items">
                 <!-- Skills will be inserted here -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Monster Damage Table -->
+          <div class="skills-table-wrapper" style="margin-top: 20px">
+            <table class="skills-table" id="monster-damage-table">
+              <thead>
+                <tr>
+                  <th data-sort-monster="name">Monster Name</th>
+                  <th data-sort-monster="type">Type</th>
+                  <th data-sort-monster="classification">Classification</th>
+                  <th data-sort-monster="damage">Total DMG</th>
+                  <th data-sort-monster="percent">Damage %</th>
+                </tr>
+              </thead>
+              <tbody id="monster-damage-items">
+                <!-- Monster damage will be inserted here -->
               </tbody>
             </table>
           </div>

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BPSR Tools - Minimap</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <style>
+      /* Leaflet map container */
+      #minimap {
+        width: 100%;
+        height: 400px;
+        background: #1a1f2e;
+      }
+
+      /* Custom player marker */
+      .player-marker-icon {
+        width: 20px;
+        height: 20px;
+        background: #667eea;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 0 15px rgba(102, 126, 234, 0.8);
+      }
+
+      /* Custom collectible markers */
+      .collectible-marker {
+        width: 12px;
+        height: 12px;
+        transform: rotate(45deg);
+        border: 1px solid #ffffff;
+      }
+
+      .collectible-marker.chest {
+        background: #ffd700;
+      }
+      .collectible-marker.story-item {
+        background: #4a90e2;
+      }
+      .collectible-marker.time-trial {
+        background: #e74c3c;
+      }
+      .collectible-marker.photo-location {
+        background: #9b59b6;
+      }
+      .collectible-marker.collected {
+        opacity: 0.3;
+      }
+    </style>
+  </head>
+  <body class="minimap-root">
+    <div class="minimap-container">
+      <div class="minimap-header">
+        <div class="scene-info">
+          <span id="scene-name">Unknown Scene</span>
+          <span id="map-info">Map: - | Line: -</span>
+        </div>
+        <div class="collectible-filters">
+          <div class="filter-dropdown">
+            <button class="filter-dropdown-button" id="filter-dropdown-btn">
+              <span>Collectibles</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filter-dropdown-menu">
+              <label class="filter-dropdown-item">
+                <input type="checkbox" id="filter-chests" checked />
+                <span class="filter-label" style="color: #ffd700"
+                  >◆ Chests</span
+                >
+              </label>
+              <label class="filter-dropdown-item">
+                <input type="checkbox" id="filter-story-items" checked />
+                <span class="filter-label" style="color: #4a90e2"
+                  >◆ Story Items</span
+                >
+              </label>
+              <label class="filter-dropdown-item">
+                <input type="checkbox" id="filter-time-trials" checked />
+                <span class="filter-label" style="color: #e74c3c"
+                  >◆ Time Trials</span
+                >
+              </label>
+              <label class="filter-dropdown-item">
+                <input type="checkbox" id="filter-photo-locations" checked />
+                <span class="filter-label" style="color: #9b59b6"
+                  >◆ Photo Locations</span
+                >
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="minimap-canvas-wrapper">
+        <!-- Leaflet map container (replaces canvas) -->
+        <div id="minimap"></div>
+
+        <!-- Loading indicator for unknown maps -->
+        <div
+          id="minimap-loading-indicator"
+          class="minimap-loading-overlay hidden"
+        >
+          <div class="minimap-loading-content">
+            <div class="minimap-spinner"></div>
+            <p class="minimap-loading-text">Waiting for map data...</p>
+            <p class="minimap-loading-hint">
+              Please change scenes or enter a known area
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="minimap-footer">
+        <div class="position-info">
+          <span id="position-display">X: 0 | Y: 0 | Z: 0</span>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/minimapClient.js"></script>
+  </body>
+</html>

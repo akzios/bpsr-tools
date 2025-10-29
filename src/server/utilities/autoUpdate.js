@@ -1,4 +1,4 @@
-/**
+1; /**
  * Auto-Update Utility
  * Handles automatic updates from Google Drive using electron-updater
  */

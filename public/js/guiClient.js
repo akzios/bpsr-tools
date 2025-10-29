@@ -9,19 +9,10 @@ console.log("main.js loaded successfully");
 
 let lastTotalDamage = 0;
 let lastDamageChangeTime = Date.now();
-let currentZoom = 1.0; // Initial zoom factor
-let syncTimerInterval;
-let syncCountdown = 0;
-const SYNC_RESET_TIME = 80; // Seconds for automatic reset
-let syncTimerDisplayTimeout; // For the 200ms delay
 let logPreviewTimeout; // Declare logPreviewTimeout here
 let lastRenderedData = null; // Store last rendered data to prevent unnecessary re-renders
 
-const dpsTimerDiv = document.getElementById("dps-timer");
 const playerBarsContainer = document.getElementById("player-bars-container");
-const syncButton = document.getElementById("sync-button");
-const syncIcon = document.querySelector("#sync-button .sync-icon");
-const syncTimerSpan = document.querySelector("#sync-button .sync-timer");
 const logsSection = document.getElementById("logs-section"); // Declare logsSection here
 const loadingIndicator = document.getElementById("loading-indicator"); // Loading indicator
 
@@ -156,12 +147,68 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // Declare pause-related variables at function scope
+  let isPaused = false;
+  let updatePauseButton;
+
   const resetButton = document.getElementById("reset-button");
   if (resetButton) {
     resetButton.addEventListener("click", () => {
       resetDpsMeter();
     });
   }
+
+  // Pause Button
+  const pauseButton = document.getElementById("pause-button");
+  if (pauseButton) {
+    // Load initial pause state
+    fetch("/api/pause")
+      .then((res) => res.json())
+      .then((data) => {
+        isPaused = data.paused || false;
+        updatePauseButton();
+      })
+      .catch((err) => console.error("Error loading pause state:", err));
+
+    pauseButton.addEventListener("click", async () => {
+      isPaused = !isPaused;
+      try {
+        const response = await fetch("/api/pause", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paused: isPaused }),
+        });
+        const data = await response.json();
+        isPaused = data.paused;
+        updatePauseButton();
+      } catch (err) {
+        console.error("Error toggling pause:", err);
+        isPaused = !isPaused; // Revert on error
+      }
+    });
+
+    updatePauseButton = function () {
+      const icon = pauseButton.querySelector("i");
+      if (isPaused) {
+        pauseButton.classList.add("paused");
+        pauseButton.title = "Resume Tracking";
+        icon.className = "fa-solid fa-play";
+      } else {
+        pauseButton.classList.remove("paused");
+        pauseButton.title = "Pause Tracking";
+        icon.className = "fa-solid fa-pause";
+      }
+    };
+  }
+
+  // Listen for pause state changes from other clients
+  socket.on("pause-state-changed", (data) => {
+    isPaused = data.paused;
+    if (updatePauseButton) {
+      updatePauseButton();
+    }
+    console.log(`Pause state synced: ${isPaused ? "paused" : "resumed"}`);
+  });
 
   // Advanced/Lite Button
   const advLiteBtn = document.getElementById("advanced-lite-btn");
@@ -199,25 +246,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
-  const zoomInButton = document.getElementById("zoom-in-button");
-  const zoomOutButton = document.getElementById("zoom-out-button");
-
-  if (zoomInButton) {
-    zoomInButton.addEventListener("click", () => {
-      currentZoom = Math.min(2.0, currentZoom + 0.1); // Limit maximum zoom to 2.0
-      applyZoom();
-    });
-  }
-
-  if (zoomOutButton) {
-    zoomOutButton.addEventListener("click", () => {
-      currentZoom = Math.max(0.5, currentZoom - 0.1); // Limit minimum zoom to 0.5
-      applyZoom();
-    });
-  }
-
-  // Sync button is now just a visual indicator, no click handler
-
   const closeButton = document.getElementById("close-button");
   if (closeButton) {
     closeButton.addEventListener("click", () => {
@@ -247,15 +275,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 });
-
-function applyZoom() {
-  const dpsMeter = document.querySelector(".bpsr-tools");
-  if (dpsMeter) {
-    dpsMeter.style.transform = `scale(${currentZoom})`;
-    dpsMeter.style.transformOrigin = "top left";
-    updateWindowSize(); // Redimensionar la ventana al aplicar zoom
-  }
-}
 
 function updateWindowSize() {
   const dpsMeter = document.querySelector(".bpsr-tools");
@@ -290,9 +309,9 @@ function updateWindowSize() {
     barsHeight = 50;
   }
 
-  // Calculate total height unscaled, including header, margins, and shadow space
+  // Calculate total height, including header, margins, and shadow space
   const shadowSpace = 24; // Box-shadow blur radius (0 0 24px)
-  const totalContentHeightUnscaled =
+  const totalContentHeight =
     headerHeight +
     marginTop +
     borderWidth +
@@ -301,83 +320,17 @@ function updateWindowSize() {
     shadowSpace +
     20; // Include shadow space + buffer
 
-  // Apply current zoom to window width and height
-  const finalWidth = Math.round(baseWidth * currentZoom);
-  const finalHeight = Math.round(totalContentHeightUnscaled * currentZoom);
+  const finalWidth = Math.round(baseWidth);
+  const finalHeight = Math.round(totalContentHeight);
 
   window.electronAPI.resizeWindow(finalWidth, finalHeight);
 }
 
 function resetDpsMeter() {
   fetch("/api/clear");
-  dpsTimerDiv.style.display = "none";
-  dpsTimerDiv.innerText = "";
   console.log("Meter Restarted");
   lastTotalDamage = 0;
   lastDamageChangeTime = Date.now();
-  stopSyncTimer(); // Stop sync timer on reset
-}
-
-// The syncData function is no longer called by click, but kept in case used internally
-async function syncData() {
-  // Don't modify visual state here, managed in updateSyncButtonState
-  try {
-    await fetch("/api/sync", { method: "POST" });
-    console.log("Data synced internally.");
-  } catch (error) {
-    console.error("Error syncing data:", error);
-  }
-}
-
-// Function to update the sync indicator visual state
-function updateSyncButtonState() {
-  clearTimeout(syncTimerDisplayTimeout); // Clear any pending timeout
-
-  if (syncTimerInterval) {
-    // If timer is active (countdown running)
-    if (syncCountdown <= 60) {
-      // Show timer, hide icon
-      syncIcon.style.display = "none";
-      syncIcon.classList.remove("spinning");
-      syncTimerSpan.innerText = `${syncCountdown}s`;
-      syncTimerSpan.style.display = "block";
-    } else {
-      // Show spinning icon, hide timer
-      syncIcon.style.display = "block";
-      syncIcon.classList.add("spinning"); // Ensures continuous spinning
-      syncTimerSpan.style.display = "none";
-    }
-  } else {
-    // If timer is not active (no countdown)
-    // Show spinning icon, hide timer
-    syncIcon.style.display = "block";
-    syncIcon.classList.add("spinning"); // Ensures continuous spinning
-    syncTimerSpan.style.display = "none";
-    syncTimerSpan.innerText = "";
-  }
-}
-
-function startSyncTimer() {
-  if (syncTimerInterval) return; // Prevent multiple timers
-  syncCountdown = SYNC_RESET_TIME;
-  updateSyncButtonState(); // Set initial state
-
-  syncTimerInterval = setInterval(() => {
-    syncCountdown--;
-    updateSyncButtonState(); // Update state on each tick
-
-    if (syncCountdown <= 0) {
-      stopSyncTimer();
-      resetDpsMeter();
-    }
-  }, 1000);
-}
-
-function stopSyncTimer() {
-  clearInterval(syncTimerInterval);
-  syncTimerInterval = null;
-  clearTimeout(syncTimerDisplayTimeout); // Clear timeout if exists
-  updateSyncButtonState(); // Reset indicator state
 }
 
 function formatTimer(ms) {
@@ -437,7 +390,7 @@ function showLogPreview(log) {
   }
 
   // Note: Log preview shows historical data - profession name can be added to log structure if needed
-  logPreview.innerHTML = `<div class=\"player-bar\" style=\"margin-top:10px;\">\n            <div class=\"progress-fill\" style=\"width: 100%; background: #444b5a;\"></div>\n            <div class=\"bar-content\">\n                <div class=\"player-info\">\n                    <span class=\"player-name\">${log.nombre}</span>\n                    <span class=\"player-id\">ID: ${log.id}</span>\n                </div>\n                <div class=\"player-performance\">\n                    <div class=\"stats-list\">\n                        <span class=\"main-stat\">DPS ${formatStat(log.dps)}</span>\n                        <span class=\"secondary-stat\">HPS ${formatStat(log.hps)}</span>\n                        <span class=\"secondary-stat\">DTPS ${formatStat(log.dtps)}</span>\n                    </div>\n                    <img class=\"class-icon\" src=\"icons/${log.icon}\" alt=\"icon\">\n                </div>\n            </div>\n        </div>`;
+  logPreview.innerHTML = `<div class=\"player-bar\" style=\"margin-top:10px;\">\n            <div class=\"progress-fill\" style=\"width: 100%; background: #444b5a;\"></div>\n            <div class=\"bar-content\">\n                <div class=\"player-info\">\n                    <span class=\"player-name\">${log.nombre}</span>\n                    <span class=\"player-id\">ID: ${log.id}</span>\n                </div>\n                <div class=\"player-performance\">\n                    <div class=\"stats-list\">\n                        <span class=\"main-stat\">DPS ${formatStat(log.dps)}</span>\n                        <span class=\"secondary-stat\">HPS ${formatStat(log.hps)}</span>\n                        <span class=\"secondary-stat\">DTPS ${formatStat(log.dtps)}</span>\n                    </div>\n                    <img class=\"class-icon\" src=\"assets/images/icons/${log.icon}\" alt=\"icon\">\n                </div>\n            </div>\n        </div>`;
   logPreviewTimeout = setTimeout(() => {
     logPreview.innerHTML = "";
   }, 7000);
@@ -487,13 +440,11 @@ const playerColors = [
 async function fetchDataAndRender() {
   const container = document.getElementById("player-bars-container");
   try {
-    const [dataRes, dictRes, settingsRes] = await Promise.all([
+    const [dataRes, settingsRes] = await Promise.all([
       fetch("/api/data"),
-      fetch("/api/dictionary"),
       fetch("/api/settings"),
     ]);
     const userData = await dataRes.json();
-    const dictionaryData = await dictRes.json();
     const currentGlobalSettings = await settingsRes.json();
 
     let userArray = Object.values(userData.user);
@@ -505,15 +456,34 @@ async function fetchDataAndRender() {
         professionDetails: userArray[0].professionDetails,
       });
     }
+    // Filter to show users who have dealt damage OR provided healing
     userArray = userArray.filter(
-      (u) => u.total_damage && u.total_damage.total > 0,
+      (u) =>
+        (u.total_damage && u.total_damage.total > 0) ||
+        (u.total_healing && u.total_healing.total > 0),
     );
+
+    // Apply monster type filter
+    const originalUserArrayLength = userArray.length;
+    userArray = applyMonsterTypeFilter(userArray);
 
     if (!userArray || userArray.length === 0) {
       loadingIndicator.style.display = "flex"; // Show loading indicator
       playerBarsContainer.style.display = "none"; // Hide player bars container
+
+      // Update loading message based on whether we had data before filtering
+      const loadingText = document.querySelector(".gui-loading-text");
+      const loadingHint = document.querySelector(".gui-loading-hint");
+      if (originalUserArrayLength > 0 && userArray.length === 0) {
+        loadingText.textContent = "No data matches the current filter";
+        loadingHint.textContent =
+          "Adjust your monster type filter to see results";
+      } else {
+        loadingText.textContent = "Waiting for combat data...";
+        loadingHint.textContent = "Start a fight to see DPS metrics";
+      }
+
       lastRenderedData = null; // Reset signature when no data
-      updateSyncButtonState();
       return;
     }
 
@@ -529,24 +499,21 @@ async function fetchDataAndRender() {
       0,
     );
 
+    // Auto-clear logic: reset if no damage change for 80 seconds
     if (sumaTotalDamage > 0) {
       if (sumaTotalDamage !== lastTotalDamage) {
         lastTotalDamage = sumaTotalDamage;
         lastDamageChangeTime = Date.now();
-        stopSyncTimer();
       } else {
-        if (Date.now() - lastDamageChangeTime > SYNC_RESET_TIME * 1000) {
+        const AUTO_CLEAR_TIME_MS = 80 * 1000; // 80 seconds
+        if (Date.now() - lastDamageChangeTime > AUTO_CLEAR_TIME_MS) {
           resetDpsMeter();
           return;
-        }
-        if (!syncTimerInterval) {
-          startSyncTimer();
         }
       }
     } else {
       lastTotalDamage = 0;
       lastDamageChangeTime = Date.now();
-      stopSyncTimer();
     }
 
     // Calculate damagePercent for all users (base for Advanced and Lite DPS)
@@ -611,9 +578,6 @@ async function fetchDataAndRender() {
       container.innerHTML =
         '<div id="message-display">Connection error...</div>';
     }
-  } finally {
-    updateSyncButtonState();
-    updateWindowSize();
   }
 }
 
@@ -775,7 +739,7 @@ function updateExistingBar(wrapper, u, index, isLiteMode, liteModeType) {
 
     // Update icon
     const iconEl = bar.querySelector(".lite-bar-icon");
-    if (iconEl) iconEl.src = `icons/${professionIcon}`;
+    if (iconEl) iconEl.src = `assets/images/icons/${professionIcon}`;
   } else {
     // Update Advanced mode bar
     const professionName = u.professionDetails?.name_en || "Unknown";
@@ -841,7 +805,7 @@ function updateExistingBar(wrapper, u, index, isLiteMode, liteModeType) {
 
     // Update class icon
     const classIcon = bar.querySelector(".class-icon");
-    if (classIcon) classIcon.src = `icons/${professionIcon}`;
+    if (classIcon) classIcon.src = `assets/images/icons/${professionIcon}`;
 
     // Update percentage overlay on icon
     const percentOverlay = bar.querySelector(".icon-col span");
@@ -919,7 +883,7 @@ function createNewBar(u, index, isLiteMode, liteModeType) {
                             <i class="fa-solid fa-chart-line"></i>
                         </div>
                         <div style="display: flex; align-items: center; gap: 5px;">
-                            <img class="lite-bar-icon" src="icons/${professionIcon}" alt="icon" style="margin-left:2px; margin-right:5px;" />
+                            <img class="lite-bar-icon" src="assets/images/icons/${professionIcon}" alt="icon" style="margin-left:2px; margin-right:5px;" />
                             <span class="lite-bar-name">${playerName}</span>
                         </div>
                         <div class="lite-bar-values">
@@ -975,7 +939,7 @@ function createNewBar(u, index, isLiteMode, liteModeType) {
                             </div>
                         </div>
                         <div class="column icon-col" style="flex-direction: column; justify-content: center; align-items: center; text-align: center; min-width: 65px; position: relative; margin-left: -10px;">
-                            <img class="class-icon" src="icons/${professionIcon}" alt="icon" style="height: 42px; width: 42px;">
+                            <img class="class-icon" src="assets/images/icons/${professionIcon}" alt="icon" style="height: 42px; width: 42px;">
                             <span style="font-size: 0.8rem; font-weight: 600; color: #fff; background: rgba(0, 0, 0, 0.5); padding: 0 4px; border-radius: 5px; position: absolute; top: 12.5px; left: 50%; transform: translateX(-50%); text-shadow: 0 0 2px rgba(0,0,0,0.7);">${Math.round(u.damagePercent)}%</span>
                         </div>
                         <div class="column extra-col" style="margin-left: -10px;">
@@ -1058,8 +1022,8 @@ function setupSkillAnalysisHandlers() {
           const top = (screen.height - height) / 2;
           window.open(
             `/gui-skills-view.html?uid=${uid}`,
-            'skillAnalysis',
-            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+            "skillAnalysis",
+            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
           );
         }
       }
@@ -1155,10 +1119,206 @@ if (window.electronAPI) {
   });
 }
 
+// Monster Type Filter Function
+function initializeMonsterTypeFilter() {
+  const filterGroup = document.getElementById("monster-type-filter");
+  if (!filterGroup) return;
+
+  const dropdownButton = filterGroup.querySelector(
+    ".filter-multiselect-button",
+  );
+  const dropdownMenu = filterGroup.querySelector(
+    ".filter-multiselect-dropdown",
+  );
+  const buttonText = filterGroup.querySelector(".filter-multiselect-text");
+  const checkboxes = filterGroup.querySelectorAll('input[type="checkbox"]');
+  const filterButton = document.getElementById("filter-button");
+  const filterIcon = filterButton?.querySelector("i");
+
+  // Update button text and filter icon based on selected items
+  function updateButtonText() {
+    const selectedItems = Array.from(checkboxes)
+      .filter((cb) => cb.checked)
+      .map((cb) => cb.nextElementSibling.textContent);
+
+    if (selectedItems.length === 0) {
+      buttonText.textContent = "None Selected";
+    } else if (selectedItems.length === checkboxes.length) {
+      buttonText.textContent = "All Selected";
+    } else {
+      buttonText.textContent = selectedItems.join(", ");
+    }
+
+    // Update filter button icon and color
+    if (filterIcon) {
+      if (
+        selectedItems.length === 0 ||
+        selectedItems.length === checkboxes.length
+      ) {
+        // No filter applied - use regular filter icon
+        filterIcon.className = "fa-solid fa-filter";
+        filterButton.style.color = "";
+        filterButton.classList.remove("active");
+      } else {
+        // Filter applied - use filled filter icon with brand color
+        filterIcon.className = "fa-solid fa-filter-circle-xmark";
+        filterButton.style.color = "var(--brand-primary)";
+        filterButton.classList.add("active");
+      }
+    }
+  }
+
+  // Toggle dropdown
+  dropdownButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = dropdownMenu.style.display === "block";
+    dropdownMenu.style.display = isOpen ? "none" : "block";
+    dropdownButton.classList.toggle("open", !isOpen);
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!filterGroup.contains(e.target)) {
+      dropdownMenu.style.display = "none";
+      dropdownButton.classList.remove("open");
+    }
+  });
+
+  // Load saved filter preferences from localStorage
+  const savedFilters = localStorage.getItem("monsterTypeFilter");
+  if (savedFilters) {
+    const selectedValues = JSON.parse(savedFilters);
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = selectedValues.includes(checkbox.value);
+    });
+  }
+  updateButtonText();
+
+  // Handle filter change on any checkbox
+  checkboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      const selectedValues = Array.from(checkboxes)
+        .filter((cb) => cb.checked)
+        .map((cb) => cb.value);
+      localStorage.setItem("monsterTypeFilter", JSON.stringify(selectedValues));
+      console.log(`Filter changed to: ${selectedValues.join(", ")}`);
+      updateButtonText();
+      // Trigger immediate re-render with new filter
+      fetchDataAndRender();
+    });
+  });
+}
+
+// Apply monster type filter to user data
+function applyMonsterTypeFilter(users) {
+  const filterGroup = document.getElementById("monster-type-filter");
+  if (!filterGroup) return users;
+
+  // Get selected filter values from checkboxes
+  const checkboxes = filterGroup.querySelectorAll('input[type="checkbox"]');
+  const selectedValues = Array.from(checkboxes)
+    .filter((cb) => cb.checked)
+    .map((cb) => cb.value);
+
+  // If no options are selected, return empty array
+  if (selectedValues.length === 0) {
+    return [];
+  }
+
+  // If all options are selected, return all users (no filtering)
+  if (selectedValues.length === checkboxes.length) {
+    return users;
+  }
+
+  // Filter users based on monster type they damaged
+  return users
+    .map((user) => {
+      if (!user.targetDamage || user.targetDamage.length === 0) return user;
+
+      // Filter target damage by selected monster types and classifications
+      const filteredTargetDamage = user.targetDamage.filter((target) => {
+        // Check if target matches any of the selected filters
+        return selectedValues.some((filterValue) => {
+          if (filterValue === "normal") {
+            return target.monsterType === 0;
+          } else if (filterValue === "dummy") {
+            return target.monsterType === 1;
+          } else if (filterValue === "elite") {
+            // Elite includes any classification containing "elite"
+            // OR type 2 without classification (assume both boss and elite)
+            if (
+              target.classification &&
+              target.classification.toLowerCase().includes("elite")
+            ) {
+              return true;
+            }
+            return target.monsterType === 2 && !target.classification;
+          } else if (filterValue === "boss") {
+            // Boss includes any classification containing "boss"
+            // OR type 2 without classification (assume both boss and elite)
+            if (
+              target.classification &&
+              target.classification.toLowerCase().includes("boss")
+            ) {
+              return true;
+            }
+            return target.monsterType === 2 && !target.classification;
+          }
+          return false;
+        });
+      });
+
+      // Recalculate total damage based on filtered targets
+      const filteredTotalDamage = filteredTargetDamage.reduce(
+        (sum, target) => sum + target.damage,
+        0,
+      );
+
+      // Return user with filtered data
+      return {
+        ...user,
+        targetDamage: filteredTargetDamage,
+        total_damage: {
+          ...user.total_damage,
+          total: filteredTotalDamage,
+        },
+      };
+    })
+    .filter((user) => user.total_damage && user.total_damage.total > 0);
+}
+
+// Initialize filter popup handlers
+function initializeFilterPopup() {
+  const filterButton = document.getElementById("filter-button");
+  const filterPopup = document.getElementById("filter-popup");
+  const closeFilterButton = document.getElementById("close-filter-popup");
+
+  if (!filterButton || !filterPopup || !closeFilterButton) return;
+
+  // Open popup when filter button is clicked
+  filterButton.addEventListener("click", () => {
+    filterPopup.style.display = "flex";
+  });
+
+  // Close popup when close button is clicked
+  closeFilterButton.addEventListener("click", () => {
+    filterPopup.style.display = "none";
+  });
+
+  // Close popup when clicking outside the content area (on overlay)
+  filterPopup.addEventListener("click", (e) => {
+    if (e.target === filterPopup) {
+      filterPopup.style.display = "none";
+    }
+  });
+}
+
 // Update UI every 50ms (fast updates with smart DOM preservation)
 setInterval(fetchDataAndRender, 50);
 fetchDataAndRender();
 updateLogsUI();
+initializeMonsterTypeFilter();
+initializeFilterPopup();
 
 // Script to remove VSCode debug text
 document.addEventListener("DOMContentLoaded", () => {

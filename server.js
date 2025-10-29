@@ -8,9 +8,14 @@ const { Server } = require("socket.io");
 const zlib = require("zlib");
 
 const { UserDataManager } = require(
-  path.join(__dirname, "src", "server", "dataManager"),
+  path.join(__dirname, "src", "server", "service", "dataManager"),
 );
-const Sniffer = require(path.join(__dirname, "src", "server", "sniffer"));
+const Sniffer = require(
+  path.join(__dirname, "src", "server", "service", "sniffer"),
+);
+const CollectionManager = require(
+  path.join(__dirname, "src", "server", "service", "collectionManager"),
+);
 const initializeApi = require(path.join(__dirname, "src", "server", "api"));
 const PacketProcessor = require(path.join(__dirname, "src", "algo", "packet"));
 const configPaths = require(
@@ -51,14 +56,17 @@ async function main() {
 
   // Create simple prefixed logger
   const logger = {
-    info: (msg) => console.log(`[Server] ${msg}`),
+    info: (msg) => {}, // Suppress info logs in production
     error: (msg) => console.error(`[Server] ${msg}`),
     warn: (msg) => console.warn(`[Server] ${msg}`),
-    debug: (msg) => isDevMode && console.log(`[Server] ${msg}`),
+    debug: (msg) => {}, // Suppress debug logs
   };
 
+  // In dev mode, enable all logs
   if (isDevMode) {
-    logger.info("🔧 DEV MODE ENABLED - All logs will be shown");
+    logger.info = (msg) => console.log(`[Server] ${msg}`);
+    logger.debug = (msg) => console.log(`[Server] ${msg}`);
+    console.log("🔧 DEV MODE ENABLED - All logs will be shown");
   }
 
   console.clear();
@@ -82,8 +90,16 @@ async function main() {
     }
   }
 
+  // Initialize isPaused to false on startup
+  globalSettings.isPaused = false;
+
   const userDataManager = new UserDataManager(logger, globalSettings, VERSION);
   await userDataManager.initialize();
+
+  // Initialize CollectionManager for collectibles system
+  logger.info("Initializing CollectionManager...");
+  const collectionManager = new CollectionManager();
+  logger.info("CollectionManager initialized");
 
   // Auto-seed database if tables are missing or empty
   try {
@@ -99,79 +115,10 @@ async function main() {
     const ProfessionModel = require(
       path.join(__dirname, "src", "server", "model", "profession"),
     );
-    const DatabaseSeeder = require(
-      path.join(__dirname, "src", "server", "model", "seed"),
-    );
 
-    // Create seeding logger
-    const seedLogger = {
-      info: (msg) => logger.info(`[Seed] ${msg}`),
-      error: (msg) => logger.error(`[Seed] ${msg}`),
-      warn: (msg) => logger.warn(`[Seed] ${msg}`),
-      debug: (msg) => isDevMode && logger.debug(`[Seed] ${msg}`),
-    };
-
-    // Initialize models
-    const playerModel = new PlayerModel(seedLogger);
-    playerModel.initialize();
-
-    const monsterModel = new MonsterModel(seedLogger, playerModel.getDB());
-    monsterModel.initialize();
-
-    const skillModel = new SkillModel(seedLogger, playerModel.getDB());
-    skillModel.initialize();
-
-    const professionModel = new ProfessionModel(
-      seedLogger,
-      playerModel.getDB(),
-    );
-    professionModel.initialize();
-
-    // Check if database needs seeding (only in development mode)
-    const isPackaged = global.__isPackaged || false;
-
-    if (!isPackaged) {
-      const db = playerModel.getDB();
-      const monstersCount = db
-        .prepare("SELECT COUNT(*) as count FROM monsters")
-        .get().count;
-      const skillsCount = db
-        .prepare("SELECT COUNT(*) as count FROM skills")
-        .get().count;
-      const professionsCount = db
-        .prepare("SELECT COUNT(*) as count FROM professions")
-        .get().count;
-
-      if (monstersCount === 0 || skillsCount === 0 || professionsCount === 0) {
-        logger.info(
-          `Database seeding required (monsters: ${monstersCount}, skills: ${skillsCount}, professions: ${professionsCount})`,
-        );
-        const seeder = new DatabaseSeeder(
-          seedLogger,
-          playerModel,
-          monsterModel,
-          skillModel,
-          professionModel,
-        );
-        const result = await seeder.seedAll();
-        if (result.success) {
-          logger.info(`Auto-seed completed: ${result.message}`);
-        } else {
-          logger.warn(`Auto-seed failed: ${result.message}`);
-        }
-      } else {
-        logger.debug(
-          `Database already seeded (monsters: ${monstersCount}, skills: ${skillsCount}, professions: ${professionsCount})`,
-        );
-      }
-    } else {
-      logger.debug(
-        "Seeding skipped in packaged mode (using pre-packaged database)",
-      );
-    }
-
-    // Close the seeding database connection
-    playerModel.close();
+    // Note: Database must be pre-seeded before running
+    // Run `npm run preseed` if database is empty
+    logger.debug("Database seeding handled via npm run preseed");
   } catch (error) {
     logger.error(`Auto-seed error: ${error.message}`);
     // Continue anyway - don't block server startup
@@ -234,7 +181,18 @@ async function main() {
     },
   });
 
-  initializeApi(app, server, io, userDataManager, logger, globalSettings); // Initialize API with globalSettings
+  // Store collectionManager in app.locals for API access
+  app.locals.collectionManager = collectionManager;
+
+  initializeApi(
+    app,
+    server,
+    io,
+    userDataManager,
+    logger,
+    globalSettings,
+    sniffer,
+  ); // Initialize API with globalSettings and sniffer
 
   server.listen(server_port, "0.0.0.0", () => {
     const localUrl = `http://localhost:${server_port}`;

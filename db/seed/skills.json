@@ -971,10 +971,6 @@
     "name_cn": "月刃",
     "name_en": "Moon Blade"
   },
-  "50033": {
-    "name_cn": null,
-    "name_en": "Gather Monsters"
-  },
   "50036": {
     "name_cn": "弱点打击",
     "name_en": "Weak Spot Strike"
@@ -1379,14 +1375,6 @@
     "name_cn": "虚蚀脉冲",
     "name_en": "Void Pulse"
   },
-  "683624": {
-    "name_cn": null,
-    "name_en": "Continuous Health Regeneration BUFF"
-  },
-  "700013": {
-    "name_cn": null,
-    "name_en": "Dark Eclipse"
-  },
   "701001": {
     "name_cn": "虚蚀之影爆炸",
     "name_en": "Void Shadow Explosion"
@@ -1531,29 +1519,9 @@
     "name_cn": "奥义！脉冲祝祷（姆克王）",
     "name_en": "Ultimate! Pulse Blessing (King M'k)"
   },
-  "2110062": {
-    "name_cn": null,
-    "name_en": "Roaring Command (Goblin King Summons Greataxe Goblins)"
-  },
   "2110066": {
     "name_cn": "绝技！大地之盾(山贼护卫队长)",
     "name_en": "Special Skill! Earth Shield (Bandit Guard Captain)"
-  },
-  "2110071": {
-    "name_cn": null,
-    "name_en": "Boar King's Chain Lightning Primary Buff"
-  },
-  "2110072": {
-    "name_cn": null,
-    "name_en": "Boar King's Chain Lightning Variable A"
-  },
-  "2110073": {
-    "name_cn": null,
-    "name_en": "Boar King's Chain Lightning Variable B"
-  },
-  "2110074": {
-    "name_cn": null,
-    "name_en": "Boar King's Chain Lightning Variable C - Hit Effect"
   },
   "2110083": {
     "name_cn": "火魔治疗",
@@ -1707,10 +1675,6 @@
     "name_cn": "冰冷脉冲",
     "name_en": "Icy Pulse"
   },
-  "2205060": {
-    "name_cn": null,
-    "name_en": "Fierce Strike"
-  },
   "2205071": {
     "name_cn": "撕裂",
     "name_en": "Rip"
@@ -1727,17 +1691,9 @@
     "name_cn": "神圣印记",
     "name_en": "Holy Mark"
   },
-  "2206243": {
-    "name_cn": null,
-    "name_en": "Holy Mark Damage"
-  },
   "2206401": {
     "name_cn": "神圣之击",
     "name_en": "Holy Strike"
-  },
-  "2206460": {
-    "name_cn": null,
-    "name_en": "Shield Ward"
   },
   "2206552": {
     "name_cn": "光明核心",

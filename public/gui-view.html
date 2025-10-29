@@ -31,50 +31,25 @@
 
     <div class="bpsr-tools">
       <header class="controls">
-        <div
-          style="
-            position: relative;
-            width: 40px;
-            height: 40px;
-            margin-right: 10px;
-            -webkit-app-region: no-drag;
-          "
-        >
-          <!-- Container for icon and sync button -->
-          <img
-            src="icon.png"
-            alt="Logo"
-            style="height: 40px; position: absolute; top: 0; left: 0"
-          />
-          <div
-            class="sync-button"
-            id="sync-button"
-            style="
-              position: absolute;
-              top: 2.5px;
-              left: 2.5px;
-              z-index: 11;
-              width: 35px;
-              height: 35px;
-            "
-          >
-            <!-- Centered over the icon -->
-            <i class="fa-solid fa-arrows-rotate sync-icon"></i>
-            <span class="sync-timer"></span>
-          </div>
-        </div>
+        <img
+          src="icon.png"
+          alt="Logo"
+          style="height: 40px; margin-right: 10px"
+        />
         <button
-          class="control-button btn-large"
+          class="control-button btn-medium"
           id="reset-button"
           title="Clear Meter"
         >
-          <i class="fa-solid fa-broom"></i> Clear
+          <i class="fa-solid fa-broom"></i>
         </button>
-        <div
-          id="dps-timer-btns"
-          class="dps-timer-buttons"
-          style="flex-grow: 1; justify-content: flex-end; display: none"
-        ></div>
+        <button
+          class="control-button btn-medium"
+          id="pause-button"
+          title="Pause/Resume Tracking"
+        >
+          <i class="fa-solid fa-pause"></i>
+        </button>
         <!-- Advanced/Lite button -->
         <button
           class="control-button btn-large"
@@ -91,20 +66,15 @@
         >
           DPS
         </button>
+        <!-- Filter button -->
         <button
           class="control-button"
-          id="zoom-in-button"
-          title="Increase size"
+          id="filter-button"
+          title="Filter Options"
         >
-          <i class="fa-solid fa-plus"></i>
+          <i class="fa-solid fa-filter"></i>
         </button>
-        <button
-          class="control-button"
-          id="zoom-out-button"
-          title="Decrease size"
-        >
-          <i class="fa-solid fa-minus"></i>
-        </button>
+        <div style="flex: 1"></div>
         <!-- Theme toggle button -->
         <button
           class="control-button"
@@ -126,31 +96,59 @@
           <i class="fa-solid fa-xmark"></i>
         </button>
       </header>
-      <div
-        style="
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          margin-bottom: 10px;
-        "
-      >
-        <div
-          id="dps-timer"
-          style="
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-top: 4px;
-            min-height: 28px;
-            color: #e0e0e0;
-            display: none;
-            text-shadow: var(--text-shadow);
-          "
-        ></div>
-        <div id="logs-section" style="margin-top: 8px"></div>
+
+      <!-- Filter Popup -->
+      <div id="filter-popup" class="filter-popup" style="display: none">
+        <div class="filter-popup-content">
+          <div class="filter-popup-header">
+            <h3>Filter Options</h3>
+            <button class="filter-close-btn" id="close-filter-popup">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="filter-popup-body">
+            <div class="filter-group">
+              <label for="monster-type-filter">Monster Type:</label>
+              <div class="filter-multiselect" id="monster-type-filter">
+                <button type="button" class="filter-multiselect-button">
+                  <span class="filter-multiselect-text">All Selected</span>
+                  <i
+                    class="fa-solid fa-chevron-down filter-multiselect-arrow"
+                  ></i>
+                </button>
+                <div class="filter-multiselect-dropdown" style="display: none">
+                  <div class="filter-checkbox-group">
+                    <label class="filter-checkbox-item">
+                      <input type="checkbox" value="normal" checked />
+                      <span>Normal</span>
+                    </label>
+                    <label class="filter-checkbox-item">
+                      <input type="checkbox" value="dummy" checked />
+                      <span>Dummy</span>
+                    </label>
+                    <label class="filter-checkbox-item">
+                      <input type="checkbox" value="elite" checked />
+                      <span>Elite</span>
+                    </label>
+                    <label class="filter-checkbox-item">
+                      <input type="checkbox" value="boss" checked />
+                      <span>Boss</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div id="loading-indicator">
-        <i class="fa-solid fa-spinner fa-spin"></i>
+
+      <div id="logs-section" style="margin-top: 8px"></div>
+      <div id="loading-indicator" class="gui-loading-overlay">
+        <div class="gui-loading-content">
+          <div class="gui-spinner"></div>
+          <p class="gui-loading-text">Waiting for combat data...</p>
+          <p class="gui-loading-hint">Start a fight to see DPS metrics</p>
+        </div>
       </div>
       <main
         id="player-bars-container"
@@ -162,7 +160,6 @@
           display: none;
         "
       ></main>
-
     </div>
 
     <script src="js/guiClient.js"></script>

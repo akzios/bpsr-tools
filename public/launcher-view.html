@@ -37,17 +37,6 @@
             </div>
           </div>
 
-          <div class="mode-button" id="web-mode">
-            <div class="mode-title">
-              <span class="mode-icon">🌐</span>
-              Web Server
-            </div>
-            <div class="mode-description">
-              Access from iPad, tablet, or any device on your network. Opens in
-              browser.
-            </div>
-          </div>
-
           <div class="mode-button" id="electron-mode">
             <div class="mode-title">
               <span class="mode-icon">🎮</span>
@@ -55,6 +44,16 @@
             </div>
             <div class="mode-description">
               Traditional desktop overlay that floats above your game window.
+            </div>
+          </div>
+
+          <div class="mode-button" id="minimap-mode" style="display: none">
+            <div class="mode-title">
+              <span class="mode-icon">🗺️</span>
+              Minimap
+            </div>
+            <div class="mode-description">
+              Real-time position tracker with scene and coordinates display.
             </div>
           </div>
         </div>
@@ -117,13 +116,13 @@
 
               <div class="setting-item">
                 <div class="setting-label">
-                  <div class="setting-title">Auto Clear on Server Change</div>
+                  <div class="setting-title">Auto Clear on channel change</div>
                   <div class="setting-description">
                     Automatically reset statistics when changing servers or maps
                   </div>
                 </div>
                 <label class="toggle-switch">
-                  <input type="checkbox" id="autoClearOnServerChange" />
+                  <input type="checkbox" id="autoClearOnChannelChange" />
                   <span class="toggle-slider"></span>
                 </label>
               </div>
@@ -137,19 +136,6 @@
                 </div>
                 <label class="toggle-switch">
                   <input type="checkbox" id="autoClearOnTimeout" />
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-
-              <div class="setting-item">
-                <div class="setting-label">
-                  <div class="setting-title">Only Record Elite Dummy</div>
-                  <div class="setting-description">
-                    Track damage only on elite training dummies
-                  </div>
-                </div>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="onlyRecordEliteDummy" />
                   <span class="toggle-slider"></span>
                 </label>
               </div>
@@ -172,33 +158,6 @@
                 placeholder='{"credentials": {...}, "spreadsheetId": "...", "sheetName": "PlayerInfo"}'
               ></textarea>
               <div class="json-status" id="jsonStatus"></div>
-            </div>
-          </div>
-
-          <div class="collapsible-section">
-            <div class="section-header" data-section="database-management">
-              <div class="section-title">Database Management</div>
-              <span class="collapse-icon">▼</span>
-            </div>
-            <div class="section-content collapsed">
-              <div class="section-description">
-                Update your database with the latest player data from the online
-                leaderboard
-              </div>
-
-              <button class="action-btn" id="update-db-btn">
-                Update Database
-              </button>
-              <div class="action-status" id="dbUpdateStatus"></div>
-
-              <div class="info-box">
-                <strong>What this does:</strong><br />
-                • Fetches latest player data<br />
-                • Merges new player data with your database<br />
-                • Updates professions, monsters, and skills<br />
-                • Preserves your existing combat history<br />
-                • Removes duplicate entries automatically
-              </div>
             </div>
           </div>
         </div>

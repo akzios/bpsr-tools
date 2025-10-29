@@ -1,6 +1,12 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const configPaths = require(
+  path.join(__dirname, "..", "server", "utilities", "configPaths"),
+);
+const { loadSettings, saveSettings } = require(
+  path.join(__dirname, "..", "server", "utilities", "settings"),
+);
 
 // Function to log to file safely for packaged environment
 function logToFile(msg) {
@@ -108,13 +114,24 @@ async function createWindow() {
   try {
     logToFile("createWindow() called");
 
-    mainWindow = new BrowserWindow({
-      width: 724,
-      height: 800,
-      minWidth: 700,
-      minHeight: 400,
-      maxWidth: 1400,
-      maxHeight: 1200,
+    // If window already exists and is not destroyed, focus it instead of creating new one
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      logToFile("Window already exists, focusing existing window");
+      mainWindow.focus();
+      return mainWindow;
+    }
+
+    // Load saved window bounds from settings
+    configPaths.initializeUserConfigs();
+    const settings = loadSettings();
+    const savedBounds = settings.guiWindowBounds;
+
+    // Default window configuration
+    const windowConfig = {
+      width: savedBounds?.width || 724,
+      height: savedBounds?.height || 800,
+      x: savedBounds?.x,
+      y: savedBounds?.y,
       transparent: true,
       frame: false,
       alwaysOnTop: true,
@@ -125,12 +142,35 @@ async function createWindow() {
         contextIsolation: true,
       },
       icon: path.join(__dirname, "..", "..", "icon.ico"),
-    });
+    };
+
+    mainWindow = new BrowserWindow(windowConfig);
+    logToFile(
+      `Window created with bounds: ${JSON.stringify(mainWindow.getBounds())}`,
+    );
+
+    // Save bounds on resize or move
+    let boundsTimeout;
+    const saveBounds = () => {
+      clearTimeout(boundsTimeout);
+      boundsTimeout = setTimeout(() => {
+        const bounds = mainWindow.getBounds();
+        const currentSettings = loadSettings();
+        currentSettings.guiWindowBounds = bounds;
+        saveSettings(currentSettings);
+        logToFile(`Window bounds saved: ${JSON.stringify(bounds)}`);
+      }, 500); // Debounce 500ms
+    };
+
+    mainWindow.on("resize", saveBounds);
+    mainWindow.on("move", saveBounds);
 
     // Set highest window level to stay on top of fullscreen apps (like games)
     // 'screen-saver' level ensures overlay stays visible even over fullscreen games
     mainWindow.setAlwaysOnTop(true, "screen-saver");
-    logToFile("Window level set to 'screen-saver' for fullscreen compatibility");
+    logToFile(
+      "Window level set to 'screen-saver' for fullscreen compatibility",
+    );
 
     // Determine if running in development mode
     const isDev = process.defaultApp || process.env.NODE_ENV === "development";
@@ -291,7 +331,8 @@ if (require.main === module) {
   });
 }
 
-// Export getters for mode tracking
+// Export getters and functions for mode tracking
 module.exports = {
   getMainWindow: () => mainWindow,
+  createWindow: createWindow,
 };

@@ -33,14 +33,14 @@
 
 **Translation Examples:**
 
-| Skill ID | Old Name | New Official Name |
-|----------|----------|-------------------|
-| 1201 | Flowing Surge | **Raincall Surge** |
-| 1210 | Aqua Vortex | **Maelstrom** |
-| 1401 | Tempest Dance - Sweep | **Windborne Grace** |
-| 1501 | Vine Control - 1 | **Vines' Embrace** |
-| 1701 | Style: Smite | **Judgment Cut** |
-| 2401 | Sword of Justice - 1 | **Blade of Justice** |
+| Skill ID | Old Name              | New Official Name    |
+| -------- | --------------------- | -------------------- |
+| 1201     | Flowing Surge         | **Raincall Surge**   |
+| 1210     | Aqua Vortex           | **Maelstrom**        |
+| 1401     | Tempest Dance - Sweep | **Windborne Grace**  |
+| 1501     | Vine Control - 1      | **Vines' Embrace**   |
+| 1701     | Style: Smite          | **Judgment Cut**     |
+| 2401     | Sword of Justice - 1  | **Blade of Justice** |
 
 ## 🔧 Technical Changes
 
@@ -85,6 +85,7 @@
 ### Automatic Update (Recommended)
 
 If you have auto-updates enabled:
+
 1. App will notify you when v1.0.2 is available
 2. Click "Download Now"
 3. Update installs automatically on app quit
