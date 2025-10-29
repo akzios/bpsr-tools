@@ -1514,19 +1514,147 @@ if (parseButton && parsePanel) {
     }
   }
 
+  // Helper function to inject metadata into PNG
+  function injectPNGMetadata(dataUrl, metadata) {
+    console.log("Injecting metadata into PNG:", metadata);
+
+    // Convert data URL to ArrayBuffer
+    const base64 = dataUrl.split(',')[1];
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    console.log("PNG size:", bytes.length, "bytes");
+
+    // PNG signature: 89 50 4E 47 0D 0A 1A 0A
+    // Find IEND chunk by walking through chunks properly
+    let iendPos = -1;
+    let pos = 8; // Skip PNG signature
+    let chunksFound = [];
+
+    while (pos <= bytes.length - 12) {
+      // Read chunk length (big-endian)
+      const length = (bytes[pos] << 24) | (bytes[pos+1] << 16) | (bytes[pos+2] << 8) | bytes[pos+3];
+
+      // Read chunk type
+      const type = String.fromCharCode(bytes[pos+4], bytes[pos+5], bytes[pos+6], bytes[pos+7]);
+      chunksFound.push(type);
+
+      console.log(`Chunk at ${pos}: ${type}, length: ${length}`);
+
+      if (type === "IEND") {
+        iendPos = pos;
+        console.log("Found IEND at position:", iendPos);
+        break;
+      }
+
+      // Move to next chunk (skip length field + type field + data + CRC)
+      pos += 4 + 4 + length + 4;
+
+      // Safety check to prevent infinite loop
+      if (pos > bytes.length) {
+        console.error("Walked past end of PNG data");
+        break;
+      }
+    }
+
+    console.log("Chunks found:", chunksFound.join(", "));
+
+    if (iendPos === -1) {
+      console.error("Could not find IEND chunk in PNG");
+      return dataUrl; // Return original if we can't find IEND
+    }
+
+    console.log("Will inject tEXt chunk before IEND at position:", iendPos);
+
+    // Create tEXt chunk with verification data
+    const keyword = "BPSR-Verification";
+    const jsonData = JSON.stringify(metadata);
+    const textData = keyword + '\0' + jsonData;
+
+    // Calculate chunk length (keyword + null + data)
+    const chunkLength = textData.length;
+    const chunkType = [0x74, 0x45, 0x58, 0x74]; // "tEXt"
+
+    // Build tEXt chunk
+    const textChunk = new Uint8Array(4 + 4 + chunkLength + 4); // length + type + data + CRC
+
+    // Length (big-endian)
+    textChunk[0] = (chunkLength >> 24) & 0xFF;
+    textChunk[1] = (chunkLength >> 16) & 0xFF;
+    textChunk[2] = (chunkLength >> 8) & 0xFF;
+    textChunk[3] = chunkLength & 0xFF;
+
+    // Type
+    textChunk.set(chunkType, 4);
+
+    // Data
+    for (let i = 0; i < textData.length; i++) {
+      textChunk[8 + i] = textData.charCodeAt(i);
+    }
+
+    // CRC (simplified - using type + data)
+    const crcData = new Uint8Array(4 + chunkLength);
+    crcData.set(chunkType, 0);
+    crcData.set(textChunk.slice(8, 8 + chunkLength), 4);
+    const crc = calculateCRC32(crcData);
+    textChunk[8 + chunkLength] = (crc >> 24) & 0xFF;
+    textChunk[8 + chunkLength + 1] = (crc >> 16) & 0xFF;
+    textChunk[8 + chunkLength + 2] = (crc >> 8) & 0xFF;
+    textChunk[8 + chunkLength + 3] = crc & 0xFF;
+
+    // Combine: original PNG up to IEND + our tEXt chunk + IEND chunk
+    const newBytes = new Uint8Array(iendPos + textChunk.length + (bytes.length - iendPos));
+    newBytes.set(bytes.slice(0, iendPos), 0);
+    newBytes.set(textChunk, iendPos);
+    newBytes.set(bytes.slice(iendPos), iendPos + textChunk.length);
+
+    // Convert back to data URL
+    let binary2 = '';
+    for (let i = 0; i < newBytes.length; i++) {
+      binary2 += String.fromCharCode(newBytes[i]);
+    }
+    console.log("Metadata injected successfully. New PNG size:", newBytes.length, "bytes");
+    return 'data:image/png;base64,' + btoa(binary2);
+  }
+
+  // CRC32 calculation for PNG chunks
+  function calculateCRC32(data) {
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < data.length; i++) {
+      crc ^= data[i];
+      for (let j = 0; j < 8; j++) {
+        crc = (crc >>> 1) ^ ((crc & 1) ? 0xEDB88320 : 0);
+      }
+    }
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+
   // Helper function to download canvas as blob (for web mode)
-  function downloadCanvasAsBlob(canvas, filename) {
-    canvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      console.log("Parse results exported to Downloads folder");
-    }, "image/png");
+  function downloadCanvasAsBlob(canvas, filename, metadata) {
+    const dataUrl = canvas.toDataURL("image/png");
+    const dataUrlWithMetadata = injectPNGMetadata(dataUrl, metadata);
+
+    // Convert data URL to blob
+    const base64 = dataUrlWithMetadata.split(',')[1];
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: 'image/png' });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    console.log("Parse results exported to Downloads folder");
   }
 
   // Helper function to generate SHA-256 hash
@@ -1856,6 +1984,15 @@ if (parseButton && parsePanel) {
       ctx.fillStyle = subTextColor;
       ctx.fillText("This parse result contains cryptographic verification. Any modifications will invalidate the code.", width / 2, height - 15);
 
+      // Prepare metadata for embedding
+      const metadata = {
+        hash: verificationHash,
+        timestamp: timestamp,
+        duration: parseDuration,
+        players: parseData,
+        version: "1.2.1"
+      };
+
       // Convert canvas to data URL or blob depending on mode
       const fileTimestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
       const filename = `bpsr-parse-${fileTimestamp}.png`;
@@ -1863,23 +2000,26 @@ if (parseButton && parsePanel) {
       if (window.electronAPI && window.electronAPI.saveFileToDesktop) {
         // Electron mode - save to desktop
         const dataUrl = canvas.toDataURL("image/png");
-        const result = await window.electronAPI.saveFileToDesktop(filename, dataUrl);
+        const dataUrlWithMetadata = injectPNGMetadata(dataUrl, metadata);
+        const result = await window.electronAPI.saveFileToDesktop(filename, dataUrlWithMetadata);
 
         if (result.success) {
           console.log(`Parse results exported to Desktop: ${result.path}`);
           console.log(`Verification Code: ${shortHash}`);
           console.log(`Full Hash: ${verificationHash}`);
+          console.log(`Metadata embedded in PNG`);
         } else {
           console.error(`Error saving to Desktop: ${result.error}`);
           // Fallback to download
-          downloadCanvasAsBlob(canvas, filename);
+          downloadCanvasAsBlob(canvas, filename, metadata);
         }
       } else {
         // Web mode - download as blob
-        downloadCanvasAsBlob(canvas, filename);
+        downloadCanvasAsBlob(canvas, filename, metadata);
         console.log(`Parse results exported to Downloads folder`);
         console.log(`Verification Code: ${shortHash}`);
         console.log(`Full Hash: ${verificationHash}`);
+        console.log(`Metadata embedded in PNG`);
       }
 
       // Log verification data for manual checking
@@ -1888,7 +2028,8 @@ if (parseButton && parsePanel) {
         duration: `${durationMinutes} minutes`,
         players: parseData.length,
         verificationCode: shortHash,
-        fullHash: verificationHash
+        fullHash: verificationHash,
+        metadataEmbedded: true
       });
 
     } catch (error) {
@@ -1963,6 +2104,167 @@ if (parseButton && parsePanel) {
       }
     }
   }, 500);
+
+  // PNG Verification Feature
+  const verifyDropZone = document.getElementById("verify-drop-zone");
+  const verifyFileInput = document.getElementById("verify-file-input");
+  const verifyResult = document.getElementById("verify-result");
+
+  if (verifyDropZone && verifyFileInput && verifyResult) {
+    // Click to select file
+    verifyDropZone.addEventListener("click", () => {
+      verifyFileInput.click();
+    });
+
+    // File selected via input
+    verifyFileInput.addEventListener("change", (e) => {
+      if (e.target.files && e.target.files[0]) {
+        verifyPNG(e.target.files[0]);
+      }
+    });
+
+    // Drag and drop
+    verifyDropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      verifyDropZone.style.borderColor = "var(--brand-primary)";
+      verifyDropZone.style.backgroundColor = "rgba(102, 126, 234, 0.05)";
+    });
+
+    verifyDropZone.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      verifyDropZone.style.borderColor = "var(--border-default)";
+      verifyDropZone.style.backgroundColor = "var(--surface-base)";
+    });
+
+    verifyDropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      verifyDropZone.style.borderColor = "var(--border-default)";
+      verifyDropZone.style.backgroundColor = "var(--surface-base)";
+
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        verifyPNG(e.dataTransfer.files[0]);
+      }
+    });
+
+    async function verifyPNG(file) {
+      if (!file.type === "image/png") {
+        showVerifyResult(false, "Please select a PNG file");
+        return;
+      }
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+
+        // Extract metadata from PNG tEXt chunk
+        const metadata = extractPNGMetadata(bytes);
+
+        if (!metadata) {
+          showVerifyResult(false, "No verification metadata found in PNG. This file was not created by BPSR Tools or is from an older version.");
+          return;
+        }
+
+        // Recalculate hash from metadata
+        const dataString = JSON.stringify({
+          timestamp: metadata.timestamp,
+          duration: metadata.duration,
+          players: metadata.players
+        });
+        const recalculatedHash = await generateHash(dataString);
+
+        // Compare hashes
+        if (recalculatedHash === metadata.hash) {
+          showVerifyResult(true, `✅ Verified! This parse is authentic and unmodified.<br><br><strong>Verification Code:</strong> ${metadata.hash.substring(0, 16).toUpperCase()}<br><strong>Timestamp:</strong> ${new Date(metadata.timestamp).toLocaleString()}<br><strong>Duration:</strong> ${Math.floor(metadata.duration / 60)} minutes<br><strong>Players:</strong> ${metadata.players.length}`);
+        } else {
+          showVerifyResult(false, `❌ Verification Failed! This parse has been modified.<br><br><strong>Expected Hash:</strong> ${metadata.hash.substring(0, 16).toUpperCase()}<br><strong>Calculated Hash:</strong> ${recalculatedHash.substring(0, 16).toUpperCase()}`);
+        }
+      } catch (error) {
+        console.error("Error verifying PNG:", error);
+        showVerifyResult(false, "Error reading PNG file: " + error.message);
+      }
+    }
+
+    function extractPNGMetadata(bytes) {
+      console.log("Extracting metadata from PNG, size:", bytes.length, "bytes");
+      // Look for tEXt chunk with keyword "BPSR-Verification"
+      let pos = 8; // Skip PNG signature
+      let chunksFound = [];
+
+      while (pos <= bytes.length - 12) {
+        // Read chunk length (big-endian)
+        const length = (bytes[pos] << 24) | (bytes[pos+1] << 16) | (bytes[pos+2] << 8) | bytes[pos+3];
+
+        // Read chunk type (type is at pos+4 to pos+7)
+        const type = String.fromCharCode(bytes[pos+4], bytes[pos+5], bytes[pos+6], bytes[pos+7]);
+
+        chunksFound.push(type);
+
+        if (type === "tEXt") {
+          console.log("Found tEXt chunk at position:", pos, "length:", length);
+          // Read chunk data (starts at pos+8)
+          const chunkData = bytes.slice(pos + 8, pos + 8 + length);
+
+          // Find null separator
+          let nullPos = -1;
+          for (let i = 0; i < chunkData.length; i++) {
+            if (chunkData[i] === 0) {
+              nullPos = i;
+              break;
+            }
+          }
+
+          if (nullPos !== -1) {
+            const keyword = String.fromCharCode(...chunkData.slice(0, nullPos));
+            console.log("tEXt keyword:", keyword);
+            if (keyword === "BPSR-Verification") {
+              const jsonData = String.fromCharCode(...chunkData.slice(nullPos + 1));
+              console.log("Found BPSR-Verification metadata!");
+              return JSON.parse(jsonData);
+            }
+          }
+        }
+
+        // Stop at IEND
+        if (type === "IEND") break;
+
+        // Move to next chunk (skip length + type + data + CRC)
+        pos += 4 + 4 + length + 4;
+
+        // Safety check to prevent infinite loop
+        if (pos > bytes.length) {
+          console.error("Walked past end of PNG data while extracting");
+          break;
+        }
+      }
+
+      console.log("Chunks found in PNG:", chunksFound.join(", "));
+      console.log("No BPSR-Verification metadata found");
+      return null;
+    }
+
+    function showVerifyResult(success, message) {
+      verifyResult.style.display = "block";
+      verifyResult.style.padding = "12px";
+      verifyResult.style.borderRadius = "6px";
+      verifyResult.style.fontSize = "0.85rem";
+      verifyResult.style.lineHeight = "1.5";
+
+      if (success) {
+        verifyResult.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
+        verifyResult.style.border = "1px solid rgba(16, 185, 129, 0.3)";
+        verifyResult.style.color = "#10b981";
+      } else {
+        verifyResult.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
+        verifyResult.style.border = "1px solid rgba(239, 68, 68, 0.3)";
+        verifyResult.style.color = "#ef4444";
+      }
+
+      verifyResult.innerHTML = message;
+    }
+  }
 } else {
   console.error("Parse mode elements not found:", {
     parseButton,
