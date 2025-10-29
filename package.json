@@ -1,13 +1,13 @@
 {
   "name": "bpsr-tools",
-  "version": "1.1.3",
+  "version": "1.2.0",
   "description": "BPSR Tools - DPS Meter with Web, Electron Overlay, and CLI modes",
   "main": "main.js",
   "bin": {
     "bpsr-tools": "server.js"
   },
   "engines": {
-    "node": "^22.15.0"
+    "node": "22.20.0"
   },
   "scripts": {
     "build": "pkg .",
@@ -15,7 +15,10 @@
     "lint:prettier": "prettier --write .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "electron-builder install-app-deps",
+    "preseed": "npm rebuild better-sqlite3 --build-from-source && node src/server/model/seed.js && npx electron-builder install-app-deps",
+    "predist": "node scripts/prepareRelease.js",
     "dist": "electron-builder --win --x64",
+    "prepublish": "node scripts/prepareRelease.js",
     "publish": "electron-builder --win --x64 --publish always"
   },
   "keywords": [
@@ -35,7 +38,7 @@
   ],
   "license": "AGPL-3.0",
   "volta": {
-    "node": "22.15.0"
+    "node": "22.20.0"
   },
   "dependencies": {
     "better-sqlite3": "^12.4.1",
@@ -48,6 +51,7 @@
     "express": "^5.1.0",
     "google-protobuf": "^4.0.0",
     "googleapis": "^164.1.0",
+    "leaflet": "^1.9.4",
     "long": "^5.3.2",
     "protobufjs": "^7.5.4",
     "socket.io": "^4.8.1",
@@ -55,10 +59,13 @@
   },
   "devDependencies": {
     "@yao-pkg/pkg": "^6.6.0",
+    "cbor": "^10.0.11",
     "electron": "^38.0.0",
     "electron-builder": "^26.0.12",
+    "msgpack-lite": "^0.1.26",
     "prettier": "^3.6.2",
-    "protobufjs-cli": "^1.1.3"
+    "protobufjs-cli": "^1.1.3",
+    "sharp": "^0.34.4"
   },
   "pkg": {
     "scripts": "src/app/cli.js",
@@ -66,7 +73,6 @@
       "public/**/*",
       "tables/**/*",
       "config/settings.json",
-      "config/dictionary.json",
       "db/.gitkeep",
       "node_modules/cap/**/*",
       "node_modules/better-sqlite3/**/*",

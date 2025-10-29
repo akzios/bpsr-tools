@@ -101,7 +101,7 @@ function initializeUserConfigs() {
   ensureDirectoryExists(userDbPath);
 
   // List of config files to copy from app to userData
-  const configFiles = ["settings.json", "dictionary.json"];
+  const configFiles = ["settings.json"];
 
   // Copy default configs if they don't exist
   for (const configFile of configFiles) {

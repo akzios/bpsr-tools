@@ -1,12 +1,16 @@
 {
   "autoUpdateEnabled": true,
-  "autoClearOnServerChange": false,
-  "autoClearOnTimeout": true,
-  "onlyRecordEliteDummy": false,
+  "autoClearOnChannelChange": false,
+  "autoClearOnTimeout": false,
   "enableFightLog": false,
   "enableDpsLog": false,
   "enableHistorySave": false,
-  "isPaused": false,
   "playerDataSyncProgress": null,
+  "guiWindowBounds": {
+    "x": null,
+    "y": null,
+    "width": 700,
+    "height": 400
+  },
   "theme": "light"
 }

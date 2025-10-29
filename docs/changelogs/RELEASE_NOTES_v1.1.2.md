@@ -36,6 +36,7 @@
 Download `BPSR-Tools-Setup-1.1.2.exe` from the [releases page](https://github.com/akzios/bpsr-tools/releases/tag/v1.1.2).
 
 **Requirements:**
+
 - Windows 10/11 (x64)
 - Npcap (network packet capture driver)
 - Administrator privileges for packet capture
@@ -43,11 +44,13 @@ Download `BPSR-Tools-Setup-1.1.2.exe` from the [releases page](https://github.co
 ### Upgrading from v1.1.1
 
 The auto-updater will notify you when v1.1.2 is available:
+
 1. Click "Download Update" when prompted
 2. Restart the application when download completes
 3. Settings and data are automatically preserved
 
 **Manual Update:**
+
 1. Download the new installer
 2. Run the installer (upgrades in place)
 3. Your settings are preserved in `%APPDATA%\BPSR Tools`

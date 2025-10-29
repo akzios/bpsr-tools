@@ -31,6 +31,7 @@ files:
   - "!db"
 
 # Extra resources to copy (not inside asar)
+# Only copy the pre-seeded database file (run `npm run preseed` before building)
 extraResources:
   - from: node_modules/cap/
     to: cap/
@@ -39,10 +40,11 @@ extraResources:
   - from: db/
     to: db/
     filter:
-      - "*.db"
-      - "*.db-shm"
-      - "*.db-wal"
-      - "seed/*.json"
+      - "bpsr-tools.db"
+      - "!*.db-shm"
+      - "!*.db-wal"
+      - "!seed/**"
+      - "!scripts/**"
 
 # Windows-specific settings
 win:

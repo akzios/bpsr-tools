@@ -19,7 +19,7 @@ let dpsHistory = {
 // Initialize with zeros and labels showing every 5 seconds
 for (let i = 0; i < 60; i++) {
   // Show labels every 5 seconds, otherwise empty string
-  dpsHistory.labels.push(i % 5 === 0 ? `${i}s` : '');
+  dpsHistory.labels.push(i % 5 === 0 ? `${i}s` : "");
   dpsHistory.dpsValues.push(0);
   dpsHistory.hpsValues.push(0);
 }
@@ -66,12 +66,13 @@ function renderSkillAnalysis(data) {
 
   // Update page title with GS
   const gearScore = data.attr?.fight_point || 0;
-  document.getElementById("page-title").textContent = `${playerName} - ${profession} (${formatStat(gearScore)})`;
+  document.getElementById("page-title").textContent =
+    `${playerName} - ${profession} (${formatStat(gearScore)})`;
 
   // Set class icon in header
   const classIconElement = document.getElementById("class-icon");
   if (classIconElement) {
-    classIconElement.src = `icons/${professionIcon}`;
+    classIconElement.src = `assets/images/icons/${professionIcon}`;
     classIconElement.alt = profession;
   }
 
@@ -89,6 +90,9 @@ function renderSkillAnalysis(data) {
 
   // Build skills table - pass duration for DPS calculation
   buildSkillsTable(skillsArray, summary.totalDamage, summary.duration);
+
+  // Build monster damage table
+  buildMonsterDamageTable(data.targetDamage || [], summary.totalDamage);
 
   // Initialize charts
   initializeCharts(skillsArray, summary);
@@ -130,7 +134,14 @@ function calculateSummaryStats(skillsArray, data) {
   const duration = data.attr?.combat_duration || 1; // Default to 1 second if not available
   const dps = totalDamage / duration;
 
-  console.log('Combat duration:', duration, 'Total damage:', totalDamage, 'Calculated DPS:', dps);
+  console.log(
+    "Combat duration:",
+    duration,
+    "Total damage:",
+    totalDamage,
+    "Calculated DPS:",
+    dps,
+  );
 
   return {
     totalDamage,
@@ -188,7 +199,12 @@ function populateSummaryCards(summary) {
   );
 }
 
-function buildSkillsTable(skillsArray, totalDamage, duration = 1, skipSort = false) {
+function buildSkillsTable(
+  skillsArray,
+  totalDamage,
+  duration = 1,
+  skipSort = false,
+) {
   const tbody = document.getElementById("skill-items");
 
   if (!tbody) {
@@ -196,7 +212,7 @@ function buildSkillsTable(skillsArray, totalDamage, duration = 1, skipSort = fal
     return;
   }
 
-  console.log('Building skills table with duration:', duration);
+  console.log("Building skills table with duration:", duration);
 
   // Sort by damage by default (only if not already sorted)
   if (!skipSort) {
@@ -221,7 +237,16 @@ function buildSkillsTable(skillsArray, totalDamage, duration = 1, skipSort = fal
       const dpsHps = duration > 0 ? skill.totalDamage / duration : 0;
 
       if (index === 0) {
-        console.log('First skill example:', skill.displayName, 'Total:', skill.totalDamage, 'Duration:', duration, 'DPS/HPS:', dpsHps);
+        console.log(
+          "First skill example:",
+          skill.displayName,
+          "Total:",
+          skill.totalDamage,
+          "Duration:",
+          duration,
+          "DPS/HPS:",
+          dpsHps,
+        );
       }
 
       // Add emoji icon based on skill type
@@ -244,6 +269,175 @@ function buildSkillsTable(skillsArray, totalDamage, duration = 1, skipSort = fal
   tbody.innerHTML = html;
 }
 
+function buildMonsterDamageTable(targetDamageArray, totalDamage) {
+  const tbody = document.getElementById("monster-damage-items");
+
+  if (!tbody) {
+    console.error("Monster damage table body not found");
+    return;
+  }
+
+  if (!targetDamageArray || targetDamageArray.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">No target damage data</td></tr>';
+    cachedMonsterData = [];
+    return;
+  }
+
+  // Filter out unknown monsters (ones with "Unknown" in the name)
+  const filteredData = targetDamageArray.filter(
+    (target) => !target.monsterName.includes("Unknown"),
+  );
+
+  if (filteredData.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">No target damage data</td></tr>';
+    cachedMonsterData = [];
+    return;
+  }
+
+  // Cache the filtered data for sorting
+  cachedMonsterData = filteredData;
+
+  // Apply current sort
+  sortAndRenderMonsterTable();
+  updateMonsterSortIndicators();
+}
+
+// Monster table sorting
+let currentMonsterSort = { column: "damage", ascending: false };
+let cachedMonsterData = [];
+
+function setupMonsterTableSort() {
+  const tableHeaders = document.querySelectorAll(
+    "#monster-damage-table th[data-sort-monster]",
+  );
+
+  tableHeaders.forEach((header) => {
+    header.style.cursor = "pointer";
+    header.addEventListener("click", () => {
+      const column = header.getAttribute("data-sort-monster");
+
+      // Toggle sort direction if clicking same column
+      if (currentMonsterSort.column === column) {
+        currentMonsterSort.ascending = !currentMonsterSort.ascending;
+      } else {
+        currentMonsterSort.column = column;
+        currentMonsterSort.ascending = false; // Default to descending for new column
+      }
+
+      sortAndRenderMonsterTable();
+      updateMonsterSortIndicators();
+    });
+  });
+}
+
+function sortAndRenderMonsterTable() {
+  if (cachedMonsterData.length === 0) return;
+
+  const sorted = [...cachedMonsterData].sort((a, b) => {
+    let aVal, bVal;
+
+    switch (currentMonsterSort.column) {
+      case "name":
+        aVal = a.monsterName.toLowerCase();
+        bVal = b.monsterName.toLowerCase();
+        break;
+      case "type":
+        aVal = a.monsterType || -1;
+        bVal = b.monsterType || -1;
+        break;
+      case "classification":
+        aVal = a.classification || "";
+        bVal = b.classification || "";
+        break;
+      case "damage":
+        aVal = a.damage;
+        bVal = b.damage;
+        break;
+      case "percent":
+        const totalDamage = cachedMonsterData.reduce(
+          (sum, t) => sum + t.damage,
+          0,
+        );
+        aVal = totalDamage > 0 ? (a.damage / totalDamage) * 100 : 0;
+        bVal = totalDamage > 0 ? (b.damage / totalDamage) * 100 : 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (typeof aVal === "string") {
+      return currentMonsterSort.ascending
+        ? aVal.localeCompare(bVal)
+        : bVal.localeCompare(aVal);
+    } else {
+      return currentMonsterSort.ascending ? aVal - bVal : bVal - aVal;
+    }
+  });
+
+  const totalDamage = cachedMonsterData.reduce((sum, t) => sum + t.damage, 0);
+  renderMonsterTableRows(sorted, totalDamage);
+}
+
+function renderMonsterTableRows(targetDamageArray, totalDamage) {
+  const tbody = document.getElementById("monster-damage-items");
+  if (!tbody) return;
+
+  let html = "";
+  targetDamageArray.forEach((target) => {
+    const damagePercent =
+      totalDamage > 0 ? (target.damage / totalDamage) * 100 : 0;
+
+    const typeColor =
+      target.monsterType === 2
+        ? "#ff6b6b"
+        : target.monsterType === 1
+          ? "#a0a0a0"
+          : "#4dabf7";
+    const typeLabel = target.monsterTypeLabel || "Unknown";
+
+    const classification = target.classification || "-";
+    const classificationColor = classification.includes("Boss")
+      ? "#e03131"
+      : classification === "Elite"
+        ? "#fd7e14"
+        : classification === "Normal monster"
+          ? "#20c997"
+          : "var(--text-secondary)";
+
+    html += `
+      <tr>
+        <td style="font-weight: 500;">${target.monsterName}</td>
+        <td><span style="color: ${typeColor}; font-weight: 500;">${typeLabel}</span></td>
+        <td><span style="color: ${classificationColor}; font-weight: 500;">${classification}</span></td>
+        <td>${formatStat(target.damage)}</td>
+        <td>${damagePercent.toFixed(1)}%</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+}
+
+function updateMonsterSortIndicators() {
+  const tableHeaders = document.querySelectorAll(
+    "#monster-damage-table th[data-sort-monster]",
+  );
+  tableHeaders.forEach((header) => {
+    const headerText = header.textContent.replace(" ▲", "").replace(" ▼", "");
+
+    if (
+      header.getAttribute("data-sort-monster") === currentMonsterSort.column
+    ) {
+      header.textContent =
+        headerText + (currentMonsterSort.ascending ? " ▲" : " ▼");
+    } else {
+      header.textContent = headerText;
+    }
+  });
+}
+
 function initializeCharts(skillsArray, summary) {
   // Destroy existing charts if they exist
   if (currentCharts.dpsGraph) currentCharts.dpsGraph.destroy();
@@ -255,9 +449,7 @@ function initializeCharts(skillsArray, summary) {
   // Get theme-aware colors
   const isLight = document.body.classList.contains("light-theme");
   const textColor = isLight ? "#1f2937" : "#e0e0e0";
-  const gridColor = isLight
-    ? "rgba(0, 0, 0, 0.1)"
-    : "rgba(255, 255, 255, 0.1)";
+  const gridColor = isLight ? "rgba(0, 0, 0, 0.1)" : "rgba(255, 255, 255, 0.1)";
 
   // DPS/HPS Real-time Graph (Line Chart)
   const dpsGraphCanvas = document.getElementById("dps-graph-chart");
@@ -297,15 +489,15 @@ function initializeCharts(skillsArray, summary) {
           legend: {
             display: true,
             labels: { color: textColor },
-            position: 'bottom',
+            position: "bottom",
           },
           tooltip: {
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 return `${context.dataset.label}: ${formatStat(context.parsed.y)}`;
-              }
-            }
-          }
+              },
+            },
+          },
         },
         scales: {
           x: {
@@ -318,9 +510,9 @@ function initializeCharts(skillsArray, summary) {
           y: {
             ticks: {
               color: textColor,
-              callback: function(value) {
+              callback: function (value) {
                 return formatStat(value);
-              }
+              },
             },
             grid: { display: false },
             beginAtZero: true,
@@ -407,7 +599,9 @@ function initializeCharts(skillsArray, summary) {
 
 // Setup collapsible cards
 function setupCollapsibleCards() {
-  const cardHeaders = document.querySelectorAll(".collapsible-card .card-header");
+  const cardHeaders = document.querySelectorAll(
+    ".collapsible-card .card-header",
+  );
 
   cardHeaders.forEach((header) => {
     header.addEventListener("click", () => {
@@ -424,14 +618,14 @@ function setupCollapsibleCards() {
 }
 
 // Setup sort functionality
-let currentSort = { column: 'damage', ascending: false }; // Default sort by damage descending
+let currentSort = { column: "damage", ascending: false }; // Default sort by damage descending
 
 function setupSortFunctionality() {
-  const tableHeaders = document.querySelectorAll('.skills-table th[data-sort]');
+  const tableHeaders = document.querySelectorAll(".skills-table th[data-sort]");
 
-  tableHeaders.forEach(header => {
-    header.style.cursor = 'pointer';
-    header.addEventListener('click', () => {
+  tableHeaders.forEach((header) => {
+    header.style.cursor = "pointer";
+    header.addEventListener("click", () => {
       if (!currentData) return;
 
       const sortBy = header.dataset.sort;
@@ -456,20 +650,22 @@ function setupSortFunctionality() {
 
       // Sort based on selected criteria
       switch (sortBy) {
-        case 'name':
+        case "name":
           skillsArray.sort((a, b) => {
-            const nameA = a.displayName || '';
-            const nameB = b.displayName || '';
-            return currentSort.ascending ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+            const nameA = a.displayName || "";
+            const nameB = b.displayName || "";
+            return currentSort.ascending
+              ? nameA.localeCompare(nameB)
+              : nameB.localeCompare(nameA);
           });
           break;
-        case 'damage':
+        case "damage":
           skillsArray.sort((a, b) => {
             const diff = (b.totalDamage || 0) - (a.totalDamage || 0);
             return currentSort.ascending ? -diff : diff;
           });
           break;
-        case 'dps':
+        case "dps":
           skillsArray.sort((a, b) => {
             const aDps = (a.totalDamage || 0) / duration;
             const bDps = (b.totalDamage || 0) / duration;
@@ -477,19 +673,19 @@ function setupSortFunctionality() {
             return currentSort.ascending ? -diff : diff;
           });
           break;
-        case 'hits':
+        case "hits":
           skillsArray.sort((a, b) => {
             const diff = (b.totalCount || 0) - (a.totalCount || 0);
             return currentSort.ascending ? -diff : diff;
           });
           break;
-        case 'crit':
+        case "crit":
           skillsArray.sort((a, b) => {
             const diff = (b.critRate || 0) - (a.critRate || 0);
             return currentSort.ascending ? -diff : diff;
           });
           break;
-        case 'avg':
+        case "avg":
           skillsArray.sort((a, b) => {
             const aAvg = a.totalCount > 0 ? a.totalDamage / a.totalCount : 0;
             const bAvg = b.totalCount > 0 ? b.totalDamage / b.totalCount : 0;
@@ -497,7 +693,7 @@ function setupSortFunctionality() {
             return currentSort.ascending ? -diff : diff;
           });
           break;
-        case 'dmgpercent':
+        case "dmgpercent":
           // Percent is already calculated from damage, so sort by damage
           skillsArray.sort((a, b) => {
             const diff = (b.totalDamage || 0) - (a.totalDamage || 0);
@@ -509,20 +705,25 @@ function setupSortFunctionality() {
       // Update header indicators
       updateSortIndicators();
 
-      buildSkillsTable(skillsArray, summary.totalDamage, summary.duration, true); // Skip default sort
+      buildSkillsTable(
+        skillsArray,
+        summary.totalDamage,
+        summary.duration,
+        true,
+      ); // Skip default sort
     });
   });
 }
 
 function updateSortIndicators() {
-  const tableHeaders = document.querySelectorAll('.skills-table th[data-sort]');
-  tableHeaders.forEach(header => {
+  const tableHeaders = document.querySelectorAll(".skills-table th[data-sort]");
+  tableHeaders.forEach((header) => {
     // Remove existing indicators
-    header.textContent = header.textContent.replace(' ▲', '').replace(' ▼', '');
+    header.textContent = header.textContent.replace(" ▲", "").replace(" ▼", "");
 
     // Add indicator to current sort column
     if (header.dataset.sort === currentSort.column) {
-      header.textContent += currentSort.ascending ? ' ▲' : ' ▼';
+      header.textContent += currentSort.ascending ? " ▲" : " ▼";
     }
   });
 }
@@ -652,7 +853,7 @@ function updateDpsHistory(realtimeDps, realtimeHps) {
   if (currentCharts.dpsGraph) {
     currentCharts.dpsGraph.data.datasets[0].data = dpsHistory.dpsValues;
     currentCharts.dpsGraph.data.datasets[1].data = dpsHistory.hpsValues;
-    currentCharts.dpsGraph.update('none'); // Update without animation
+    currentCharts.dpsGraph.update("none"); // Update without animation
   }
 }
 
@@ -728,4 +929,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+
+  // Setup monster damage table sorting
+  setupMonsterTableSort();
 });

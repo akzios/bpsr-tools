@@ -72,8 +72,8 @@ sectionHeaders.forEach((header) => {
 });
 
 const cliButton = document.getElementById("cli-mode");
-const webButton = document.getElementById("web-mode");
 const electronButton = document.getElementById("electron-mode");
+const minimapButton = document.getElementById("minimap-mode");
 
 // Throttle mode launches to prevent rapid clicking
 let isLaunching = false;
@@ -91,9 +91,11 @@ function launchModeWithFeedback(mode, button) {
   button.style.pointerEvents = "none";
 
   // Disable all mode buttons temporarily
-  [cliButton, webButton, electronButton].forEach((btn) => {
-    btn.style.pointerEvents = "none";
-    btn.style.opacity = "0.6";
+  [cliButton, electronButton, minimapButton].forEach((btn) => {
+    if (btn) {
+      btn.style.pointerEvents = "none";
+      btn.style.opacity = "0.6";
+    }
   });
 
   // Launch the mode
@@ -102,9 +104,11 @@ function launchModeWithFeedback(mode, button) {
   // Re-enable after delay (2.5 seconds)
   setTimeout(() => {
     isLaunching = false;
-    [cliButton, webButton, electronButton].forEach((btn) => {
-      btn.style.pointerEvents = "auto";
-      btn.style.opacity = "1";
+    [cliButton, electronButton, minimapButton].forEach((btn) => {
+      if (btn) {
+        btn.style.pointerEvents = "auto";
+        btn.style.opacity = "1";
+      }
     });
   }, 2500);
 }
@@ -113,13 +117,15 @@ cliButton.addEventListener("click", () => {
   launchModeWithFeedback("cli", cliButton);
 });
 
-webButton.addEventListener("click", () => {
-  launchModeWithFeedback("web", webButton);
-});
-
 electronButton.addEventListener("click", () => {
   launchModeWithFeedback("electron", electronButton);
 });
+
+if (minimapButton) {
+  minimapButton.addEventListener("click", () => {
+    launchModeWithFeedback("minimap", minimapButton);
+  });
+}
 
 // Settings functionality
 const settingsBtn = document.getElementById("settings-btn");
@@ -136,12 +142,10 @@ settingsBtn.addEventListener("click", async () => {
     const settings = await window.launcherAPI.getSettings();
     document.getElementById("autoUpdateEnabled").checked =
       settings.autoUpdateEnabled !== false; // Default to true
-    document.getElementById("autoClearOnServerChange").checked =
-      settings.autoClearOnServerChange || false;
+    document.getElementById("autoClearOnChannelChange").checked =
+      settings.autoClearOnChannelChange || false;
     document.getElementById("autoClearOnTimeout").checked =
       settings.autoClearOnTimeout || false;
-    document.getElementById("onlyRecordEliteDummy").checked =
-      settings.onlyRecordEliteDummy || false;
   } catch (error) {
     console.error("Error loading settings:", error);
   }
@@ -251,11 +255,10 @@ sheetsConfigTextarea.addEventListener("input", validateJSON);
 saveBtn.addEventListener("click", async () => {
   const settings = {
     autoUpdateEnabled: document.getElementById("autoUpdateEnabled").checked,
-    autoClearOnServerChange: document.getElementById("autoClearOnServerChange")
-      .checked,
+    autoClearOnChannelChange: document.getElementById(
+      "autoClearOnChannelChange",
+    ).checked,
     autoClearOnTimeout: document.getElementById("autoClearOnTimeout").checked,
-    onlyRecordEliteDummy: document.getElementById("onlyRecordEliteDummy")
-      .checked,
   };
 
   try {
@@ -370,53 +373,3 @@ checkUpdatesBtn.addEventListener("click", async () => {
   }
 });
 
-// Database Update functionality
-const updateDbBtn = document.getElementById("update-db-btn");
-const dbUpdateStatus = document.getElementById("dbUpdateStatus");
-
-// Helper function to set database update status
-function setDbUpdateStatus(message, type = "") {
-  dbUpdateStatus.textContent = message;
-  dbUpdateStatus.className = type
-    ? `action-status ${type}`
-    : "action-status";
-}
-
-// Update database
-updateDbBtn.addEventListener("click", async () => {
-  // Show confirmation modal
-  const confirmed = await showConfirm(
-    "Update Database",
-    "This will fetch the latest player data and merge it with your database. This may take a few minutes. Continue?",
-  );
-
-  if (!confirmed) return;
-
-  setDbUpdateStatus("");
-  setDbUpdateStatus("Updating database...", "info");
-  updateDbBtn.disabled = true;
-
-  try {
-    const result = await window.launcherAPI.updateDatabase();
-
-    if (result.code === 0) {
-      const stats = result.data;
-      const message = `✓ Database updated! Added: ${stats.professions} professions, ${stats.monsters} monsters, ${stats.skills} skills, ${stats.players} players`;
-      setDbUpdateStatus(message, "success");
-
-      console.log("[Database Update] Success:", result);
-    } else {
-      setDbUpdateStatus(`✗ Update failed: ${result.msg}`, "error");
-      console.error("[Database Update] Error:", result);
-    }
-
-    // Re-enable button after 3 seconds
-    setTimeout(() => {
-      updateDbBtn.disabled = false;
-    }, 3000);
-  } catch (error) {
-    console.error("Error updating database:", error);
-    setDbUpdateStatus(`✗ Error: ${error.message}`, "error");
-    updateDbBtn.disabled = false;
-  }
-});

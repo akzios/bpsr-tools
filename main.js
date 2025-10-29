@@ -23,19 +23,16 @@ const isPackaged = app.isPackaged;
 
 // Track active modes and their resources
 const activeModes = {
-  web: { active: false },
-  electron: { active: false, window: null },
-  cli: { active: false, window: null },
+  electron: { window: null, isOpen: false },
+  cli: { window: null, isOpen: false },
+  minimap: { window: null, isOpen: false },
 };
 
 // Close a specific mode
 function closeMode(mode) {
   console.log(`Closing ${mode} mode`);
 
-  if (mode === "web") {
-    // Web mode just opens browser, nothing to close
-    activeModes.web.active = false;
-  } else if (mode === "electron") {
+  if (mode === "electron") {
     try {
       const electronMain =
         require.cache[require.resolve("./src/app/electronGUI.js")];
@@ -45,11 +42,11 @@ function closeMode(mode) {
           overlayWindow.close();
         }
       }
-      delete require.cache[require.resolve("./src/app/electronGUI.js")];
+      // Don't delete require cache - IPC handlers should persist
     } catch (e) {
       console.log("Error closing electron mode:", e.message);
     }
-    activeModes.electron.active = false;
+    activeModes.electron.isOpen = false;
     activeModes.electron.window = null;
   } else if (mode === "cli") {
     try {
@@ -61,8 +58,22 @@ function closeMode(mode) {
     } catch (e) {
       console.log("Error closing CLI mode:", e.message);
     }
-    activeModes.cli.active = false;
+    activeModes.cli.isOpen = false;
     activeModes.cli.window = null;
+  } else if (mode === "minimap") {
+    try {
+      if (
+        activeModes.minimap.window &&
+        !activeModes.minimap.window.isDestroyed()
+      ) {
+        activeModes.minimap.window.close();
+      }
+      delete require.cache[require.resolve("./src/app/electronMinimap.js")];
+    } catch (e) {
+      console.log("Error closing minimap mode:", e.message);
+    }
+    activeModes.minimap.isOpen = false;
+    activeModes.minimap.window = null;
   }
 
   updateTrayMenu();
@@ -143,26 +154,29 @@ async function launchMode(mode) {
     return;
   }
 
-  // Check if mode is already active
-  if (activeModes[mode] && activeModes[mode].active) {
-    // Focus the window if it exists
+  // Check if window is already open
+  if (mode === "electron" && activeModes.electron.isOpen) {
     if (
-      mode === "electron" &&
       activeModes.electron.window &&
       !activeModes.electron.window.isDestroyed()
     ) {
       activeModes.electron.window.focus();
-    } else if (
-      mode === "cli" &&
-      activeModes.cli.window &&
-      !activeModes.cli.window.isDestroyed()
-    ) {
+      console.log(`[Main] ${mode} window already open, focusing`);
+    }
+    return;
+  } else if (mode === "cli" && activeModes.cli.isOpen) {
+    if (activeModes.cli.window && !activeModes.cli.window.isDestroyed()) {
       activeModes.cli.window.focus();
-    } else if (mode === "web") {
-      // Web mode just opens browser again
-      require("electron").shell.openExternal(
-        `http://localhost:${BACKEND_PORT}`,
-      );
+      console.log(`[Main] ${mode} window already open, focusing`);
+    }
+    return;
+  } else if (mode === "minimap" && activeModes.minimap.isOpen) {
+    if (
+      activeModes.minimap.window &&
+      !activeModes.minimap.window.isDestroyed()
+    ) {
+      activeModes.minimap.window.focus();
+      console.log(`[Main] ${mode} window already open, focusing`);
     }
     return;
   }
@@ -189,42 +203,37 @@ async function launchMode(mode) {
   // Create tray if not exists
   createTray();
 
-  if (mode === "web") {
-    // Web mode just opens browser to existing backend server
-    activeModes.web.active = true;
-    updateTrayMenu();
-
-    // Open browser to backend server (small delay for UX)
-    setTimeout(() => {
-      require("electron").shell.openExternal(
-        `http://localhost:${BACKEND_PORT}`,
-      );
-    }, 500);
-
-    // Release lock after delay
-    setTimeout(() => {
-      isLaunchingMode = false;
-      console.log(`[Main] ${mode} mode launch complete`);
-    }, 1500);
-  } else if (mode === "electron") {
-    // Load electron-gui which will create the overlay window
+  if (mode === "electron") {
+    // Load electron-gui module
     const electronMain = require("./src/app/electronGUI.js");
 
-    // Track the window (small delay for window creation)
-    setTimeout(() => {
-      activeModes.electron.window = electronMain.getMainWindow();
-      activeModes.electron.active = true;
-      updateTrayMenu();
-
-      // Listen for window close to update tray
-      if (activeModes.electron.window) {
-        activeModes.electron.window.on("closed", () => {
-          activeModes.electron.active = false;
-          activeModes.electron.window = null;
+    // Create or focus the window
+    electronMain
+      .createWindow()
+      .then(() => {
+        // Track the window (small delay for window creation)
+        setTimeout(() => {
+          activeModes.electron.window = electronMain.getMainWindow();
+          activeModes.electron.isOpen = true;
           updateTrayMenu();
-        });
-      }
-    }, 500);
+
+          // Listen for window close to update tray (only if not already listening)
+          if (
+            activeModes.electron.window &&
+            activeModes.electron.window.listenerCount("closed") === 0
+          ) {
+            activeModes.electron.window.on("closed", () => {
+              activeModes.electron.isOpen = false;
+              activeModes.electron.window = null;
+              updateTrayMenu();
+            });
+          }
+        }, 500);
+      })
+      .catch((err) => {
+        console.error("Failed to create electron window:", err);
+        isLaunchingMode = false;
+      });
 
     // Release lock after delay
     setTimeout(() => {
@@ -235,13 +244,32 @@ async function launchMode(mode) {
     // Launch CLI in Electron window (server is already ready)
     const { createCLIWindow } = require("./src/app/electronCLI.js");
     activeModes.cli.window = createCLIWindow();
-    activeModes.cli.active = true;
+    activeModes.cli.isOpen = true;
     updateTrayMenu();
 
     // Listen for window close to update tray
     activeModes.cli.window.on("closed", () => {
-      activeModes.cli.active = false;
+      activeModes.cli.isOpen = false;
       activeModes.cli.window = null;
+      updateTrayMenu();
+    });
+
+    // Release lock after delay
+    setTimeout(() => {
+      isLaunchingMode = false;
+      console.log(`[Main] ${mode} mode launch complete`);
+    }, 1500);
+  } else if (mode === "minimap") {
+    // Load minimap electron window
+    const { createMinimapWindow } = require("./src/app/electronMinimap.js");
+    activeModes.minimap.window = createMinimapWindow(BACKEND_PORT);
+    activeModes.minimap.isOpen = true;
+    updateTrayMenu();
+
+    // Listen for window close to update tray
+    activeModes.minimap.window.on("closed", () => {
+      activeModes.minimap.isOpen = false;
+      activeModes.minimap.window = null;
       updateTrayMenu();
     });
 
@@ -272,21 +300,11 @@ function updateTrayMenu() {
       enabled: false,
     },
     {
-      label: activeModes.web.active ? "✓ Web Server" : "  Web Server",
-      click: () => {
-        if (activeModes.web.active) {
-          closeMode("web");
-        } else {
-          launchMode("web");
-        }
-      },
-    },
-    {
-      label: activeModes.electron.active
+      label: activeModes.electron.isOpen
         ? "✓ Electron Overlay"
         : "  Electron Overlay",
       click: () => {
-        if (activeModes.electron.active) {
+        if (activeModes.electron.isOpen) {
           closeMode("electron");
         } else {
           launchMode("electron");
@@ -294,15 +312,26 @@ function updateTrayMenu() {
       },
     },
     {
-      label: activeModes.cli.active ? "✓ CLI Mode" : "  CLI Mode",
+      label: activeModes.cli.isOpen ? "✓ CLI Mode" : "  CLI Mode",
       click: () => {
-        if (activeModes.cli.active) {
+        if (activeModes.cli.isOpen) {
           closeMode("cli");
         } else {
           launchMode("cli");
         }
       },
     },
+    // Minimap hidden for now
+    // {
+    //   label: activeModes.minimap.active ? "✓ Minimap" : "  Minimap",
+    //   click: () => {
+    //     if (activeModes.minimap.active) {
+    //       closeMode("minimap");
+    //     } else {
+    //       launchMode("minimap");
+    //     }
+    //   },
+    // },
     { type: "separator" },
     {
       label: "Quit",
@@ -426,94 +455,6 @@ ipcMain.handle("save-sheets-config", async (event, config) => {
   }
 });
 
-// Database update handler
-ipcMain.handle("update-database", async () => {
-  try {
-    const { updateDatabase } = require(path.join(
-      __dirname,
-      "src",
-      "server",
-      "utilities",
-      "updateDatabase",
-    ));
-
-    // Get paths - handle both dev and packaged
-    const userDbPath = path.join(configPaths.getDbPath(), "bpsr-tools.db");
-
-    // Seed files location:
-    // - Always use userData for writable access
-    // - In packaged apps: userData/db/seed/
-    // - In dev: __dirname/db/seed/ (for backward compatibility)
-    const seedBasePath = app.isPackaged
-      ? path.join(configPaths.getUserDataPath(), "db", "seed")
-      : path.join(__dirname, "db", "seed");
-
-    // Copy seed template files from installation to userData on first update
-    if (app.isPackaged) {
-      const installSeedPath = path.join(process.resourcesPath, "db", "seed");
-      const userSeedPath = path.join(
-        configPaths.getUserDataPath(),
-        "db",
-        "seed",
-      );
-
-      // Ensure userData seed directory exists
-      if (!fs.existsSync(userSeedPath)) {
-        fs.mkdirSync(userSeedPath, { recursive: true });
-      }
-
-      // Copy seed templates if they don't exist in userData
-      const seedFiles = [
-        "professions.json",
-        "monsters.json",
-        "skills.json",
-      ];
-      for (const file of seedFiles) {
-        const srcFile = path.join(installSeedPath, file);
-        const destFile = path.join(userSeedPath, file);
-        if (fs.existsSync(srcFile) && !fs.existsSync(destFile)) {
-          fs.copyFileSync(srcFile, destFile);
-          console.log(`[IPC] Copied seed file: ${file}`);
-        }
-      }
-    }
-
-    console.log("[IPC] Database update requested");
-    console.log("[IPC] User DB path:", userDbPath);
-    console.log("[IPC] Seed base path:", seedBasePath);
-
-    const stats = await updateDatabase(userDbPath, seedBasePath);
-
-    if (stats.success) {
-      console.log(
-        `[IPC] Database updated: +${stats.professions} professions, +${stats.monsters} monsters, +${stats.skills} skills, +${stats.players} players`,
-      );
-      return {
-        code: 0,
-        msg: "Database updated successfully",
-        data: {
-          professions: stats.professions,
-          monsters: stats.monsters,
-          skills: stats.skills,
-          players: stats.players,
-        },
-      };
-    } else {
-      console.error(`[IPC] Database update failed: ${stats.errors.join(", ")}`);
-      return {
-        code: 1,
-        msg: "Database update failed",
-        errors: stats.errors,
-      };
-    }
-  } catch (error) {
-    console.error("[IPC] Database update error:", error);
-    return {
-      code: 1,
-      msg: "Error updating database: " + error.message,
-    };
-  }
-});
 
 // Auto-update handlers
 ipcMain.handle("check-for-updates", async () => {

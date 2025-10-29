@@ -20,17 +20,14 @@ config/sheets.json
 .env.local
 .env.*.local
 *.token
-GH_TOKEN
-
-# SQLite database files (runtime-generated)
-db/bpsr-tools.db
-db/bpsr-tools.db-shm
-db/bpsr-tools.db-wal
 
 # Misc
 .npmrc
 /Prerequisites/npcap-1.83.exe
 pnpm-lock.yaml
+nul
+
+temp/
 
 # IDE
 .vscode/

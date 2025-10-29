@@ -88,6 +88,7 @@ const MessageType = {
 };
 
 const NotifyMethod = {
+  SyncSceneData: 0x00000003,
   SyncNearEntities: 0x00000006,
   SyncContainerData: 0x00000015,
   SyncContainerDirtyData: 0x00000016,
@@ -99,6 +100,7 @@ const NotifyMethod = {
 const AttrType = {
   AttrName: 0x01,
   AttrId: 0x0a,
+  AttrPosition: 0x35, // Position data (Vector3)
   AttrProfessionId: 0xdc,
   AttrFightPoint: 0x272e,
   AttrLevel: 0x2710,
@@ -256,10 +258,10 @@ class PacketProcessor {
   constructor({ logger, userDataManager }) {
     // Wrap logger with [Packet] prefix
     this.logger = {
-      info: (msg) => logger.info(`[Packet] ${msg}`),
+      info: (msg) => {}, // Suppressed (too verbose)
       error: (msg) => logger.error(`[Packet] ${msg}`),
       warn: (msg) => logger.warn(`[Packet] ${msg}`),
-      debug: (msg) => logger.debug(`[Packet] ${msg}`),
+      debug: (msg) => {}, // Suppressed (too verbose)
     };
     this.userDataManager = userDataManager;
   }
@@ -274,7 +276,7 @@ class PacketProcessor {
     return zlib.zstdDecompressSync(buffer);
   }
 
-  _processAoiSyncDelta(aoiSyncDelta) {
+  _processAoiSyncDelta(aoiSyncDelta, isPaused = false) {
     if (!aoiSyncDelta) return;
 
     let targetUuid = aoiSyncDelta.Uuid;
@@ -294,6 +296,9 @@ class PacketProcessor {
 
     const skillEffect = aoiSyncDelta.SkillEffects;
     if (!skillEffect) return;
+
+    // Skip damage/healing processing if paused, but continue processing player attributes above
+    if (isPaused) return;
 
     if (!skillEffect.Damages) return;
     for (const syncDamageInfo of skillEffect.Damages) {
@@ -442,17 +447,17 @@ class PacketProcessor {
     }
   }
 
-  _processSyncNearDeltaInfo(payloadBuffer) {
+  _processSyncNearDeltaInfo(payloadBuffer, isPaused = false) {
     const syncNearDeltaInfo = pb.SyncNearDeltaInfo.decode(payloadBuffer);
     // this.logger.debug(JSON.stringify(syncNearDeltaInfo, null, 2));
 
     if (!syncNearDeltaInfo.DeltaInfos) return;
     for (const aoiSyncDelta of syncNearDeltaInfo.DeltaInfos) {
-      this._processAoiSyncDelta(aoiSyncDelta);
+      this._processAoiSyncDelta(aoiSyncDelta, isPaused);
     }
   }
 
-  _processSyncToMeDeltaInfo(payloadBuffer) {
+  _processSyncToMeDeltaInfo(payloadBuffer, isPaused = false) {
     const syncToMeDeltaInfo = pb.SyncToMeDeltaInfo.decode(payloadBuffer);
     // this.logger.debug(JSON.stringify(syncToMeDeltaInfo, null, 2));
 
@@ -472,7 +477,7 @@ class PacketProcessor {
     const aoiSyncDelta = aoiSyncToMeDelta.BaseDelta;
     if (!aoiSyncDelta) return;
 
-    this._processAoiSyncDelta(aoiSyncDelta);
+    this._processAoiSyncDelta(aoiSyncDelta, isPaused);
   }
 
   _processSyncContainerData(payloadBuffer) {
@@ -521,6 +526,17 @@ class PacketProcessor {
 
       if (charBase.FightPoint)
         this.userDataManager.setFightPoint(playerUid, charBase.FightPoint);
+
+      // Update scene data (MapId, LineId)
+      if (vData.SceneData) {
+        const sceneData = vData.SceneData;
+        if (sceneData.MapId) {
+          this.userDataManager.setSceneMapId(playerUid, sceneData.MapId);
+        }
+        if (sceneData.LineId) {
+          this.userDataManager.setSceneLineId(playerUid, sceneData.LineId);
+        }
+      }
 
       if (!vData.ProfessionList) return;
       const professionList = vData.ProfessionList;
@@ -654,6 +670,31 @@ class PacketProcessor {
           );
           this.userDataManager.setName(playerUid, playerName);
           break;
+        case AttrType.AttrPosition:
+          try {
+            const positionData = pb.Vector3.decode(attr.RawData);
+            if (
+              positionData &&
+              positionData.X != null &&
+              positionData.Y != null &&
+              positionData.Z != null
+            ) {
+              this.userDataManager.setPosition(
+                playerUid,
+                positionData.X,
+                positionData.Y,
+                positionData.Z,
+              );
+              this.logger.debug(
+                `_processPlayerAttrs: Setting position for UID ${playerUid}: (${positionData.X}, ${positionData.Y}, ${positionData.Z})`,
+              );
+            }
+          } catch (err) {
+            this.logger.warn(
+              `Failed to decode position for UID ${playerUid}: ${err.message}`,
+            );
+          }
+          break;
         case AttrType.AttrProfessionId:
           const professionId = reader.int32();
           const professionName = getProfessionNameFromId(professionId);
@@ -742,6 +783,8 @@ class PacketProcessor {
           break;
         case AttrType.AttrId:
           const attrId = reader.int32();
+          // Store the monster database ID for later lookup
+          this.userDataManager.enemyCache.attrId.set(enemyUid, attrId);
           const name = this.userDataManager.monsterDb?.getMonsterName(attrId);
           if (name) {
             this.logger.info(`Found monster name ${name} for id ${enemyUid}`);
@@ -768,6 +811,7 @@ class PacketProcessor {
     // this.logger.debug(JSON.stringify(syncNearEntities, null, 2));
 
     if (!syncNearEntities.Appear) return;
+
     for (const entity of syncNearEntities.Appear) {
       const entityUuid = entity.Uuid;
       if (!entityUuid) continue;
@@ -790,7 +834,7 @@ class PacketProcessor {
     }
   }
 
-  _processNotifyMsg(reader, isZstdCompressed) {
+  _processNotifyMsg(reader, isZstdCompressed, isPaused = false) {
     const serviceUuid = reader.readUInt64();
     const stubId = reader.readUInt32();
     const methodId = reader.readUInt32();
@@ -806,6 +850,9 @@ class PacketProcessor {
     }
 
     switch (methodId) {
+      case NotifyMethod.SyncSceneData:
+        this._processSyncSceneData(msgPayload);
+        break;
       case NotifyMethod.SyncNearEntities:
         this._processSyncNearEntities(msgPayload);
         break;
@@ -816,10 +863,10 @@ class PacketProcessor {
         this._processSyncContainerDirtyData(msgPayload);
         break;
       case NotifyMethod.SyncToMeDeltaInfo:
-        this._processSyncToMeDeltaInfo(msgPayload);
+        this._processSyncToMeDeltaInfo(msgPayload, isPaused);
         break;
       case NotifyMethod.SyncNearDeltaInfo:
-        this._processSyncNearDeltaInfo(msgPayload);
+        this._processSyncNearDeltaInfo(msgPayload, isPaused);
         break;
       default:
         this.logger.debug(`Skipping NotifyMsg with methodId ${methodId}`);
@@ -832,7 +879,7 @@ class PacketProcessor {
     this.logger.debug(`Unimplemented processing return`);
   }
 
-  processPacket(packets) {
+  processPacket(packets, isPaused = false, globalSettings = null) {
     try {
       const packetsReader = new BinaryReader(packets);
 
@@ -853,7 +900,7 @@ class PacketProcessor {
 
         switch (msgTypeId) {
           case MessageType.Notify:
-            this._processNotifyMsg(packetReader, isZstdCompressed);
+            this._processNotifyMsg(packetReader, isZstdCompressed, isPaused);
             break;
           case MessageType.Return:
             this._processReturnMsg(packetReader, isZstdCompressed);
@@ -869,7 +916,7 @@ class PacketProcessor {
             }
 
             // this.logger.debug("Processing FrameDown packet.");
-            this.processPacket(nestedPacket);
+            this.processPacket(nestedPacket, isPaused, globalSettings);
             break;
           default:
             // this.logger.debug(`Ignore packet with message type ${msgTypeId}.`);
@@ -880,6 +927,42 @@ class PacketProcessor {
       this.logger.error(
         `Fail while parsing data for player ${currentUserUuid.shiftRight(16)}.\nErr: ${e}`,
       );
+    }
+  }
+
+  _processSyncSceneData(payloadBuffer) {
+    try {
+      // Match Go implementation: payload[42] = length byte, offset 43 = start of string
+      const start = 43;
+
+      if (start >= payloadBuffer.length) {
+        this.userDataManager.setSceneName("");
+        return;
+      }
+
+      // Read length byte at offset 42
+      let length = payloadBuffer[42];
+
+      if (start + length > payloadBuffer.length) {
+        length = payloadBuffer.length - start;
+      }
+
+      // Extract the text segment at the specific offset
+      const textSegment = payloadBuffer.subarray(start, start + length);
+      const text = textSegment.toString("utf8");
+
+      // Extract Chinese characters from this specific segment
+      const chinesePattern = /[\u4e00-\u9fa5]+/;
+      const match = text.match(chinesePattern);
+
+      if (match && match[0].trim().length > 0) {
+        const sceneName = match[0].trim();
+        this.userDataManager.setSceneName(sceneName);
+      } else {
+        this.userDataManager.setSceneName("");
+      }
+    } catch (err) {
+      this.userDataManager.setSceneName("");
     }
   }
 }

@@ -6,14 +6,13 @@ const configPaths = require("./configPaths");
  */
 const DEFAULT_SETTINGS = {
   autoUpdateEnabled: true,
-  autoClearOnServerChange: false,
+  autoClearOnChannelChange: false,
   autoClearOnTimeout: true,
-  onlyRecordEliteDummy: false,
   enableFightLog: false,
   enableDpsLog: false,
   enableHistorySave: false,
-  isPaused: false,
   playerDataSyncProgress: null,
+  guiWindowBounds: null, // { x, y, width, height }
 };
 
 /**
@@ -22,7 +21,21 @@ const DEFAULT_SETTINGS = {
  */
 function loadSettings() {
   try {
-    const settingsPath = configPaths.getConfigPath("settings.json");
+    let settingsPath;
+
+    // Check if running in dev mode (not packaged)
+    const isDev = process.defaultApp || process.env.NODE_ENV === "development";
+
+    if (isDev) {
+      // Dev mode: load from source config directory
+      const path = require("path");
+      settingsPath = path.join(process.cwd(), "config", "settings.json");
+      console.log("[Settings] Dev mode: Loading from source file");
+    } else {
+      // Production: load from user data directory
+      settingsPath = configPaths.getConfigPath("settings.json");
+    }
+
     if (fs.existsSync(settingsPath)) {
       const data = fs.readFileSync(settingsPath, "utf8");
       const loadedSettings = JSON.parse(data);
@@ -40,13 +53,36 @@ function loadSettings() {
 
 /**
  * Save settings to config file
+ * In dev mode (not packaged), saves to source config/ directory
+ * In production (packaged), saves to user data directory
  * @param {Object} settings - Settings object to save
  * @returns {boolean} Success status
  */
 function saveSettings(settings) {
   try {
-    const settingsPath = configPaths.getConfigPath("settings.json");
-    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), "utf8");
+    // Filter out runtime-only properties that should never be persisted
+    const { isPaused, ...settingsToSave } = settings;
+
+    let settingsPath;
+
+    // Check if running in dev mode (not packaged)
+    const isDev = process.defaultApp || process.env.NODE_ENV === "development";
+
+    if (isDev) {
+      // Dev mode: save to source config directory
+      const path = require("path");
+      settingsPath = path.join(process.cwd(), "config", "settings.json");
+      console.log("[Settings] Dev mode: Saving to source file");
+    } else {
+      // Production: save to user data directory
+      settingsPath = configPaths.getConfigPath("settings.json");
+    }
+
+    fs.writeFileSync(
+      settingsPath,
+      JSON.stringify(settingsToSave, null, 2),
+      "utf8",
+    );
     console.log("[Settings] Saved settings to:", settingsPath);
     return true;
   } catch (error) {

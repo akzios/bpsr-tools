@@ -6,7 +6,9 @@ const path = require("path");
 const fsPromises = require("fs").promises;
 const fs = require("fs");
 const { saveSettings } = require(path.join(__dirname, "utilities", "settings"));
-const GoogleSheetsService = require(path.join(__dirname, "googleSheets"));
+const GoogleSheetsService = require(
+  path.join(__dirname, "service", "googleSheets"),
+);
 const configPaths = require(path.join(__dirname, "utilities", "configPaths"));
 
 const LOGS_DPS_PATH = path.join("./logs_dps.json");
@@ -18,6 +20,7 @@ function initializeApi(
   userDataManager,
   logger,
   globalSettings,
+  sniffer,
 ) {
   app.use(cors());
   app.use(express.json());
@@ -202,7 +205,14 @@ function initializeApi(
   app.post("/api/pause", (req, res) => {
     const { paused } = req.body;
     globalSettings.isPaused = paused; // Update pause state in globalSettings
+    if (sniffer) {
+      sniffer.setPaused(paused); // Update pause state in sniffer
+    }
     console.log(`Stats ${globalSettings.isPaused ? "paused" : "resumed"}!`);
+
+    // Broadcast pause state change to all connected clients
+    io.emit("pause-state-changed", { paused: globalSettings.isPaused });
+
     res.json({
       code: 0,
       msg: `Stats ${globalSettings.isPaused ? "paused" : "resumed"}!`,
@@ -379,7 +389,10 @@ function initializeApi(
     const newSettings = req.body;
     const oldTheme = globalSettings.theme;
     Object.assign(globalSettings, newSettings); // Update globalSettings directly
-    saveSettings(globalSettings);
+
+    // Filter out isPaused before saving (it's runtime-only state)
+    const { isPaused, ...settingsToSave } = globalSettings;
+    saveSettings(settingsToSave);
 
     // Broadcast theme change to all connected clients if theme changed
     if (newSettings.theme && newSettings.theme !== oldTheme) {
@@ -387,36 +400,6 @@ function initializeApi(
     }
 
     res.json({ code: 0, data: globalSettings });
-  });
-
-  app.get("/api/dictionary", async (req, res) => {
-    const dictionaryPath = path.join(
-      __dirname,
-      "..",
-      "..",
-      "config",
-      "dictionary.json",
-    ); // Adjust the path
-    try {
-      const data = await fsPromises.readFile(dictionaryPath, "utf8");
-      if (data.trim() === "") {
-        res.json({});
-      } else {
-        res.json(JSON.parse(data));
-      }
-    } catch (error) {
-      if (error.code === "ENOENT") {
-        logger.warn("dictionary.json not found, returning empty object.");
-        res.json({});
-      } else {
-        logger.error("Failed to read or parse dictionary.json:", error);
-        res.status(500).json({
-          code: 1,
-          msg: "Failed to load dictionary",
-          error: error.message,
-        });
-      }
-    }
   });
 
   // Profession API endpoints
@@ -574,11 +557,9 @@ function initializeApi(
   // Update database with fresh seed data
   app.post("/api/update-database", async (req, res) => {
     try {
-      const { updateDatabase } = require(path.join(
-        __dirname,
-        "utilities",
-        "updateDatabase",
-      ));
+      const { updateDatabase } = require(
+        path.join(__dirname, "utilities", "updateDatabase"),
+      );
 
       // Get paths
       const userDbPath = path.join(configPaths.getDbPath(), "bpsr-tools.db");
@@ -605,7 +586,9 @@ function initializeApi(
           },
         });
       } else {
-        logger.error(`[API] Database update failed: ${stats.errors.join(", ")}`);
+        logger.error(
+          `[API] Database update failed: ${stats.errors.join(", ")}`,
+        );
         res.status(500).json({
           code: 1,
           msg: "Database update failed",
@@ -629,6 +612,29 @@ function initializeApi(
     });
   });
 
+  // Emit scene data updates (50ms for smooth position tracking)
+  let lastLoggedSceneData = null;
+  setInterval(() => {
+    if (!globalSettings.isPaused) {
+      const sceneData = userDataManager.getSceneData();
+      if (sceneData) {
+        io.emit("scene-update", sceneData);
+
+        // Scene update logging disabled
+        // const currentSnapshot = JSON.stringify({
+        //   scene: sceneData.scene,
+        //   position: sceneData.player.pos,
+        // });
+        //
+        // if (currentSnapshot !== lastLoggedSceneData) {
+        //   console.log("[Scene Update]", JSON.stringify(sceneData, null, 2));
+        //   lastLoggedSceneData = currentSnapshot;
+        // }
+      }
+    }
+  }, 50); // 20 updates/sec for smooth minimap movement
+
+  // Emit combat data updates (100ms)
   setInterval(() => {
     if (!globalSettings.isPaused) {
       const userData = userDataManager.getAllUsersData();
@@ -664,6 +670,269 @@ function initializeApi(
       io.emit("data", data);
     }
   }, 100);
+
+  // ===== Collectibles API Endpoints =====
+
+  /**
+   * GET /api/collectibles/:mapId
+   * Get all collectibles for a specific map
+   * Optional query param: userId for progress tracking
+   */
+  app.get("/api/collectibles/:mapId", (req, res) => {
+    try {
+      const mapId = parseInt(req.params.mapId);
+      const userId = req.query.userId ? parseInt(req.query.userId) : null;
+
+      if (isNaN(mapId)) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Invalid map ID",
+        });
+      }
+
+      if (!req.app.locals.collectionManager) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Collection manager not initialized",
+        });
+      }
+
+      const collectionManager = req.app.locals.collectionManager;
+
+      // Get collectibles with or without user progress
+      const collectibles = userId
+        ? collectionManager.getAllForMapWithProgress(mapId, userId)
+        : collectionManager.getAllForMap(mapId);
+
+      res.json({
+        code: 0,
+        mapId,
+        collectibles,
+      });
+    } catch (error) {
+      logger.error(
+        `[Collectibles API] Error fetching collectibles: ${error.message}`,
+      );
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to fetch collectibles",
+        error: error.message,
+      });
+    }
+  });
+
+  /**
+   * GET /api/collectibles/:mapId/statistics
+   * Get collectible statistics for a specific map
+   * Optional query param: userId for progress
+   */
+  app.get("/api/collectibles/:mapId/statistics", (req, res) => {
+    try {
+      const mapId = parseInt(req.params.mapId);
+      const userId = req.query.userId ? parseInt(req.query.userId) : null;
+
+      if (isNaN(mapId)) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Invalid map ID",
+        });
+      }
+
+      if (!req.app.locals.collectionManager) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Collection manager not initialized",
+        });
+      }
+
+      const collectionManager = req.app.locals.collectionManager;
+      const statistics = collectionManager.getStatistics(mapId, userId);
+
+      res.json({
+        code: 0,
+        mapId,
+        statistics,
+      });
+    } catch (error) {
+      logger.error(
+        `[Collectibles API] Error fetching statistics: ${error.message}`,
+      );
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to fetch statistics",
+        error: error.message,
+      });
+    }
+  });
+
+  /**
+   * POST /api/collections/mark
+   * Mark a collectible as collected by a user
+   */
+  app.post("/api/collections/mark", (req, res) => {
+    try {
+      const { userId, collectionType, collectibleId, mapId } = req.body;
+
+      if (!userId || !collectionType || !collectibleId || !mapId) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Missing required fields: userId, collectionType, collectibleId, mapId",
+        });
+      }
+
+      const userIdInt = parseInt(userId);
+      const collectibleIdInt = parseInt(collectibleId);
+      const mapIdInt = parseInt(mapId);
+
+      if (isNaN(userIdInt) || isNaN(collectibleIdInt) || isNaN(mapIdInt)) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Invalid ID format",
+        });
+      }
+
+      if (!req.app.locals.collectionManager) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Collection manager not initialized",
+        });
+      }
+
+      const collectionManager = req.app.locals.collectionManager;
+      const success = collectionManager.markCollected(
+        userIdInt,
+        collectionType,
+        collectibleIdInt,
+        mapIdInt,
+      );
+
+      if (success) {
+        res.json({
+          code: 0,
+          msg: "Collectible marked as collected",
+        });
+      } else {
+        res.json({
+          code: 0,
+          msg: "Collectible was already collected",
+        });
+      }
+    } catch (error) {
+      logger.error(
+        `[Collectibles API] Error marking collected: ${error.message}`,
+      );
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to mark collectible",
+        error: error.message,
+      });
+    }
+  });
+
+  /**
+   * DELETE /api/collections/mark
+   * Remove a collected item
+   */
+  app.delete("/api/collections/mark", (req, res) => {
+    try {
+      const { userId, collectionType, collectibleId } = req.body;
+
+      if (!userId || !collectionType || !collectibleId) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Missing required fields: userId, collectionType, collectibleId",
+        });
+      }
+
+      const userIdInt = parseInt(userId);
+      const collectibleIdInt = parseInt(collectibleId);
+
+      if (isNaN(userIdInt) || isNaN(collectibleIdInt)) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Invalid ID format",
+        });
+      }
+
+      if (!req.app.locals.collectionManager) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Collection manager not initialized",
+        });
+      }
+
+      const collectionManager = req.app.locals.collectionManager;
+      const success = collectionManager.removeCollected(
+        userIdInt,
+        collectionType,
+        collectibleIdInt,
+      );
+
+      if (success) {
+        res.json({
+          code: 0,
+          msg: "Collectible unmarked",
+        });
+      } else {
+        res.json({
+          code: 1,
+          msg: "Collectible was not found in collection",
+        });
+      }
+    } catch (error) {
+      logger.error(
+        `[Collectibles API] Error removing collected: ${error.message}`,
+      );
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to remove collectible",
+        error: error.message,
+      });
+    }
+  });
+
+  /**
+   * GET /api/collections/progress/:userId
+   * Get overall collection progress for a user
+   */
+  app.get("/api/collections/progress/:userId", (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+
+      if (isNaN(userId)) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Invalid user ID",
+        });
+      }
+
+      if (!req.app.locals.collectionManager) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Collection manager not initialized",
+        });
+      }
+
+      const collectionManager = req.app.locals.collectionManager;
+      const progress =
+        collectionManager.userCollections.getOverallProgress(userId);
+
+      res.json({
+        code: 0,
+        userId,
+        progress,
+      });
+    } catch (error) {
+      logger.error(
+        `[Collectibles API] Error fetching progress: ${error.message}`,
+      );
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to fetch progress",
+        error: error.message,
+      });
+    }
+  });
 }
 
 module.exports = initializeApi;
