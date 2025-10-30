@@ -840,9 +840,12 @@ input[type="text"] {
   padding: 0;
   box-sizing: border-box;
 }
+body {
+  overflow: hidden; /* Prevent scrollbars during scaling */
+}
 .bpsr-tools {
   width: calc(100vw - 24px); /* Full width minus margins */
-  min-width: 676px; /* 700px window - 24px margins */
+  min-width: 350px; /* Minimum size: 350x200 with auto-scaling */
   height: calc(100vh - 24px); /* Full height minus margins */
   background: var(--surface-base);
   backdrop-filter: blur(10px);
@@ -865,12 +868,29 @@ input[type="text"] {
   justify-content: flex-start;
   align-items: center;
   flex-shrink: 0;
+  flex-wrap: wrap; /* Allow buttons to wrap when too narrow */
   margin-bottom: 8px;
   margin-top: 0;
   padding: 8px;
   gap: 10px;
   -webkit-app-region: drag;
+  overflow: visible; /* Ensure wrapped buttons are visible */
 }
+
+/* Ensure logo scales down appropriately */
+.controls img {
+  height: 40px;
+  margin-right: 10px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+/* Ensure the flex spacer doesn't cause issues with wrapping */
+.controls > div[style*="flex: 1"] {
+  flex: 1;
+  min-width: 20px; /* Minimum width for spacer */
+}
+
 #diccionario-form {
   display: flex;
   gap: 8px;

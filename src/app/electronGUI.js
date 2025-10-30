@@ -151,6 +151,8 @@ async function createWindow() {
     const windowConfig = {
       width: savedBounds?.width || 724,
       height: savedBounds?.height || 800,
+      minWidth: 350,
+      minHeight: 200,
       x: savedBounds?.x,
       y: savedBounds?.y,
       transparent: true,

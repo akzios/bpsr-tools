@@ -1086,16 +1086,20 @@ if (window.electronAPI) {
             newY = startBounds.y + deltaY;
           }
 
-          // Apply size constraints
-          newWidth = Math.max(700, Math.min(1400, newWidth));
-          newHeight = Math.max(400, Math.min(1200, newHeight));
+          // Apply size constraints (allow very small sizes with auto-scaling)
+          const minWidth = 350;
+          const minHeight = 200;
+          const maxWidth = 1400;
+          const maxHeight = 1200;
+          newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+          newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
 
           // Adjust position if we hit minimum size constraint
-          if (direction.includes("left") && newWidth === 700) {
-            newX = startBounds.x + (startBounds.width - 700);
+          if (direction.includes("left") && newWidth === minWidth) {
+            newX = startBounds.x + (startBounds.width - minWidth);
           }
-          if (direction.includes("top") && newHeight === 400) {
-            newY = startBounds.y + (startBounds.height - 400);
+          if (direction.includes("top") && newHeight === minHeight) {
+            newY = startBounds.y + (startBounds.height - minHeight);
           }
 
           // Set window bounds (position + size)
@@ -1325,6 +1329,65 @@ fetchDataAndRender();
 updateLogsUI();
 initializeMonsterTypeFilter();
 initializeCollapsiblePanels();
+
+// Auto-scale GUI when window is resized below minimum width
+function updateGUIScale() {
+  const bpsrTools = document.querySelector('.bpsr-tools');
+  if (!bpsrTools) return;
+
+  const minWidth = 676; // Minimum natural width before scaling
+  const minScale = 0.5; // Minimum scale factor
+  const currentWidth = window.innerWidth;
+
+  if (currentWidth < minWidth) {
+    // Calculate scale factor: 1.0 at minWidth, 0.5 at (minWidth * 0.5)
+    const scale = Math.max(minScale, currentWidth / minWidth);
+
+    // Debug log (only log when scale changes significantly)
+    const lastScale = parseFloat(bpsrTools.dataset.lastScale || '1');
+    if (Math.abs(scale - lastScale) > 0.01) {
+      console.log(`[Scale] Window: ${currentWidth}px, Scale: ${scale.toFixed(2)}x`);
+      bpsrTools.dataset.lastScale = scale;
+    }
+
+    // Apply scaling transform
+    bpsrTools.style.transform = `scale(${scale})`;
+    bpsrTools.style.transformOrigin = 'top left';
+
+    // Adjust container dimensions to account for scaling
+    // The element needs to be larger to fill the viewport when scaled down
+    const scaledWidth = minWidth;
+    const scaledHeight = (window.innerHeight - 24) / scale;
+
+    bpsrTools.style.width = `${scaledWidth}px`;
+    bpsrTools.style.height = `${scaledHeight}px`;
+    bpsrTools.style.minWidth = `${scaledWidth}px`;
+
+    // Ensure proper overflow handling
+    bpsrTools.style.overflowX = 'hidden';
+    bpsrTools.style.overflowY = 'auto'; // Allow vertical scroll if needed
+    document.body.style.overflow = 'hidden';
+  } else {
+    // Reset to normal
+    bpsrTools.style.transform = '';
+    bpsrTools.style.transformOrigin = '';
+    bpsrTools.style.width = 'calc(100vw - 24px)';
+    bpsrTools.style.height = 'calc(100vh - 24px)';
+    bpsrTools.style.minWidth = '';
+    bpsrTools.style.overflowX = '';
+    bpsrTools.style.overflowY = '';
+    document.body.style.overflow = '';
+    delete bpsrTools.dataset.lastScale;
+  }
+}
+
+// Update scale on window resize
+window.addEventListener('resize', updateGUIScale);
+// Initial scale check
+document.addEventListener('DOMContentLoaded', updateGUIScale);
+// Call immediately and frequently to catch all resize events
+updateGUIScale();
+setInterval(updateGUIScale, 100); // Check every 100ms to catch Electron setBounds
 
 // Script to remove VSCode debug text
 document.addEventListener("DOMContentLoaded", () => {

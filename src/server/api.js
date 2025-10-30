@@ -26,8 +26,8 @@ function initializeApi(
   app.use(express.json({ charset: 'utf-8' }));
   app.use(express.static(path.join(__dirname, "..", "..", "public"))); // Adjust the path
 
-  // Set UTF-8 charset for all responses
-  app.use((req, res, next) => {
+  // Set UTF-8 charset for API responses only
+  app.use('/api', (req, res, next) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     next();
   });
