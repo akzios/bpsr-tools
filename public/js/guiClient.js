@@ -1460,6 +1460,11 @@ const parseDurationSlider = document.getElementById("parse-duration-slider");
 const parseDurationDisplay = document.getElementById("parse-duration-display");
 const parseStartBtn = document.getElementById("parse-start-btn");
 const parseCancelBtn = document.getElementById("parse-cancel-btn");
+const parseSingleTargetCheckbox = document.getElementById("parse-single-target-checkbox");
+
+// Parse single target state
+let parseSingleTargetEnabled = false;
+let parseSingleTargetMonster = null; // Will store { monsterId, monsterName } when detected
 
 if (parseButton && parsePanel) {
   // Update duration display when slider changes
@@ -1508,6 +1513,10 @@ if (parseButton && parsePanel) {
     const duration = parseInt(parseDurationSlider.value);
     parseDuration = duration * 60; // Convert to seconds
 
+    // Capture single target setting
+    parseSingleTargetEnabled = parseSingleTargetCheckbox ? parseSingleTargetCheckbox.checked : false;
+    parseSingleTargetMonster = null; // Reset - will be detected on first damage
+
     // Clear current data and ensure tracking is resumed
     await fetch("/api/clear");
     await fetch("/api/pause", {
@@ -1521,9 +1530,10 @@ if (parseButton && parsePanel) {
     parseButton.classList.add("waiting");
     parseButton.title = "Waiting for your damage...";
 
-    // Disable start button, slider, and update text
+    // Disable start button, slider, checkbox and update text
     parseStartBtn.disabled = true;
     parseDurationSlider.disabled = true;
+    if (parseSingleTargetCheckbox) parseSingleTargetCheckbox.disabled = true;
     parseStartBtn.textContent = "Waiting for damage...";
 
     // Update button to show waiting state
@@ -1531,6 +1541,8 @@ if (parseButton && parsePanel) {
     if (icon) {
       icon.className = "fa-solid fa-hourglass-start";
     }
+
+    console.log(`Parse starting - Single target: ${parseSingleTargetEnabled ? "enabled" : "disabled"}`);
 
     // Keep panel open - don't hide or remove class
   });
@@ -1734,7 +1746,39 @@ if (parseButton && parsePanel) {
       // Fetch current data
       const response = await fetch("/api/data");
       const userData = await response.json();
-      const userArray = Object.values(userData.user || {})
+      let userArray = Object.values(userData.user || {});
+
+      // If single target is enabled, filter damage to only that monster
+      if (parseSingleTargetEnabled && parseSingleTargetMonster) {
+        console.log(`Filtering parse results for single target: ${parseSingleTargetMonster.monsterName}`);
+
+        userArray = userArray.map(user => {
+          // Find damage to the selected monster
+          let targetDamage = 0;
+          if (user.targetDamage && Array.isArray(user.targetDamage)) {
+            const targetEntry = user.targetDamage.find(t => t.monsterId === parseSingleTargetMonster.monsterId);
+            if (targetEntry) {
+              targetDamage = targetEntry.damage;
+            }
+          }
+
+          // Recalculate DPS for single target (damage / parse duration)
+          const singleTargetDps = parseDuration > 0 ? targetDamage / parseDuration : 0;
+
+          // Create filtered user object with single target damage
+          return {
+            ...user,
+            total_damage: {
+              ...user.total_damage,
+              total: targetDamage
+            },
+            total_dps: singleTargetDps,
+            _singleTarget: true // Flag to indicate this is filtered
+          };
+        });
+      }
+
+      userArray = userArray
         .filter(u => (u.total_damage && u.total_damage.total > 0) || (u.total_healing && u.total_healing.total > 0))
         .sort((a, b) => (b.total_damage?.total || 0) - (a.total_damage?.total || 0))
         .slice(0, 10);
@@ -1820,7 +1864,8 @@ if (parseButton && parsePanel) {
       ctx.font = "16px 'Inter', sans-serif";
       ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
       const durationMinutes = Math.floor(parseDuration / 60);
-      ctx.fillText(`${displayTimestamp} • ${durationMinutes} min`, width / 2, 75);
+      const targetInfo = parseSingleTargetEnabled && parseSingleTargetMonster ? ` • Target: ${parseSingleTargetMonster.monsterName}` : '';
+      ctx.fillText(`${displayTimestamp} • ${durationMinutes} min${targetInfo}`, width / 2, 75);
 
       // Draw verification hash with shield icon
       ctx.font = "bold 14px 'Courier New', monospace";
@@ -2131,9 +2176,10 @@ if (parseButton && parsePanel) {
     parseButton.classList.remove("waiting", "active");
     parseButton.title = "Parse Mode";
 
-    // Re-enable start button, slider, and reset text
+    // Re-enable start button, slider, checkbox and reset text
     parseStartBtn.disabled = false;
     parseDurationSlider.disabled = false;
+    if (parseSingleTargetCheckbox) parseSingleTargetCheckbox.disabled = false;
     parseStartBtn.textContent = "Start";
 
     // Reset icon
@@ -2159,6 +2205,22 @@ if (parseButton && parsePanel) {
           const playerData = userArray.find(user => user.isLocalPlayer === true);
 
           if (playerData && playerData.total_damage && playerData.total_damage.total > 0) {
+            // If single target is enabled, detect the first monster damaged
+            if (parseSingleTargetEnabled && !parseSingleTargetMonster) {
+              // Find the monster with the most damage (likely the first one hit)
+              if (playerData.targetDamage && playerData.targetDamage.length > 0) {
+                const firstTarget = playerData.targetDamage.reduce((max, target) =>
+                  target.damage > max.damage ? target : max
+                , playerData.targetDamage[0]);
+
+                parseSingleTargetMonster = {
+                  monsterId: firstTarget.monsterId,
+                  monsterName: firstTarget.monsterName
+                };
+                console.log("Single target detected:", parseSingleTargetMonster);
+              }
+            }
+
             startParseCountdown();
           }
         }
