@@ -5,6 +5,33 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2025-10-29
+
+### Added
+
+- Auto-scaling GUI overlay when window is resized below 676px
+  - Content scales smoothly from 1.0x down to 0.5x minimum
+  - Maintains readability and usability at small sizes
+  - Responsive control buttons that wrap instead of getting cut off
+- Flexible minimum window size of 350x200 (down from 700x400)
+  - Users can resize GUI overlay to any compact size
+  - Perfect for small screen setups or minimalist overlays
+
+### Fixed
+
+- Web browser mode now correctly displays rendered HTML instead of source code
+  - Fixed Content-Type header from `application/json` to `text/html`
+  - Middleware now only applies JSON Content-Type to `/api/*` routes
+- Resize handles now allow shrinking below previous 700x400 minimum
+  - Electron window `minWidth`/`minHeight` updated to 350x200
+  - JavaScript resize constraints updated to match
+
+### Changed
+
+- GUI overlay minimum window dimensions reduced from 700x400 to 350x200
+- Control buttons now wrap to multiple rows when window is too narrow
+- CSS min-width constraint relaxed from 676px to 350px to allow smaller sizes
+
 ## [1.2.2] - 2025-10-29
 
 ### Changed

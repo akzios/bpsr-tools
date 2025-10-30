@@ -7,10 +7,10 @@
   "enableHistorySave": false,
   "playerDataSyncProgress": null,
   "guiWindowBounds": {
-    "x": 43,
-    "y": 255,
-    "width": 700,
-    "height": 613
+    "x": 1782,
+    "y": 4,
+    "width": 763,
+    "height": 486
   },
-  "theme": "dark"
+  "theme": "light"
 }
