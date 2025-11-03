@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skill Analysis - BPSR Tools</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <script src="assets/libs/chart.umd.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="skill-analysis-window">
+    <div id="skill-analysis-root"></div>
+
+    <script type="module">
+      console.log('[Skill Analysis HTML] Script starting...');
+
+      // Show loading indicator
+      document.getElementById('skill-analysis-root').innerHTML =
+        '<div style="padding: 40px; text-align: center; color: var(--text-primary);">' +
+        '<h2>Loading Skill Analysis...</h2>' +
+        '<p>Please wait...</p>' +
+        '</div>';
+
+      try {
+        console.log('[Skill Analysis HTML] Importing SkillAnalysis module...');
+        const { SkillAnalysis } = await import('/js/views/skillAnalysis.js');
+        console.log('[Skill Analysis HTML] Module imported successfully');
+
+        // Get UID from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const playerUid = urlParams.get('uid');
+        console.log('[Skill Analysis HTML] Player UID from URL:', playerUid);
+
+        if (!playerUid) {
+          console.error('[Skill Analysis] No player UID provided');
+          document.getElementById('skill-analysis-root').innerHTML =
+            '<div style="padding: 40px; text-align: center; color: var(--text-secondary);">' +
+            '<h2>Error</h2>' +
+            '<p>No player UID specified in URL</p>' +
+            '</div>';
+        } else {
+          // Initialize skill analysis view
+          console.log('[Skill Analysis HTML] Initializing SkillAnalysis view...');
+          const container = document.getElementById('skill-analysis-root');
+          new SkillAnalysis(container, playerUid);
+          console.log('[Skill Analysis HTML] SkillAnalysis initialized');
+        }
+      } catch (error) {
+        console.error('[Skill Analysis HTML] Error:', error);
+        document.getElementById('skill-analysis-root').innerHTML =
+          '<div style="padding: 40px; text-align: center; color: var(--error);">' +
+          '<h2>Error Loading Skill Analysis</h2>' +
+          '<p>' + error.message + '</p>' +
+          '<pre style="text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; margin-top: 20px;">' +
+          error.stack +
+          '</pre>' +
+          '</div>';
+      }
+    </script>
+  </body>
+</html>

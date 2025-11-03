@@ -123,11 +123,6 @@ class AutoUpdateManager {
    * Start automatic update checks (every 6 hours)
    */
   startPeriodicUpdateCheck() {
-    if (!app.isPackaged) {
-      logger.info("Periodic update checks disabled in development mode");
-      return;
-    }
-
     // Check on startup (after 10 seconds)
     setTimeout(() => {
       this.checkForUpdates(false);

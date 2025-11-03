@@ -52,7 +52,10 @@ async function main() {
 
   // Check for dev mode via environment variable or command line arg
   const isDevMode =
-    process.env.DEV_MODE === "true" || process.argv.includes("--dev");
+    process.defaultApp ||
+    process.env.NODE_ENV === "development" ||
+    process.env.DEV_MODE === "true" ||
+    process.argv.includes("--dev");
 
   // Create simple prefixed logger
   const logger = {
@@ -75,6 +78,20 @@ async function main() {
   console.log("#           BPSR Tools - Starting Up              #");
   console.log("#                                                 #");
   console.log("###################################################");
+
+  // Debug: Show dev mode status
+  if (isDevMode) {
+    console.log("\n🔧 DEV MODE: ENABLED");
+    console.log(`   - process.defaultApp: ${process.defaultApp}`);
+    console.log(`   - NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`   - Info/Debug logs: ENABLED`);
+  } else {
+    console.log("\n📦 PRODUCTION MODE");
+    console.log(`   - process.defaultApp: ${process.defaultApp}`);
+    console.log(`   - NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`   - Info/Debug logs: DISABLED`);
+  }
+
   console.log("\nInitializing service...");
   console.log("Detecting network traffic, please wait...");
 
@@ -181,8 +198,9 @@ async function main() {
     },
   });
 
-  // Store collectionManager in app.locals for API access
+  // Store collectionManager and sessionDb in app.locals for API access
   app.locals.collectionManager = collectionManager;
+  app.locals.sessionDb = userDataManager.sessionDb;
 
   initializeApi(
     app,
@@ -233,9 +251,8 @@ async function main() {
   console.log("Welcome to BPSR Tools!");
   console.log("Detecting game server, please wait...");
 
-  // Interval to clean IP and TCP fragment cache, and API cache
+  // Interval to clean API cache
   setInterval(() => {
-    userDataManager.checkTimeoutClear();
     userDataManager.playerAPI.clearStaleCache();
   }, 10000);
 }

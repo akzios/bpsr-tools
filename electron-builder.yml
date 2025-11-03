@@ -16,19 +16,18 @@ files:
   - server.js
   - src/**/*
   - public/**/*
+  - dist/public/**/*
   - tables/**/*
-  - config/**/*
-  - "!config/sheets.json"
   - icon.ico
   - icon.png
   - "!**/*.map"
   - "!**/*.md"
   - "!.gitignore"
   - "!.git"
-  - "!dist"
   - "!dist_electron"
   - "!scripts"
   - "!db"
+  - "!config"
 
 # Extra resources to copy (not inside asar)
 # Only copy the pre-seeded database file (run `npm run preseed` before building)

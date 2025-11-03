@@ -256,6 +256,7 @@ if (require.main === module) {
     const ProfessionModel = require("./Profession");
     const TagModel = require("./Tag");
     const MonsterTagModel = require("./MonsterTag");
+    const SessionModel = require("./Session");
 
     const playerModel = new PlayerModel(logger);
     playerModel.initialize();
@@ -277,6 +278,10 @@ if (require.main === module) {
     const monsterTagModel = new MonsterTagModel(logger, db);
     monsterTagModel.initialize();
 
+    const sessionModel = new SessionModel(logger, db);
+    sessionModel.initialize();
+    sessionModel.prepareStatements();
+
     return {
       player: playerModel,
       monster: monsterModel,
@@ -284,6 +289,7 @@ if (require.main === module) {
       profession: professionModel,
       tag: tagModel,
       monsterTag: monsterTagModel,
+      session: sessionModel,
       db,
     };
   };
@@ -350,6 +356,8 @@ if (require.main === module) {
       "monster_tags",
       "skills",
       "players",
+      "sessions",
+      "session_players",
       "chests",
       "story_items",
       "time_trials",
@@ -370,6 +378,8 @@ if (require.main === module) {
       monster_tags: "Monster-Tag Links",
       skills: "Skills",
       players: "Players",
+      sessions: "Sessions",
+      session_players: "Session Players",
       chests: "Chests",
       story_items: "Story Items",
       time_trials: "Time Trials",
