@@ -57,7 +57,7 @@ const PLAYER_LIST = [
  */
 function fetchPlayerData(uid) {
   return new Promise((resolve, reject) => {
-    const url = `https://blueprotocol.lunixx.de/index.php?action=data&q=${uid}&profession`;
+    const url = `https://blueprotocol.lunixx.de/api/players?q=${uid}`;
 
     https
       .get(url, (res) => {
@@ -71,11 +71,13 @@ function fetchPlayerData(uid) {
           try {
             const json = JSON.parse(data);
 
-            // API returns { ok: true, rows: [...] }
-            // Each row has: player_id, name, profession, fightPoint, max_hp
-            if (json && json.ok && json.rows && json.rows.length > 0) {
+            // New API returns { success: true, data: { players: [...], count: N, limit: N } }
+            // Each player has: player_id, name, profession, fightPoint, max_hp
+            const players = json?.data?.players;
+
+            if (players && Array.isArray(players) && players.length > 0) {
               // Find exact match for the UID (API does partial matches)
-              const player = json.rows.find(
+              const player = players.find(
                 (row) => String(row.player_id) === String(uid),
               );
 

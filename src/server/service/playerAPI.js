@@ -42,7 +42,7 @@ class PlayerAPIService {
     this.pendingFetches.add(playerId);
 
     try {
-      const url = `https://blueprotocol.lunixx.de/index.php?action=data&q=${playerId}&profession=&sort=fightPoint&dir=desc&limit=1`;
+      const url = `https://blueprotocol.lunixx.de/api/players?q=${playerId}`;
 
       this.logger.debug(`Fetching player data from API for ID ${playerId}`);
 
@@ -69,8 +69,14 @@ class PlayerAPIService {
           });
       });
 
-      if (data.ok && data.rows && data.rows.length > 0) {
-        const playerData = data.rows[0];
+      // New API format: { success: true, data: { players: [...], count: N, limit: N } }
+      const players = data?.data?.players;
+
+      if (players && Array.isArray(players) && players.length > 0) {
+        // Find exact match for the player ID (API does partial matches)
+        const playerData = players.find(
+          (p) => String(p.player_id) === String(playerId)
+        ) || players[0]; // Fall back to first result if no exact match
 
         // Cache the result
         this.cache.set(playerId, {

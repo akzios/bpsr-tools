@@ -22,9 +22,24 @@ function initializeApi(
   globalSettings,
   sniffer,
 ) {
+  // Detect dev mode
+  const isDevMode =
+    process.defaultApp ||
+    process.env.NODE_ENV === "development" ||
+    process.env.DEV_MODE === "true" ||
+    process.argv.includes("--dev");
+
   app.use(cors());
   app.use(express.json({ charset: 'utf-8' }));
-  app.use(express.static(path.join(__dirname, "..", "..", "public"))); // Adjust the path
+
+  // Serve compiled TypeScript from dist/public first (takes priority)
+  app.use(express.static(path.join(__dirname, "..", "..", "dist", "public")));
+
+  // In dev mode, fall back to source public folder for non-compiled files (CSS, HTML, assets)
+  if (isDevMode) {
+    logger.info("Dev mode: Serving source files from public/");
+    app.use(express.static(path.join(__dirname, "..", "..", "public")));
+  }
 
   // Set UTF-8 charset for API responses only
   app.use('/api', (req, res, next) => {
@@ -37,9 +52,10 @@ function initializeApi(
     res.status(200).json({ status: "ok" });
   });
 
-  // Serve gui-view.html as the default page
+  // Serve app.html as the default page
   app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "..", "..", "public", "gui-view.html"));
+    const appHtmlPath = path.join(__dirname, "..", "..", "public", "app.html");
+    res.sendFile(appHtmlPath);
   });
 
   app.get("/icon.png", (req, res) => {
@@ -130,14 +146,14 @@ function initializeApi(
         name: user.name,
         professionDetails: user.professionDetails,
         level: user.player_level || null,
-        totalDamage: user.total_damage?.total || 0,
+        totalDamage: user.totalDamage?.total || 0,
         dps: user.dps || 0,
         fightPoint: user.fightPoint || 0,
         currentHp: user.attr?.current_hp || 0,
         maxHp: user.attr?.max_hp || 0,
-        critCount: user.total_damage?.critHitCount || 0,
-        luckCount: user.total_damage?.luckHitCount || 0,
-        hitCount: user.total_damage?.hitCount || 0,
+        critCount: user.totalDamage?.critHitCount || 0,
+        luckCount: user.totalDamage?.luckHitCount || 0,
+        hitCount: user.totalDamage?.hitCount || 0,
       };
     });
 
@@ -677,6 +693,45 @@ function initializeApi(
     }
   }, 100);
 
+  // Emit skill breakdown updates (100ms - same as combat data)
+  let skillDataEmitCount = 0;
+  setInterval(() => {
+    if (!globalSettings.isPaused) {
+      const userData = userDataManager.getAllUsersData();
+      const skillBreakdowns = {};
+
+      // Get skill breakdown for each active player
+      Object.keys(userData).forEach((uid) => {
+        const skillData = userDataManager.getUserSkillData(parseInt(uid));
+        if (skillData) {
+          skillBreakdowns[uid] = skillData;
+        }
+      });
+
+      // Log every 10 seconds (20 emissions) - detailed target damage info
+      if (skillDataEmitCount % 20 === 0 && Object.keys(skillBreakdowns).length > 0) {
+        const firstUid = Object.keys(skillBreakdowns)[0];
+        const firstPlayer = skillBreakdowns[firstUid];
+        logger.info('[skill-data] Emitting to clients:', {
+          playerCount: Object.keys(skillBreakdowns).length,
+          samplePlayer: firstUid,
+          sampleTargetDamageCount: firstPlayer.targetDamage?.length || 0,
+          sampleTargetDamage: firstPlayer.targetDamage?.map(t => ({
+            name: t.monsterName,
+            dmg: t.totalDamage
+          })) || [],
+          sampleSkillCount: Object.keys(firstPlayer.skills || {}).length,
+        });
+      }
+      skillDataEmitCount++;
+
+      io.emit("skill-data", {
+        code: 0,
+        data: skillBreakdowns,
+      });
+    }
+  }, 500);
+
   // ===== Collectibles API Endpoints =====
 
   /**
@@ -939,6 +994,535 @@ function initializeApi(
       });
     }
   });
+
+  // ============================================
+  // Session API Endpoints
+  // ============================================
+
+  /**
+   * GET /api/sessions/temporary
+   * Get current temporary session stats (in-memory, not saved to DB)
+   */
+  app.get("/api/sessions/temporary", (req, res) => {
+    try {
+      const tempSession = userDataManager.getTemporarySessionStats();
+
+      if (!tempSession) {
+        return res.json({
+          code: 0,
+          data: null,
+          msg: "No active temporary session",
+        });
+      }
+
+      res.json({
+        code: 0,
+        data: tempSession,
+      });
+    } catch (error) {
+      logger.error("[API] Error getting temporary session:", error);
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to get temporary session",
+        error: error.message,
+      });
+    }
+  });
+
+  /**
+   * GET /api/sessions/list
+   * Get all sessions with pagination
+   */
+  app.get("/api/sessions/list", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit) || 50;
+      const offset = parseInt(req.query.offset) || 0;
+
+      if (!req.app.locals.sessionDb) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Session database not initialized",
+        });
+      }
+
+      const sessions = req.app.locals.sessionDb.getAllSessions(limit, offset);
+
+      res.json({
+        code: 0,
+        data: sessions,
+      });
+    } catch (error) {
+      logger.error(`[Session API] Error fetching sessions: ${error.message}`);
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to fetch sessions",
+        error: error.message,
+      });
+    }
+  });
+
+  /**
+   * GET /api/sessions/active
+   * Get all active sessions
+   */
+  app.get("/api/sessions/active", async (req, res) => {
+    try {
+      if (!req.app.locals.sessionDb) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Session database not initialized",
+        });
+      }
+
+      const sessions = req.app.locals.sessionDb.getActiveSessions();
+
+      res.json({
+        code: 0,
+        data: sessions,
+      });
+    } catch (error) {
+      logger.error(
+        `[Session API] Error fetching active sessions: ${error.message}`,
+      );
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to fetch active sessions",
+        error: error.message,
+      });
+    }
+  });
+
+  /**
+   * GET /api/sessions/:id
+   * Get session by ID with full details (players and fights)
+   */
+  app.get("/api/sessions/:id", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+
+      if (isNaN(sessionId)) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Invalid session ID",
+        });
+      }
+
+      if (!req.app.locals.sessionDb) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Session database not initialized",
+        });
+      }
+
+      const session = req.app.locals.sessionDb.getSessionWithDetails(sessionId);
+
+      if (!session) {
+        return res.status(404).json({
+          code: 1,
+          msg: "Session not found",
+        });
+      }
+
+      res.json({
+        code: 0,
+        data: session,
+      });
+    } catch (error) {
+      logger.error(`[Session API] Error fetching session: ${error.message}`);
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to fetch session",
+        error: error.message,
+      });
+    }
+  });
+
+  /**
+   * POST /api/sessions/create
+   * Create a new session
+   * If a temporary session is active, use its start time and clear it after saving
+   */
+  app.post("/api/sessions/create", async (req, res) => {
+    try {
+      const { session_name, type } = req.body;
+
+      if (!req.app.locals.sessionDb) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Session database not initialized",
+        });
+      }
+
+      // Check if there's an active temporary session
+      const tempSession = userDataManager.getTemporarySessionStats();
+      const startTime = tempSession ? tempSession.startTime : Date.now();
+
+      const sessionId = req.app.locals.sessionDb.createSession(
+        session_name,
+        type || 'Open World',
+        startTime,
+      );
+
+      // Clear temporary session after saving to DB
+      if (tempSession) {
+        userDataManager.clearTemporarySession();
+        logger.info(`[Session API] Converted temporary session to permanent (ID: ${sessionId})`);
+      }
+
+      res.json({
+        code: 0,
+        data: {
+          session_id: sessionId,
+          was_temporary: !!tempSession,
+        },
+      });
+    } catch (error) {
+      logger.error(`[Session API] Error creating session: ${error.message}`);
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to create session",
+        error: error.message,
+      });
+    }
+  });
+
+  /**
+   * POST /api/sessions/:id/save
+   * Save current combat data to session
+   */
+  app.post("/api/sessions/:id/save", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+
+      if (isNaN(sessionId)) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Invalid session ID",
+        });
+      }
+
+      if (!req.app.locals.sessionDb) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Session database not initialized",
+        });
+      }
+
+      // Get combat data from request body or fallback to server data
+      const combatData = req.body.combatData || userDataManager.getAllUsersData();
+
+      logger.debug(`[Session API] Raw combat data keys:`, Object.keys(combatData));
+
+      const users = Object.keys(combatData).map((uid) => {
+        const userData = combatData[uid];
+        return {
+          uid: parseInt(uid),
+          ...userData,
+        };
+      });
+
+      logger.info(`[Session API] Saving ${users.length} players to session ${sessionId}`);
+
+      if (users.length > 0) {
+        logger.debug(`[Session API] Sample user data:`, JSON.stringify({
+          uid: users[0].uid,
+          name: users[0].name,
+          totalDamage: users[0].totalDamage?.total,
+          professionDetails: users[0].professionDetails,
+        }, null, 2));
+      }
+
+      // Calculate session stats from all players
+      let totalDamage = 0;
+      let totalHealing = 0;
+      let maxDps = 0;
+      let maxHps = 0;
+
+      users.forEach((user) => {
+        const userDamage = user.totalDamage?.total || 0;
+        const userHealing = user.totalHealing?.total || 0;
+
+        totalDamage += userDamage;
+        totalHealing += userHealing;
+        maxDps = Math.max(maxDps, user.realtimeDpsMax || 0);
+        maxHps = Math.max(maxHps, user.realtimeHpsMax || 0);
+
+        logger.debug(`[Session API] User ${user.name} (${user.uid}): damage=${userDamage}, healing=${userHealing}`);
+      });
+
+      // Save each player to session (fetch skills separately as they're not in summary)
+      users.forEach((user) => {
+        // Fetch skill data for this player
+        const skillData = userDataManager.getUserSkillData(user.uid);
+        const skills = skillData?.skills || {};
+        const targetDamage = skillData?.targetDamage || [];
+
+        // Calculate combat duration for this player's session
+        const combatDuration = skillData?.attr?.combat_duration || 1;
+
+        // Calculate total hits from skills
+        let totalHits = 0;
+        let totalDamageFromSkills = 0;
+        Object.values(skills).forEach((skill) => {
+          totalHits += skill.totalCount || 0;
+          totalDamageFromSkills += skill.totalDamage || 0;
+        });
+
+        // Enrich skill data with calculated statistics
+        const enrichedSkills = {};
+        Object.keys(skills).forEach((skillId) => {
+          const skill = skills[skillId];
+          const skillTotalCount = skill.totalCount || 0;
+          const skillTotalDamage = skill.totalDamage || 0;
+
+          enrichedSkills[skillId] = {
+            ...skill,
+            // Damage percentage
+            damagePercent: totalDamageFromSkills > 0 ? skillTotalDamage / totalDamageFromSkills : 0,
+            // DPS/HPS for this skill
+            dpsHps: combatDuration > 0 ? skillTotalDamage / combatDuration : 0,
+            // Average damage per hit
+            avgPerHit: skillTotalCount > 0 ? skillTotalDamage / skillTotalCount : 0,
+            // Normal hit average
+            normAvg: (skill.countBreakdown?.normal || 0) > 0
+              ? (skill.damageBreakdown?.normal || 0) / skill.countBreakdown.normal
+              : 0,
+            // Critical hit average
+            critAvg: (skill.countBreakdown?.critical || 0) > 0
+              ? (skill.damageBreakdown?.critical || 0) / skill.countBreakdown.critical
+              : 0,
+            // Hits per minute
+            hitsPerMinute: combatDuration > 0 ? (skillTotalCount / combatDuration) * 60 : 0,
+            // Hits per second
+            hitsPerSecond: combatDuration > 0 ? skillTotalCount / combatDuration : 0,
+          };
+        });
+
+        logger.debug(`[Session API] Player ${user.name} (UID: ${user.uid}): ${Object.keys(skills).length} skills, fightPoint=${user.fightPoint}`);
+
+        const playerData = {
+          player_id: user.uid,
+          player_name: user.name,
+          profession_id: user.professionDetails?.id || null,
+          total_damage: user.totalDamage?.total || 0,
+          total_healing: user.totalHealing?.total || 0,
+          total_dps: user.totalDps || 0,
+          total_hps: user.totalHps || 0,
+          max_dps: user.realtimeDpsMax || 0,
+          max_hps: user.realtimeHpsMax || 0,
+          fight_point: user.fightPoint || 0,
+          total_count: totalHits,
+          taken_damage: user.takenDamage || 0,
+          dead_count: user.deadCount || 0,
+          hp: user.hp || 0,
+          max_hp: user.maxHp || 0,
+          skill_breakdown: enrichedSkills,
+          time_series_data: user.timeSeriesData || [],
+          target_damage: targetDamage,
+        };
+        req.app.locals.sessionDb.addSessionPlayer(sessionId, playerData);
+      });
+
+      // Update session with aggregate stats
+      const session = req.app.locals.sessionDb.getSession(sessionId);
+      const duration = Date.now() - session.start_time;
+      const avgDps = duration > 0 ? (totalDamage / duration) * 1000 : 0;
+      const avgHps = duration > 0 ? (totalHealing / duration) * 1000 : 0;
+
+      logger.info(`[Session API] Session ${sessionId} totals: damage=${totalDamage}, healing=${totalHealing}, duration=${duration}ms, avgDps=${avgDps.toFixed(2)}`);
+
+      // Update session (mark as completed when saved)
+      req.app.locals.sessionDb.updateSession(sessionId, {
+        end_time: Date.now(),
+        duration: duration,
+        total_damage: totalDamage,
+        total_healing: totalHealing,
+        avg_dps: avgDps,
+        avg_hps: avgHps,
+        max_dps: maxDps,
+        max_hps: maxHps,
+        player_count: users.length,
+        is_active: 0, // Saved sessions are always completed
+      });
+
+      res.json({
+        code: 0,
+        data: {
+          session_id: sessionId,
+          players_saved: users.length,
+        },
+      });
+    } catch (error) {
+      logger.error(`[Session API] Error saving session: ${error.message}`);
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to save session",
+        error: error.message,
+      });
+    }
+  });
+
+  /**
+   * POST /api/sessions/:id/end
+   * End an active session
+   */
+  app.post("/api/sessions/:id/end", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+
+      if (isNaN(sessionId)) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Invalid session ID",
+        });
+      }
+
+      if (!req.app.locals.sessionDb) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Session database not initialized",
+        });
+      }
+
+      const session = req.app.locals.sessionDb.getSession(sessionId);
+      if (!session) {
+        return res.status(404).json({
+          code: 1,
+          msg: "Session not found",
+        });
+      }
+
+      // Update session to inactive
+      req.app.locals.sessionDb.updateSession(sessionId, {
+        ...session,
+        end_time: Date.now(),
+        duration: Date.now() - session.start_time,
+        is_active: 0,
+      });
+
+      res.json({
+        code: 0,
+        data: {
+          session_id: sessionId,
+        },
+      });
+    } catch (error) {
+      logger.error(`[Session API] Error ending session: ${error.message}`);
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to end session",
+        error: error.message,
+      });
+    }
+  });
+
+  /**
+   * DELETE /api/sessions/:id
+   * Delete a session
+   */
+  app.delete("/api/sessions/:id", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+
+      if (isNaN(sessionId)) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Invalid session ID",
+        });
+      }
+
+      if (!req.app.locals.sessionDb) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Session database not initialized",
+        });
+      }
+
+      req.app.locals.sessionDb.deleteSession(sessionId);
+
+      res.json({
+        code: 0,
+        data: {
+          session_id: sessionId,
+        },
+      });
+    } catch (error) {
+      logger.error(`[Session API] Error deleting session: ${error.message}`);
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to delete session",
+        error: error.message,
+      });
+    }
+  });
+
+  app.post("/api/sessions/:id/rename", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const { name, notes, type } = req.body;
+
+      if (isNaN(sessionId)) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Invalid session ID",
+        });
+      }
+
+      if (!req.app.locals.sessionDb) {
+        return res.status(503).json({
+          code: 1,
+          msg: "Session database not initialized",
+        });
+      }
+
+      const session = req.app.locals.sessionDb.getSession(sessionId);
+      if (!session) {
+        return res.status(404).json({
+          code: 1,
+          msg: "Session not found",
+        });
+      }
+
+      const updates = {};
+
+      if (name !== undefined && typeof name === 'string') {
+        updates.session_name = name.trim();
+      }
+
+      if (notes !== undefined && typeof notes === 'string') {
+        updates.notes = notes.trim();
+      }
+
+      if (type !== undefined && typeof type === 'string') {
+        updates.type = type.trim();
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({
+          code: 1,
+          msg: "No valid updates provided",
+        });
+      }
+
+      req.app.locals.sessionDb.updateSessionMetadata(sessionId, updates);
+
+      res.json({
+        code: 0,
+        data: {
+          session_id: sessionId,
+          ...updates,
+        },
+      });
+    } catch (error) {
+      logger.error(`[Session API] Error updating session metadata: ${error.message}`);
+      res.status(500).json({
+        code: 1,
+        msg: "Failed to update session metadata",
+        error: error.message,
+      });
+    }
+  });
+
 }
 
 module.exports = initializeApi;

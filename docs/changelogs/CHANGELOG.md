@@ -5,6 +5,87 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - TBD
+
+### Breaking Changes
+
+- Config directory no longer shipped in installation packages
+  - Settings now exclusively use `%APPDATA%\bpsr-tools\config\`
+- Auto-clear on timeout feature removed
+  - Use manual clear button or auto-clear on channel change instead
+
+### Added
+
+- **TypeScript Migration:** Complete frontend refactored to TypeScript with strict mode
+  - Type safety with compile-time error detection
+  - Path aliases: `@shared/*`, `@components/*`, `@app-types/*`
+  - Zero framework overhead (compiles to vanilla JavaScript)
+- **Component-Based Architecture:** 14 reusable components for 100% code reuse
+  - Button, Toggle, Modal, DPSTable, ControlPanel, Header, Sidebar, Filter, Slider, etc.
+  - 4 shared utilities: socketManager, router, dataFormatter, uiHelpers (40+ functions)
+- **Multi-View Shell:** New app shell with navigation and routing
+  - Hash-based routing (`/dpsmeter`, `/sessions`, `/settings`)
+  - Header component with theme toggle, pin, zoom, close buttons
+  - Collapsible sidebar with persistent state
+  - Route persistence between sessions
+- **Sessions Tracking System:** Complete combat session management
+  - Save/load combat data with custom names and auto-detected types
+  - Session history view with sortable columns
+  - Session detail view with complete player and skill breakdowns
+  - Auto-save system with configurable triggers (on clear, inactivity, window close)
+  - Session type detection (Parse, Dungeon, Raid, Guild Hunt, Boss Crusade, Open World)
+  - Complete data preservation (player stats, skill breakdowns, time-series DPS, target damage)
+  - Real-time dashboard with stats cards, DPS chart, top players/skills
+  - Database schema: 2 tables (sessions, session_players) with CASCADE delete
+  - Automatic column migration for database schema updates
+- Enhanced collapsible animations in settings
+  - Grid-based height transitions (smoother than max-height)
+  - Opacity fades, hover effects (translateX, scale)
+  - Optimized icon rotation with `will-change: transform`
+- Build system improvements
+  - New `scripts/copyAssets.js` for production builds
+  - `npm run build:full` compiles TypeScript + copies assets
+  - `predist`/`prepublish` hooks ensure complete builds
+
+### Fixed
+
+- **CRITICAL:** Settings and database save path issues
+  - Were being saved to read-only installation directory
+  - Now properly use `%APPDATA%\bpsr-tools` for all execution contexts
+  - Added extensive logging showing exact save locations
+- **CRITICAL:** Auto-save functionality
+  - DEFAULT_SETTINGS was missing `autoSave` object
+  - Duration calculation using wrong data type (object vs number)
+  - Total damage sum using incorrect property path
+  - Auto-save now triggers correctly based on thresholds
+- Skill data in sessions
+  - `getSummary()` now includes `skill_breakdown: this.getSkillSummary()`
+  - Skill names properly display in session history
+- Database merge completeness
+  - Monster merge now includes `monster_type` and `score` columns
+- Settings button positioning
+  - Now appears at bottom of sidebar when CLI menu is absent
+- TypeScript compilation errors across all views
+
+### Changed
+
+- Static file serving strategy
+  - Dev mode: Serves from both `dist/public/` and source `public/`
+  - Production: Serves only from `dist/public/`
+  - Smaller installation size (no duplicate source files)
+- Removed `checkTimeoutClear()` calls from combat event handlers
+- Removed config file copying (no longer necessary)
+- Updated electron-builder to exclude config directory
+
+### Removed
+
+- Auto-clear on timeout feature (entire functionality)
+  - Removed UI controls (toggle + number input)
+  - Removed `checkTimeoutClear()` method
+  - Removed settings: `autoClearOnTimeout`, `clearTimeoutSeconds`
+- Config directory from installation packages
+  - No longer needed with proper user data directory usage
+
 ## [1.2.3] - 2025-10-29
 
 ### Added
@@ -178,7 +259,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Documentation conventions in CLAUDE.md
 - Simplified README.md structure
 
 ### Changed

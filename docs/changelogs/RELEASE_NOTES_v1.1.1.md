@@ -52,8 +52,7 @@
 - Updated: `public/js/guiClient.js` - Comments and API calls
 - Updated: `public/js/guiSkillAnalysis.js` - File header comments
 - Updated: `public/css/style.css` - Theme variables, removed modal CSS
-- Cleaned: `public/gui-view.html` - Removed modal HTML
-- Updated: `CLAUDE.md` - Documentation updates
+- Cleaned: `public/gui.html` - Removed modal HTML
 
 ## 🔄 Breaking Changes
 

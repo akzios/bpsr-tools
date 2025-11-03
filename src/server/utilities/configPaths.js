@@ -10,18 +10,10 @@ const path = require("path");
  */
 
 // Check if we're running in Electron context
-let isElectron = false;
-let app = null;
-
-try {
-  // Try to load electron - will fail in non-Electron environments
-  const electron = require("electron");
-  app = electron.app;
-  isElectron = true;
-} catch (e) {
-  // Not in Electron context, that's fine
-  isElectron = false;
-}
+// Use process.versions.electron instead of trying to require electron.app
+// This works in both main process and forked child processes
+const isElectron = !!(process.versions && process.versions.electron);
+const isPackaged = !!(process.resourcesPath); // True when running from installed app
 
 // Get the user data directory (writable location)
 let userDataPath;
@@ -29,15 +21,48 @@ let userConfigPath;
 let userDbPath;
 let appPath;
 
-if (isElectron && app) {
-  userDataPath = app.getPath("userData");
-  userConfigPath = path.join(userDataPath, "config");
-  userDbPath = path.join(userDataPath, "db");
-  appPath = app.getAppPath();
-  console.log("[configPaths] Running in Electron context");
+if (isElectron) {
+  // Try to get app from electron module
+  let app = null;
+  try {
+    const electron = require("electron");
+    app = electron.app;
+  } catch (e) {
+    // In child process, electron.app is undefined
+    app = null;
+  }
+
+  if (app) {
+    // Main Electron process - use electron.app
+    userDataPath = app.getPath("userData");
+    userConfigPath = path.join(userDataPath, "config");
+    userDbPath = path.join(userDataPath, "db");
+    appPath = app.getAppPath();
+    console.log("[configPaths] Running in Electron context");
+  } else if (isPackaged) {
+    // Child process in packaged app - construct paths manually
+    const os = require("os");
+    const appName = "bpsr-tools";
+    userDataPath = path.join(os.homedir(), "AppData", "Roaming", appName);
+    userConfigPath = path.join(userDataPath, "config");
+    userDbPath = path.join(userDataPath, "db");
+    appPath = path.dirname(process.resourcesPath);
+    console.log("[configPaths] Running in Electron context (child process)");
+  } else {
+    // Dev mode - use current working directory
+    userDataPath = process.cwd();
+    userConfigPath = path.join(userDataPath, "config");
+    userDbPath = path.join(userDataPath, "db");
+    appPath = process.cwd();
+    console.log("[configPaths] Running in Electron dev mode");
+  }
+
   console.log("[configPaths] User data path:", userDataPath);
+  console.log("[configPaths] Config path:", userConfigPath);
   console.log("[configPaths] Database path:", userDbPath);
   console.log("[configPaths] App path:", appPath);
+  console.log("[configPaths] Settings will be saved to:", path.join(userConfigPath, "settings.json"));
+  console.log("[configPaths] Database will be saved to:", path.join(userDbPath, "bpsr-tools.db"));
 } else {
   // In non-Electron context, use current working directory
   userDataPath = process.cwd();
@@ -94,33 +119,15 @@ function initializeUserConfigs() {
   console.log("User data path:", userDataPath);
   console.log("App path:", appPath);
 
-  // Ensure config directory exists
   ensureDirectoryExists(userConfigPath);
-
-  // Ensure db directory exists
   ensureDirectoryExists(userDbPath);
-
-  // List of config files to copy from app to userData
-  const configFiles = ["settings.json"];
-
-  // Copy default configs if they don't exist
-  for (const configFile of configFiles) {
-    const srcPath = path.join(appPath, "config", configFile);
-    const destPath = path.join(userConfigPath, configFile);
-
-    if (fs.existsSync(srcPath)) {
-      copyIfNotExists(srcPath, destPath);
-    } else {
-      console.warn(`Default config not found: ${srcPath}`);
-    }
-  }
 
   // Handle database: Copy on first run, or merge seed data on updates
   // In packaged apps, extraResources are in process.resourcesPath
   let dbSrcPath;
-  const isPackaged = isElectron && app && app.isPackaged;
 
-  if (isPackaged) {
+  // Use process.resourcesPath to detect packaged apps (works in child processes too)
+  if (process.resourcesPath) {
     dbSrcPath = path.join(process.resourcesPath, "db", "bpsr-tools.db");
   } else {
     dbSrcPath = path.join(appPath, "db", "bpsr-tools.db");
@@ -129,6 +136,21 @@ function initializeUserConfigs() {
   const dbDestPath = path.join(userDbPath, "bpsr-tools.db");
 
   if (fs.existsSync(dbSrcPath)) {
+    // Validate that the source database has skills before proceeding
+    try {
+      const Database = require("better-sqlite3");
+      const tempDb = new Database(dbSrcPath, { readonly: true });
+      const skillCount = tempDb.prepare("SELECT COUNT(*) as count FROM skills").get();
+      console.log(`[configPaths] Source database contains ${skillCount.count} skills`);
+      tempDb.close();
+
+      if (skillCount.count === 0) {
+        console.warn("[configPaths] WARNING: Pre-seeded database has 0 skills! Did you run 'npm run preseed'?");
+      }
+    } catch (error) {
+      console.error(`[configPaths] Failed to validate source database: ${error.message}`);
+    }
+
     // First run: copy entire database
     if (!fs.existsSync(dbDestPath)) {
       if (copyIfNotExists(dbSrcPath, dbDestPath, true)) {
@@ -140,7 +162,7 @@ function initializeUserConfigs() {
       console.log(
         "[configPaths] Database exists, merging seed data from update...",
       );
-      mergeSeedData(dbSrcPath, dbDestPath, isPackaged);
+      mergeSeedData(dbSrcPath, dbDestPath, !!process.resourcesPath);
     }
   } else {
     console.log(
@@ -226,13 +248,19 @@ function mergeSeedData(srcDbPath, destDbPath, isPackaged = true) {
       // Merge monsters
       const monsters = srcDb.prepare("SELECT * FROM monsters").all();
       const insertMon = destDb.prepare(`
-        INSERT OR IGNORE INTO monsters (id, name_cn, name_en)
-        VALUES (?, ?, ?)
+        INSERT OR IGNORE INTO monsters (id, name_cn, name_en, monster_type, score)
+        VALUES (?, ?, ?, ?, ?)
       `);
 
       let newMonsters = 0;
       for (const mon of monsters) {
-        const result = insertMon.run(mon.id, mon.name_cn, mon.name_en);
+        const result = insertMon.run(
+          mon.id,
+          mon.name_cn,
+          mon.name_en,
+          mon.monster_type,
+          mon.score || 0
+        );
         if (result.changes > 0) newMonsters++;
       }
       if (newMonsters > 0) {
@@ -241,6 +269,8 @@ function mergeSeedData(srcDbPath, destDbPath, isPackaged = true) {
 
       // Merge skills
       const skills = srcDb.prepare("SELECT * FROM skills").all();
+      console.log(`[configPaths] Source database has ${skills.length} skills`);
+
       const insertSkill = destDb.prepare(`
         INSERT OR IGNORE INTO skills (id, name_cn, name_en)
         VALUES (?, ?, ?)
@@ -251,6 +281,10 @@ function mergeSeedData(srcDbPath, destDbPath, isPackaged = true) {
         const result = insertSkill.run(skill.id, skill.name_cn, skill.name_en);
         if (result.changes > 0) newSkills++;
       }
+
+      const destSkillCount = destDb.prepare("SELECT COUNT(*) as count FROM skills").get();
+      console.log(`[configPaths] Destination database now has ${destSkillCount.count} skills`);
+
       if (newSkills > 0) {
         console.log(`[configPaths] Added ${newSkills} new skills`);
       }

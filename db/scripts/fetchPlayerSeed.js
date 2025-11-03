@@ -18,7 +18,7 @@ const professionMap = {
 function fetchPlayers() {
   return new Promise((resolve, reject) => {
     const url =
-      "https://blueprotocol.lunixx.de/index.php?action=recent&limit=1000000";
+      "https://blueprotocol.lunixx.de/old/index.php?action=recent&limit=1000000";
 
     console.log("[FetchPlayerSeed] Fetching player data from API...");
 

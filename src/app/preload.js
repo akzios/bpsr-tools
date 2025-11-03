@@ -1,5 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
+console.log('[Preload] Script loaded');
+
 // Expose API for DPS Meter overlay window
 contextBridge.exposeInMainWorld("electronAPI", {
   setWindowMovable: (movable) =>
@@ -9,14 +11,36 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.send("resize-window", width, height),
   setBounds: (bounds) => ipcRenderer.send("set-bounds", bounds),
   getBounds: () => ipcRenderer.invoke("get-bounds"),
-  openSkillAnalysisWindow: (uid) =>
-    ipcRenderer.send("open-skill-analysis-window", uid),
+  openSkillAnalysisWindow: (uid) => {
+    console.log('[Preload] openSkillAnalysisWindow called with UID:', uid);
+    ipcRenderer.send("open-skill-analysis-window", uid);
+  },
   setAlwaysOnTop: (alwaysOnTop) =>
     ipcRenderer.send("set-always-on-top", alwaysOnTop),
   getAlwaysOnTop: () => ipcRenderer.invoke("get-always-on-top"),
   saveFileToDesktop: (filename, dataUrl) =>
     ipcRenderer.invoke("save-file-to-desktop", filename, dataUrl),
 });
+
+// Expose electron object for skill analysis window compatibility
+contextBridge.exposeInMainWorld("electron", {
+  ipcRenderer: {
+    invoke: (channel, ...args) => {
+      const validChannels = ['set-always-on-top', 'get-always-on-top', 'set-window-opacity', 'get-window-opacity', 'save-file-to-desktop', 'get-bounds'];
+      if (validChannels.includes(channel)) {
+        return ipcRenderer.invoke(channel, ...args);
+      }
+    },
+    send: (channel, ...args) => {
+      const validChannels = ['close-window'];
+      if (validChannels.includes(channel)) {
+        ipcRenderer.send(channel, ...args);
+      }
+    }
+  }
+});
+
+console.log('[Preload] electronAPI exposed to window');
 
 // Expose API for CLI window
 let keypressCallback = null;

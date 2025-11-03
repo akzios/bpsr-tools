@@ -11,9 +11,24 @@ const { app } = require("electron");
 const userDataPath = app ? app.getPath("userData") : ".";
 const logsDir = path.join(userDataPath, "logs");
 
+// Detect development mode
+const isDevMode =
+  process.defaultApp ||
+  process.env.NODE_ENV === "development" ||
+  process.env.DEV_MODE === "true";
+
+// Log dev mode detection for debugging
+if (isDevMode) {
+  console.log(`[Logger] Dev mode detected - Log level: debug`);
+  console.log(`[Logger] process.defaultApp: ${process.defaultApp}`);
+  console.log(`[Logger] NODE_ENV: ${process.env.NODE_ENV}`);
+} else {
+  console.log(`[Logger] Production mode - Log level: info`);
+}
+
 // Create logger instance
 const logger = winston.createLogger({
-  level: process.env.NODE_ENV === "development" ? "debug" : "info",
+  level: isDevMode ? "debug" : "info",
   format: winston.format.combine(
     winston.format.timestamp({
       format: "YYYY-MM-DD HH:mm:ss",

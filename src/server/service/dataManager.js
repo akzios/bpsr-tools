@@ -125,6 +125,12 @@ class StatisticData {
       crit_lucky: 0,
       total: 0,
     };
+    this.minMax = {
+      normal: { min: Infinity, max: 0 },
+      critical: { min: Infinity, max: 0 },
+      lucky: { min: Infinity, max: 0 },
+      crit_lucky: { min: Infinity, max: 0 },
+    };
     this.realtimeWindow = [];
     this.timeRange = [];
     this.realtimeStats = {
@@ -142,6 +148,17 @@ class StatisticData {
   addRecord(value, isCrit, isLucky, hpLessenValue = 0) {
     const now = Date.now();
 
+    // Determine hit type for min/max tracking
+    let hitType = 'normal';
+    if (isCrit && isLucky) {
+      hitType = 'crit_lucky';
+    } else if (isCrit) {
+      hitType = 'critical';
+    } else if (isLucky) {
+      hitType = 'lucky';
+    }
+
+    // Update stats
     if (isCrit) {
       if (isLucky) {
         this.stats.crit_lucky += value;
@@ -156,6 +173,7 @@ class StatisticData {
     this.stats.total += value;
     this.stats.hpLessen += hpLessenValue;
 
+    // Update counts
     if (isCrit) {
       this.count.critical++;
     }
@@ -169,6 +187,12 @@ class StatisticData {
       this.count.crit_lucky++;
     }
     this.count.total++;
+
+    // Update min/max for this hit type
+    if (this.minMax[hitType]) {
+      this.minMax[hitType].min = Math.min(this.minMax[hitType].min, value);
+      this.minMax[hitType].max = Math.max(this.minMax[hitType].max, value);
+    }
 
     this.realtimeWindow.push({
       time: now,
@@ -227,6 +251,12 @@ class StatisticData {
       crit_lucky: 0,
       total: 0,
     };
+    this.minMax = {
+      normal: { min: Infinity, max: 0 },
+      critical: { min: Infinity, max: 0 },
+      lucky: { min: Infinity, max: 0 },
+      crit_lucky: { min: Infinity, max: 0 },
+    };
     this.realtimeWindow = [];
     this.timeRange = [];
     this.realtimeStats = {
@@ -247,6 +277,7 @@ class UserData {
     this.profession = "Unknown";
     this.skillUsage = new Map();
     this.targetDamage = new Map();
+    this.monsterDetailsCache = new Map(); // Cache for monster lookups
     this.fightPoint = 0;
     this.subProfession = "";
     this.attr = {};
@@ -254,6 +285,8 @@ class UserData {
     this.position = null;
     this.mapId = null;
     this.lineId = null;
+    this.timeSeriesData = []; // Track DPS/HPS over time
+    this.lastSnapshotTime = Date.now();
   }
 
   /** Add damage record
@@ -363,23 +396,25 @@ class UserData {
   getSummary(enemyCache = null, monsterDb = null, monsterTagDb = null) {
     return {
       uid: this.uid,
-      realtime_dps: this.damageStats.realtimeStats.value,
-      realtime_dps_max: this.damageStats.realtimeStats.max,
-      total_dps: this.getTotalDps(),
-      total_damage: { ...this.damageStats.stats },
-      total_count: this.getTotalCount(),
-      realtime_hps: this.healingStats.realtimeStats.value,
-      realtime_hps_max: this.healingStats.realtimeStats.max,
-      total_hps: this.getTotalHps(),
-      total_healing: { ...this.healingStats.stats },
-      taken_damage: this.takenDamage,
+      realtimeDps: this.damageStats.realtimeStats.value,
+      realtimeDpsMax: this.damageStats.realtimeStats.max,
+      totalDps: this.getTotalDps(),
+      totalDamage: { ...this.damageStats.stats },
+      totalCount: this.getTotalCount(),
+      realtimeHps: this.healingStats.realtimeStats.value,
+      realtimeHpsMax: this.healingStats.realtimeStats.max,
+      totalHps: this.getTotalHps(),
+      totalHealing: { ...this.healingStats.stats },
+      takenDamage: this.takenDamage,
       profession:
         this.profession + (this.subProfession ? `-${this.subProfession}` : ""),
       name: this.name,
       fightPoint: this.fightPoint,
       hp: this.attr.hp,
-      max_hp: this.attr.max_hp,
-      dead_count: this.deadCount,
+      maxHp: this.attr.max_hp,
+      deadCount: this.deadCount,
+      timeSeriesData: this.timeSeriesData,
+      skill_breakdown: this.getSkillSummary(), // Include skill data with displayName
       targetDamage: enemyCache
         ? this.getTargetDamageBreakdown(enemyCache, monsterDb, monsterTagDb)
         : [],
@@ -416,6 +451,24 @@ class UserData {
         luckyRate: luckyRate,
         damageBreakdown: { ...stat.stats },
         countBreakdown: { ...stat.count },
+        minMaxBreakdown: {
+          normal: {
+            min: stat.minMax.normal.min === Infinity ? 0 : stat.minMax.normal.min,
+            max: stat.minMax.normal.max,
+          },
+          critical: {
+            min: stat.minMax.critical.min === Infinity ? 0 : stat.minMax.critical.min,
+            max: stat.minMax.critical.max,
+          },
+          lucky: {
+            min: stat.minMax.lucky.min === Infinity ? 0 : stat.minMax.lucky.min,
+            max: stat.minMax.lucky.max,
+          },
+          crit_lucky: {
+            min: stat.minMax.crit_lucky.min === Infinity ? 0 : stat.minMax.crit_lucky.min,
+            max: stat.minMax.crit_lucky.max,
+          },
+        },
       };
     }
     return skills;
@@ -449,49 +502,61 @@ class UserData {
 
       if (aggregatedMap.has(key)) {
         // Add damage to existing entry
-        aggregatedMap.get(key).damage += damage;
+        aggregatedMap.get(key).totalDamage += damage;
       } else {
-        // Create new entry - fetch monster details
-        let monsterName = null;
-        let monsterType = null;
-        let monsterTypeLabel = "Unknown";
-        let classification = null;
+        // Check cache first before doing expensive database lookups
+        let monsterDetails = this.monsterDetailsCache.get(key);
 
-        if (monsterId && monsterDb) {
-          const monster = monsterDb.getMonster(monsterId);
-          if (monster) {
-            // Use database name (prefer English, fallback to Chinese)
-            monsterName = monster.name_en || monster.name_cn;
-            monsterType = monster.monster_type;
-            monsterTypeLabel =
-              monsterTypeLabels[monster.monster_type] || "Unknown";
+        if (!monsterDetails) {
+          // Cache miss - fetch monster details from database
+          let monsterName = null;
+          let monsterType = null;
+          let monsterTypeLabel = "Unknown";
+          let classification = null;
 
-            // Get classification tags if monsterTagDb is available
-            if (monsterTagDb) {
-              const tags = monsterTagDb.getMonsterTags(monsterId);
-              const classificationTag = tags.find((tag) =>
-                classificationTagIds.includes(tag.id),
-              );
-              if (classificationTag) {
-                classification = classificationTag.name;
+          if (monsterId && monsterDb) {
+            const monster = monsterDb.getMonster(monsterId);
+            if (monster) {
+              // Use database name (prefer English, fallback to Chinese)
+              monsterName = monster.name_en || monster.name_cn;
+              monsterType = monster.monster_type;
+              monsterTypeLabel =
+                monsterTypeLabels[monster.monster_type] || "Unknown";
+
+              // Get classification tags if monsterTagDb is available
+              if (monsterTagDb) {
+                const tags = monsterTagDb.getMonsterTags(monsterId);
+                const classificationTag = tags.find((tag) =>
+                  classificationTagIds.includes(tag.id),
+                );
+                if (classificationTag) {
+                  classification = classificationTag.name;
+                }
               }
             }
           }
+
+          // Fallback to cache name if database lookup failed, then to Unknown
+          if (!monsterName) {
+            monsterName =
+              enemyCache?.name.get(targetUid) || `Unknown (${targetUid})`;
+          }
+
+          // Cache the monster details for future calls
+          monsterDetails = {
+            monsterId,
+            monsterName,
+            monsterType,
+            monsterTypeLabel,
+            monsterClassification: classification,
+          };
+          this.monsterDetailsCache.set(key, monsterDetails);
         }
 
-        // Fallback to cache name if database lookup failed, then to Unknown
-        if (!monsterName) {
-          monsterName =
-            enemyCache?.name.get(targetUid) || `Unknown (${targetUid})`;
-        }
-
+        // Create new entry with cached or freshly fetched details
         aggregatedMap.set(key, {
-          monsterId,
-          monsterName,
-          damage,
-          monsterType,
-          monsterTypeLabel,
-          classification,
+          ...monsterDetails,
+          totalDamage: damage,
         });
       }
     }
@@ -500,7 +565,7 @@ class UserData {
     const breakdown = Array.from(aggregatedMap.values());
 
     // Sort by damage descending
-    breakdown.sort((a, b) => b.damage - a.damage);
+    breakdown.sort((a, b) => b.totalDamage - a.totalDamage);
     return breakdown;
   }
 
@@ -541,6 +606,28 @@ class UserData {
     this.attr[key] = value;
   }
 
+  /**
+   * Record DPS/HPS snapshot for time series tracking
+   * Call this periodically (e.g., every second) to build time series data
+   */
+  recordTimeSeriesSnapshot() {
+    const now = Date.now();
+    // Record snapshot every second
+    if (now - this.lastSnapshotTime >= 1000) {
+      this.timeSeriesData.push({
+        timestamp: now,
+        dps: this.damageStats.realtimeStats.value || 0,
+        hps: this.healingStats.realtimeStats.value || 0,
+      });
+      this.lastSnapshotTime = now;
+
+      // Limit to last 300 points (5 minutes at 1 second intervals)
+      if (this.timeSeriesData.length > 300) {
+        this.timeSeriesData.shift();
+      }
+    }
+  }
+
   /** 重置数据 预留 */
   reset() {
     this.damageStats.reset();
@@ -548,6 +635,8 @@ class UserData {
     this.takenDamage = 0;
     this.skillUsage.clear();
     this.fightPoint = 0;
+    this.timeSeriesData = [];
+    this.lastSnapshotTime = Date.now();
   }
 }
 
@@ -587,6 +676,13 @@ class UserDataManager {
       sceneName: "",
     };
 
+    // Temporary session tracking (in-memory before DB save)
+    this.temporarySession = {
+      isActive: false,
+      startTime: null,
+      sessionName: null,
+    };
+
     // Initialize player database
     this.playerDb = new PlayerModel(logger);
     this.monsterDb = null; // Will be initialized in initialize()
@@ -594,6 +690,7 @@ class UserDataManager {
     this.tagDb = null; // Will be initialized in initialize()
     this.skillDb = null; // Will be initialized in initialize()
     this.professionDb = null; // Will be initialized in initialize()
+    this.sessionDb = null; // Will be initialized in initialize()
 
     // Initialize player API service
     this.playerAPI = new PlayerAPIService(logger);
@@ -625,6 +722,12 @@ class UserDataManager {
     // Initialize skill database
     this.skillDb = new SkillModel(this.logger, this.playerDb.getDB());
     this.skillDb.initialize();
+
+    // Initialize session database
+    const SessionModel = require("../model/Session");
+    this.sessionDb = new SessionModel(this.logger, this.playerDb.getDB());
+    this.sessionDb.initialize();
+    this.sessionDb.prepareStatements();
   }
 
   /** Set the local player UID
@@ -771,7 +874,11 @@ class UserDataManager {
     hpLessenValue = 0,
     targetUid,
   ) {
-    this.checkTimeoutClear();
+    // Auto-start temporary session on first combat data
+    if (!this.temporarySession.isActive && !this.globalSettings.isPaused) {
+      this.startTemporarySession();
+    }
+
     const user = this.getUser(uid);
     user.addDamage(
       skillId,
@@ -805,8 +912,11 @@ class UserDataManager {
     isCauseLucky,
     targetUid,
   ) {
-    // isPaused will be handled in sniffer or entry point
-    this.checkTimeoutClear();
+    // Auto-start temporary session on first combat data
+    if (!this.temporarySession.isActive && !this.globalSettings.isPaused) {
+      this.startTemporarySession();
+    }
+
     if (uid !== 0) {
       const user = this.getUser(uid);
       user.addHealing(skillId, element, healing, isCrit, isLucky, isCauseLucky);
@@ -819,8 +929,6 @@ class UserDataManager {
    * @param {boolean} isDead - Whether it's lethal damage
    * */
   addTakenDamage(uid, damage, isDead) {
-    // isPaused will be handled in sniffer or entry point
-    this.checkTimeoutClear();
     const user = this.getUser(uid);
     user.addTakenDamage(damage, isDead);
   }
@@ -1009,6 +1117,11 @@ class UserDataManager {
     user.lineId = lineId;
     // Also update global scene data if this is the local player
     if (uid === this.localPlayerUid) {
+      // Check if line ID changed (channel change)
+      if (this.sceneData.lineId !== null && this.sceneData.lineId !== lineId) {
+        this.logger.info("[TemporarySession] Channel change detected, clearing temporary session");
+        this.clearTemporarySession();
+      }
       this.sceneData.lineId = lineId;
     }
   }
@@ -1055,6 +1168,7 @@ class UserDataManager {
   updateAllRealtimeDps() {
     for (const user of this.users.values()) {
       user.updateRealtimeDps();
+      user.recordTimeSeriesSnapshot(); // Record DPS/HPS over time
     }
   }
 
@@ -1125,6 +1239,79 @@ class UserDataManager {
     return result;
   }
 
+  /** Start temporary session (auto-start on first combat data) */
+  startTemporarySession() {
+    if (!this.temporarySession.isActive) {
+      this.temporarySession = {
+        isActive: true,
+        startTime: Date.now(),
+        sessionName: null,
+      };
+      this.logger.info("[TemporarySession] Auto-started temporary session");
+    }
+  }
+
+  /** Clear temporary session (on clear or channel change) */
+  clearTemporarySession() {
+    if (this.temporarySession.isActive) {
+      this.logger.info("[TemporarySession] Cleared temporary session");
+    }
+    this.temporarySession = {
+      isActive: false,
+      startTime: null,
+      sessionName: null,
+    };
+  }
+
+  /** Check if temporary session is active */
+  isTemporarySessionActive() {
+    return this.temporarySession.isActive;
+  }
+
+  /** Get temporary session stats */
+  getTemporarySessionStats() {
+    if (!this.temporarySession.isActive) {
+      return null;
+    }
+
+    const duration = Date.now() - this.temporarySession.startTime;
+    const userData = this.getAllUsersData();
+    const players = Object.values(userData);
+
+    if (players.length === 0) {
+      return null;
+    }
+
+    // Find local player (player with isLocalPlayer flag)
+    const localPlayer = players.find(p => p.isLocalPlayer);
+
+    if (!localPlayer) {
+      // No local player found, return null
+      this.logger.warn('[TemporarySession] No local player found');
+      return null;
+    }
+
+    // Use only local player's stats
+    const currentDps = localPlayer.realtimeDps || 0;
+    const avgDps = localPlayer.totalDps || 0;
+    const avgHps = localPlayer.totalHps || 0;
+    const totalDamage = localPlayer.totalDamage?.total || 0;
+    const totalHealing = localPlayer.totalHealing?.total || 0;
+
+    return {
+      isActive: true,
+      startTime: this.temporarySession.startTime,
+      duration,
+      sessionName: this.temporarySession.sessionName,
+      playerCount: players.length, // Still show total player count
+      currentDps,
+      avgDps,
+      avgHps,
+      totalDamage,
+      totalHealing,
+    };
+  }
+
   /** Get all enemy cache data */
   getAllEnemiesData() {
     const result = {};
@@ -1154,6 +1341,8 @@ class UserDataManager {
   clearAll() {
     this.users = new Map();
     this.startTime = Date.now();
+    // Clear temporary session when combat data is cleared
+    this.clearTemporarySession();
   }
 
   /** Get user ID list */
@@ -1238,15 +1427,6 @@ class UserDataManager {
     }
   }
 
-  checkTimeoutClear() {
-    if (!this.globalSettings.autoClearOnTimeout || this.users.size === 0)
-      return;
-    const currentTime = Date.now();
-    if (this.lastLogTime && currentTime - this.lastLogTime > 20000) {
-      this.clearAll();
-      this.logger.info("Timeout reached, statistics cleared!");
-    }
-  }
 }
 
 module.exports = {

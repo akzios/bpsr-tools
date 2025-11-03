@@ -7,12 +7,21 @@ const configPaths = require("./configPaths");
 const DEFAULT_SETTINGS = {
   autoUpdateEnabled: true,
   autoClearOnChannelChange: false,
-  autoClearOnTimeout: true,
   enableFightLog: false,
   enableDpsLog: false,
   enableHistorySave: false,
   playerDataSyncProgress: null,
   guiWindowBounds: null, // { x, y, width, height }
+  autoSave: {
+    enabled: false,
+    onClear: false,
+    onInactivity: false,
+    inactivityMinutes: 5,
+    onWindowClose: false,
+    minDuration: 60,
+    minPlayers: 1,
+    minTotalDamage: 100000,
+  },
 };
 
 /**

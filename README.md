@@ -4,7 +4,7 @@ A real-time DPS (Damage Per Second) meter for Blue Protocol that captures and de
 
 **Forked from:** [mrsnakke/BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter)
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)
 

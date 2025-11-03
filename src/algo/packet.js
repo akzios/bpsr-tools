@@ -790,6 +790,15 @@ class PacketProcessor {
             this.logger.info(`Found monster name ${name} for id ${enemyUid}`);
             this.userDataManager.enemyCache.name.set(enemyUid, name);
           }
+
+          // Invalidate old "unknown" cache entry if it exists (race condition fix)
+          // This happens when damage was tracked before AttrId packet arrived
+          const unknownKey = `unknown_${enemyUid}`;
+          for (const user of this.userDataManager.users.values()) {
+            if (user.monsterDetailsCache.has(unknownKey)) {
+              user.monsterDetailsCache.delete(unknownKey);
+            }
+          }
           break;
         case AttrType.AttrHp:
           const enemyHp = reader.int32();

@@ -88,7 +88,6 @@ BPSR Tools is a desktop application that monitors your Blue Protocol gameplay in
 
 - Comprehensive README with usage instructions
 - Setup guides for GitHub Releases and auto-updates
-- Developer documentation (CLAUDE.md)
 - Configuration file examples
 
 ---
