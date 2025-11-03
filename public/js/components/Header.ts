@@ -38,6 +38,28 @@ export class Header {
     };
 
     this.render();
+    this.initializeAlwaysOnTopState();
+  }
+
+  /**
+   * Initialize always-on-top state from actual window state (Electron only)
+   */
+  private async initializeAlwaysOnTopState(): Promise<void> {
+    if (!this.options.isElectron || !this.options.onAlwaysOnTopToggle) return;
+
+    const electronAPI = (window as any).electronAPI;
+    if (electronAPI && electronAPI.getAlwaysOnTop) {
+      try {
+        const result = await electronAPI.getAlwaysOnTop();
+        if (result.success) {
+          this.isAlwaysOnTop = result.enabled;
+          this.updateAlwaysOnTopButton();
+          console.log('[Header] Initialized always-on-top state:', this.isAlwaysOnTop);
+        }
+      } catch (error) {
+        console.error('[Header] Error getting initial always-on-top state:', error);
+      }
+    }
   }
 
   /**

@@ -231,12 +231,25 @@ ipcMain.handle("set-always-on-top", async (event, enabled) => {
   try {
     const senderWindow = BrowserWindow.fromWebContents(event.sender);
     if (senderWindow) {
-      senderWindow.setAlwaysOnTop(enabled, enabled ? "floating" : "normal", 1);
+      senderWindow.setAlwaysOnTop(enabled, enabled ? "screen-saver" : "normal", 1);
       return { success: true };
     }
     return { success: false };
   } catch (error) {
     console.error('[Main] Error setting always on top:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("get-always-on-top", async (event) => {
+  try {
+    const senderWindow = BrowserWindow.fromWebContents(event.sender);
+    if (senderWindow) {
+      return { success: true, enabled: senderWindow.isAlwaysOnTop() };
+    }
+    return { success: false };
+  } catch (error) {
+    console.error('[Main] Error getting always on top:', error);
     return { success: false, error: error.message };
   }
 });
