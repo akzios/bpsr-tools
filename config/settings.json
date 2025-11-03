@@ -1,8 +1,6 @@
 {
   "autoUpdateEnabled": true,
   "autoClearOnChannelChange": false,
-  "autoClearOnTimeout": true,
-  "clearTimeoutSeconds": 80,
   "enableFightLog": false,
   "enableDpsLog": false,
   "enableHistorySave": false,
@@ -17,14 +15,16 @@
     "enabled": false,
     "onClear": false,
     "onInactivity": false,
-    "inactivityMinutes": 2,
+    "inactivityMinutes": 5,
     "onWindowClose": false,
-    "minDuration": 0,
+    "minDuration": 60,
     "minPlayers": 1,
-    "minTotalDamage": 10000
+    "minTotalDamage": 100000
   },
-  "theme": "light",
+  "autoClearOnTimeout": true,
+  "clearTimeoutSeconds": 80,
+  "theme": "dark",
   "sidebarCollapsed": false,
-  "lastRoute": "/dpsmeter",
+  "lastRoute": "/sessions",
   "windowOpacity": 1
 }

@@ -5,6 +5,15 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - TBD
+
+### Fixed
+
+- **CRITICAL:** Always-on-top (pin) functionality not working
+  - Fixed IPC communication mismatch in preload.js
+  - Changed `setAlwaysOnTop` from `ipcRenderer.send()` to `ipcRenderer.invoke()`
+  - Pin button now correctly toggles always-on-top for main app and skill analysis windows
+
 ## [2.0.0] - TBD
 
 ### Breaking Changes

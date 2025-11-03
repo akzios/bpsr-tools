@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.send("open-skill-analysis-window", uid);
   },
   setAlwaysOnTop: (alwaysOnTop) =>
-    ipcRenderer.send("set-always-on-top", alwaysOnTop),
+    ipcRenderer.invoke("set-always-on-top", alwaysOnTop),
   getAlwaysOnTop: () => ipcRenderer.invoke("get-always-on-top"),
   saveFileToDesktop: (filename, dataUrl) =>
     ipcRenderer.invoke("save-file-to-desktop", filename, dataUrl),
