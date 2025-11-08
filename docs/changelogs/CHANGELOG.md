@@ -5,6 +5,59 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.3] - 2025-11-08
+
+### Added
+
+- **Clickthrough Mode** - Window can ignore mouse events to interact with game behind overlay
+  - Global keyboard shortcut: `Ctrl+Shift+K` to toggle clickthrough on/off
+  - Setting persists across sessions
+  - Visual feedback when clickthrough is active
+- **Player Search Filter** - Search bar to filter players by name
+  - Case-insensitive search
+  - Real-time filtering as you type
+  - Located at top of filter panel for easy access
+- **Tank Mode** - Expanded lite mode role options from 2 to 3
+  - DPS mode: Sorts by total damage (red button)
+  - Healer mode: Sorts by total healing (green button)
+  - Tank mode: Sorts by damage taken (blue button)
+  - Cycles through all 3 modes with single button click
+- **Always-On-Top Persistence** - Pin setting now saves between sessions
+  - Window remembers if it was pinned on last close
+  - Automatically restores pinned state on startup
+
+### Changed
+
+- **Settings Auto-Save** - Settings now save automatically on every change
+  - No more manual "Save Settings" button required
+  - Instant feedback when toggling options
+  - Number inputs debounced by 500ms for smooth typing
+  - Opacity slider saves in real-time
+- **Advanced/Lite Toggle Button** - Switched from text to icon-based design
+  - Lite mode icon: `chart-simple` (bar chart)
+  - Advanced mode icon: `table-list` (table)
+  - More compact and consistent with other control buttons
+- **Input Styling** - Enhanced text input design across all views
+  - Smooth focus states with brand color border
+  - Hover effects with subtle background tint
+  - Better visual hierarchy and accessibility
+- **Sorting Logic** - Mode-specific sorting for better role visibility
+  - Healer mode: Sorts by HPS instead of DPS
+  - Tank mode: Sorts by damage taken instead of DPS
+  - DPS mode & Advanced mode: Sorts by DPS (default behavior)
+- **Filter Panel Layout** - Reorganized with clearer sections and headings
+  - Search at top for quick access
+  - Filter section with heading and monster type options
+  - Better visual separation between filter types
+
+### Fixed
+
+- **TCP Gap Detection** - Network packet resync for improved stability
+  - Detects missing packets in TCP stream
+  - 2-second timeout before forcing resync
+  - Prevents stuck connections when packets are lost
+  - Detailed logging for gap detection and resolution
+
 ## [2.0.2] - 2025-02-11
 
 ### Fixed

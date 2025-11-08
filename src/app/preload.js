@@ -26,7 +26,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
 contextBridge.exposeInMainWorld("electron", {
   ipcRenderer: {
     invoke: (channel, ...args) => {
-      const validChannels = ['set-always-on-top', 'get-always-on-top', 'set-window-opacity', 'get-window-opacity', 'save-file-to-desktop', 'get-bounds'];
+      const validChannels = ['set-always-on-top', 'get-always-on-top', 'set-window-opacity', 'get-window-opacity', 'set-clickthrough', 'get-clickthrough', 'save-file-to-desktop', 'get-bounds'];
       if (validChannels.includes(channel)) {
         return ipcRenderer.invoke(channel, ...args);
       }
@@ -35,6 +35,12 @@ contextBridge.exposeInMainWorld("electron", {
       const validChannels = ['close-window'];
       if (validChannels.includes(channel)) {
         ipcRenderer.send(channel, ...args);
+      }
+    },
+    on: (channel, listener) => {
+      const validChannels = ['clickthrough-changed'];
+      if (validChannels.includes(channel)) {
+        ipcRenderer.on(channel, listener);
       }
     }
   }

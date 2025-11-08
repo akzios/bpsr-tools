@@ -59,6 +59,9 @@ class App {
     // Setup automatic scaling based on window resize
     this.setupAutoScaling();
 
+    // Setup IPC listener for clickthrough changes (Electron only)
+    this.setupClickthroughListener();
+
     // Setup route change listener to save route
     window.addEventListener('routechange', (event: Event) => {
       const customEvent = event as CustomEvent;
@@ -462,6 +465,53 @@ class App {
 
     window.addEventListener('resize', handleResize);
     handleResize();
+  }
+
+  /**
+   * Setup IPC listener for clickthrough changes from main process
+   */
+  private setupClickthroughListener(): void {
+    const electron = (window as any).electron;
+    if (!electron || !electron.ipcRenderer) return;
+
+    // Listen for clickthrough state changes from main process (triggered by global shortcut)
+    electron.ipcRenderer.on('clickthrough-changed', (_event: any, newState: boolean) => {
+      console.log('[App] Clickthrough state changed from main process:', newState);
+
+      // Update settings checkbox if on settings page
+      const clickthroughCheckbox = document.getElementById('clickthrough') as HTMLInputElement;
+      if (clickthroughCheckbox) {
+        clickthroughCheckbox.checked = newState;
+      }
+
+      // Save settings to persist the change
+      this.saveClickthroughSetting(newState);
+    });
+
+    console.log('[App] Clickthrough IPC listener registered');
+  }
+
+  /**
+   * Save clickthrough setting to backend
+   */
+  private async saveClickthroughSetting(clickthrough: boolean): Promise<void> {
+    try {
+      const response = await fetch('/api/settings');
+      const result = await response.json();
+      const settings = result.data || result;
+
+      settings.clickthrough = clickthrough;
+
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+
+      console.log('[App] Clickthrough setting saved:', clickthrough);
+    } catch (error) {
+      console.error('[App] Error saving clickthrough setting:', error);
+    }
   }
 
   /**

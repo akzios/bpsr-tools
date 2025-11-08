@@ -6,11 +6,13 @@
   "enableHistorySave": false,
   "playerDataSyncProgress": null,
   "guiWindowBounds": {
-    "x": 1829,
-    "y": 1,
+    "x": null,
+    "y": null,
     "width": 700,
     "height": 400
   },
+  "clickthrough": false,
+  "alwaysOnTop": true,
   "autoSave": {
     "enabled": false,
     "onClear": false,
@@ -25,6 +27,171 @@
   "clearTimeoutSeconds": 80,
   "theme": "dark",
   "sidebarCollapsed": false,
-  "lastRoute": "/sessions",
-  "windowOpacity": 1
+  "lastRoute": "/dpsmeter",
+  "windowOpacity": 0.5,
+  "code": 0,
+  "data": {
+    "autoUpdateEnabled": true,
+    "autoClearOnChannelChange": false,
+    "enableFightLog": false,
+    "enableDpsLog": false,
+    "enableHistorySave": false,
+    "playerDataSyncProgress": null,
+    "guiWindowBounds": {
+      "x": 1394,
+      "y": 127,
+      "width": 657,
+      "height": 677
+    },
+    "clickthrough": true,
+    "autoSave": {
+      "enabled": false,
+      "onClear": false,
+      "onInactivity": false,
+      "inactivityMinutes": 5,
+      "onWindowClose": false,
+      "minDuration": 60,
+      "minPlayers": 1,
+      "minTotalDamage": 100000
+    },
+    "autoClearOnTimeout": true,
+    "clearTimeoutSeconds": 80,
+    "theme": "dark",
+    "sidebarCollapsed": false,
+    "lastRoute": "/dpsmeter",
+    "windowOpacity": 0.5,
+    "code": 0,
+    "data": {
+      "autoUpdateEnabled": true,
+      "autoClearOnChannelChange": false,
+      "enableFightLog": false,
+      "enableDpsLog": false,
+      "enableHistorySave": false,
+      "playerDataSyncProgress": null,
+      "guiWindowBounds": {
+        "x": 1394,
+        "y": 127,
+        "width": 657,
+        "height": 677
+      },
+      "clickthrough": true,
+      "autoSave": {
+        "enabled": false,
+        "onClear": false,
+        "onInactivity": false,
+        "inactivityMinutes": 5,
+        "onWindowClose": false,
+        "minDuration": 60,
+        "minPlayers": 1,
+        "minTotalDamage": 100000
+      },
+      "autoClearOnTimeout": true,
+      "clearTimeoutSeconds": 80,
+      "theme": "dark",
+      "sidebarCollapsed": false,
+      "lastRoute": "/dpsmeter",
+      "windowOpacity": 0.5,
+      "code": 0,
+      "data": {
+        "autoUpdateEnabled": true,
+        "autoClearOnChannelChange": false,
+        "enableFightLog": false,
+        "enableDpsLog": false,
+        "enableHistorySave": false,
+        "playerDataSyncProgress": null,
+        "guiWindowBounds": {
+          "x": 1394,
+          "y": 127,
+          "width": 657,
+          "height": 677
+        },
+        "clickthrough": true,
+        "autoSave": {
+          "enabled": false,
+          "onClear": false,
+          "onInactivity": false,
+          "inactivityMinutes": 5,
+          "onWindowClose": false,
+          "minDuration": 60,
+          "minPlayers": 1,
+          "minTotalDamage": 100000
+        },
+        "autoClearOnTimeout": true,
+        "clearTimeoutSeconds": 80,
+        "theme": "dark",
+        "sidebarCollapsed": false,
+        "lastRoute": "/settings",
+        "windowOpacity": 0.5,
+        "isPaused": false,
+        "code": 0,
+        "data": {
+          "autoUpdateEnabled": true,
+          "autoClearOnChannelChange": false,
+          "enableFightLog": false,
+          "enableDpsLog": false,
+          "enableHistorySave": false,
+          "playerDataSyncProgress": null,
+          "guiWindowBounds": {
+            "x": 1394,
+            "y": 127,
+            "width": 657,
+            "height": 677
+          },
+          "clickthrough": true,
+          "autoSave": {
+            "enabled": false,
+            "onClear": false,
+            "onInactivity": false,
+            "inactivityMinutes": 5,
+            "onWindowClose": false,
+            "minDuration": 60,
+            "minPlayers": 1,
+            "minTotalDamage": 100000
+          },
+          "autoClearOnTimeout": true,
+          "clearTimeoutSeconds": 80,
+          "theme": "dark",
+          "sidebarCollapsed": false,
+          "lastRoute": "/settings",
+          "windowOpacity": 0.5,
+          "isPaused": false,
+          "code": 0,
+          "data": {
+            "autoUpdateEnabled": true,
+            "autoClearOnChannelChange": false,
+            "enableFightLog": false,
+            "enableDpsLog": false,
+            "enableHistorySave": false,
+            "playerDataSyncProgress": null,
+            "guiWindowBounds": {
+              "x": 1394,
+              "y": 127,
+              "width": 657,
+              "height": 677
+            },
+            "clickthrough": false,
+            "autoSave": {
+              "enabled": false,
+              "onClear": false,
+              "onInactivity": false,
+              "inactivityMinutes": 5,
+              "onWindowClose": false,
+              "minDuration": 60,
+              "minPlayers": 1,
+              "minTotalDamage": 100000
+            },
+            "autoClearOnTimeout": true,
+            "clearTimeoutSeconds": 80,
+            "theme": "dark",
+            "sidebarCollapsed": false,
+            "lastRoute": "/settings",
+            "windowOpacity": 0.5,
+            "isPaused": false
+          }
+        }
+      },
+      "isPaused": false
+    },
+    "isPaused": false
+  }
 }

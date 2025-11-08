@@ -12,6 +12,8 @@ const DEFAULT_SETTINGS = {
   enableHistorySave: false,
   playerDataSyncProgress: null,
   guiWindowBounds: null, // { x, y, width, height }
+  clickthrough: false, // Allow clicking through the overlay window
+  alwaysOnTop: false, // Keep window always on top
   autoSave: {
     enabled: false,
     onClear: false,

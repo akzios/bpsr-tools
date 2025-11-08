@@ -150,7 +150,7 @@ export class SkillAnalysis {
   private renderHeader(container: HTMLElement): void {
     const playerName = this.data!.name || `Player ${this.data!.uid}`;
     const profession = this.data!.professionDetails?.name_en || 'Unknown';
-    const gearScore = this.data!.fightPoint || 0;
+    const gearScore = this.data!.attr?.fight_point || this.data!.fightPoint || 0;
     const professionIcon = this.data!.professionDetails?.icon || 'unknown.png';
 
     // Left section

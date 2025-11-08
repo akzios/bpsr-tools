@@ -11,6 +11,7 @@ import { Slider } from '@components/Slider';
 export interface AppSettings {
   autoUpdateEnabled: boolean;
   autoClearOnChannelChange: boolean;
+  clickthrough?: boolean;
   theme: 'light' | 'dark';
   windowOpacity?: number;
   sidebarCollapsed?: boolean;
@@ -140,6 +141,11 @@ export class Settings {
     input.type = 'checkbox';
     input.id = id;
 
+    // Auto-save on change
+    input.addEventListener('change', () => {
+      this.autoSaveSettings();
+    });
+
     const slider = document.createElement('span');
     slider.className = 'toggle-slider';
 
@@ -187,6 +193,15 @@ export class Settings {
     input.min = String(min);
     input.max = String(max);
     input.step = String(step);
+
+    // Auto-save on change (with debounce for number inputs)
+    let debounceTimer: number;
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(() => {
+        this.autoSaveSettings();
+      }, 500);
+    });
 
     settingItem.appendChild(label);
     settingItem.appendChild(input);
@@ -367,6 +382,8 @@ export class Settings {
             console.error('[Settings] Error setting window opacity:', error);
           }
         }
+        // Auto-save settings
+        this.autoSaveSettings();
       },
     });
 
@@ -444,12 +461,20 @@ export class Settings {
       }
     );
 
-    const dpsMeterSection = this.createCollapsibleSection(
-      'DPS Meter',
-      'Configure DPS meter behavior and data tracking',
+    const overlaySection = this.createCollapsibleSection(
+      'Overlay',
+      'Configure overlay window behavior and interaction',
       () => {
         const container = document.createElement('div');
         container.className = 'settings-items-group';
+
+        container.appendChild(
+          this.createToggleSetting(
+            'clickthrough',
+            'Click-Through Mode (Ctrl+Shift+K)',
+            'Allow clicking through the overlay window to interact with windows behind it'
+          )
+        );
 
         container.appendChild(
           this.createToggleSetting(
@@ -480,30 +505,12 @@ export class Settings {
 
     settingsGroup.appendChild(appUpdatesSection);
     settingsGroup.appendChild(appearanceSection);
-    settingsGroup.appendChild(dpsMeterSection);
+    settingsGroup.appendChild(overlaySection);
     settingsGroup.appendChild(sessionAutoSaveSection);
     settingsGroup.appendChild(sheetsSection);
 
-    const footer = document.createElement('div');
-    footer.className = 'settings-footer';
-
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'save-btn';
-    saveBtn.id = 'save-btn';
-    saveBtn.textContent = 'Save Settings';
-    saveBtn.addEventListener('click', () => this.saveSettings());
-
-    const successMessage = document.createElement('div');
-    successMessage.className = 'success-message';
-    successMessage.id = 'success-message';
-    successMessage.textContent = 'Settings saved successfully!';
-
-    footer.appendChild(saveBtn);
-    footer.appendChild(successMessage);
-
     this.settingsWrapper.appendChild(header);
     this.settingsWrapper.appendChild(settingsGroup);
-    this.settingsWrapper.appendChild(footer);
   }
 
   /**
@@ -517,6 +524,7 @@ export class Settings {
 
       // Get current window opacity from Electron if available
       let currentOpacity = settings.windowOpacity ?? 1.0;
+      let currentClickthrough = settings.clickthrough || false;
       const electron = (window as any).electron;
       if (electron && electron.ipcRenderer) {
         try {
@@ -527,11 +535,22 @@ export class Settings {
         } catch (error) {
           console.error('[Settings] Error getting window opacity:', error);
         }
+
+        // Get current clickthrough state from Electron
+        try {
+          const clickthroughResult = await electron.ipcRenderer.invoke('get-clickthrough');
+          if (clickthroughResult.success) {
+            currentClickthrough = clickthroughResult.enabled;
+          }
+        } catch (error) {
+          console.error('[Settings] Error getting clickthrough:', error);
+        }
       }
 
       this.currentSettings = {
         autoUpdateEnabled: settings.autoUpdateEnabled !== false,
         autoClearOnChannelChange: settings.autoClearOnChannelChange || false,
+        clickthrough: currentClickthrough,
         theme: settings.theme || 'dark',
         windowOpacity: currentOpacity,
         autoSave: settings.autoSave || {
@@ -570,10 +589,12 @@ export class Settings {
   private populateForm(settings: any): void {
     const autoUpdateCheckbox = document.getElementById('autoUpdateEnabled') as HTMLInputElement;
     const autoClearChannelCheckbox = document.getElementById('autoClearOnChannelChange') as HTMLInputElement;
+    const clickthroughCheckbox = document.getElementById('clickthrough') as HTMLInputElement;
     const themeSelect = document.getElementById('themeSelect') as HTMLSelectElement;
 
     if (autoUpdateCheckbox) autoUpdateCheckbox.checked = settings.autoUpdateEnabled;
     if (autoClearChannelCheckbox) autoClearChannelCheckbox.checked = settings.autoClearOnChannelChange;
+    if (clickthroughCheckbox) clickthroughCheckbox.checked = settings.clickthrough;
     if (themeSelect) themeSelect.value = settings.theme;
 
     // Set opacity slider value (don't call set-window-opacity here to avoid save loop)
@@ -608,11 +629,12 @@ export class Settings {
   }
 
   /**
-   * Save settings to API
+   * Auto-save settings to API (silent, no UI feedback)
    */
-  private async saveSettings(): Promise<void> {
+  private async autoSaveSettings(): Promise<void> {
     const autoUpdateCheckbox = document.getElementById('autoUpdateEnabled') as HTMLInputElement;
     const autoClearChannelCheckbox = document.getElementById('autoClearOnChannelChange') as HTMLInputElement;
+    const clickthroughCheckbox = document.getElementById('clickthrough') as HTMLInputElement;
     const themeSelect = document.getElementById('themeSelect') as HTMLSelectElement;
 
     // Collect auto-save settings
@@ -628,6 +650,7 @@ export class Settings {
     const settings: any = {
       autoUpdateEnabled: autoUpdateCheckbox?.checked || false,
       autoClearOnChannelChange: autoClearChannelCheckbox?.checked || false,
+      clickthrough: clickthroughCheckbox?.checked || false,
       theme: (themeSelect?.value as 'light' | 'dark') || 'dark',
       windowOpacity: this.opacitySlider?.getValue() ?? 1.0,
       autoSave: {
@@ -656,16 +679,17 @@ export class Settings {
       this.currentSettings = settings;
       this.applyTheme(settings.theme);
 
-      const successMessage = document.getElementById('success-message');
-      if (successMessage) {
-        successMessage.classList.add('show');
-        setTimeout(() => {
-          successMessage.classList.remove('show');
-        }, 2000);
+      // Apply clickthrough immediately (Electron only)
+      if (clickthroughCheckbox) {
+        const electron = (window as any).electron;
+        if (electron && electron.ipcRenderer) {
+          await electron.ipcRenderer.invoke('set-clickthrough', clickthroughCheckbox.checked);
+        }
       }
+
+      console.log('[Settings] Auto-saved settings');
     } catch (error) {
-      console.error('[Settings] Error saving settings:', error);
-      alert('Failed to save settings: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      console.error('[Settings] Error auto-saving settings:', error);
     }
   }
 

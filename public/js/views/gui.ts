@@ -85,6 +85,7 @@ export class Gui {
 
     this.initialize();
     this.setupWindowCloseHandler();
+    this.setupKeyboardShortcuts();
   }
 
   /**
@@ -246,6 +247,11 @@ export class Gui {
         console.log('[Gui] Monster filter changed:', selected);
         this.fetchAndRenderData();
       },
+      onPlayerSearchChange: (searchTerm: string) => {
+        console.log('[Gui] Player search changed:', searchTerm);
+        this.controlPanel.setFilterText(searchTerm);
+        this.fetchAndRenderData();
+      },
     });
     this.collapsiblePanels.appendChild(panel.getElement());
     return panel;
@@ -315,14 +321,46 @@ export class Gui {
   }
 
   /**
+   * Apply player search filter
+   */
+  private applyPlayerSearchFilter(players: CombatData[]): CombatData[] {
+    const searchTerm = this.filterPanel.getPlayerSearchTerm();
+    if (!searchTerm || searchTerm.trim() === '') {
+      return players;
+    }
+
+    return players.filter((player) => {
+      const playerName = (player.name || '').toLowerCase();
+      return playerName.includes(searchTerm);
+    });
+  }
+
+  /**
    * Enrich combat data with calculated fields
    */
   private enrichCombatData(players: CombatData[]): EnrichedCombatData[] {
-    // Sort by total damage (descending) to match damage percentage order
-    const sorted = [...players].sort((a, b) => {
-      const aDamage = a.totalDamage?.total || 0;
-      const bDamage = b.totalDamage?.total || 0;
-      return bDamage - aDamage;
+    // Apply player search filter
+    const filtered = this.applyPlayerSearchFilter(players);
+
+    // Sort based on current lite mode type
+    const state = this.controlPanel.getState();
+    const sorted = [...filtered].sort((a, b) => {
+      if (state.isLiteMode && state.liteModeType === 'healer') {
+        // Sort by HPS in healer mode
+        const aHealing = a.totalHealing?.total || 0;
+        const bHealing = b.totalHealing?.total || 0;
+        return bHealing - aHealing;
+      } else if (state.isLiteMode && state.liteModeType === 'tank') {
+        // Sort by damage taken in tank mode
+        const aTaken = a.takenDamage || 0;
+        const bTaken = b.takenDamage || 0;
+        return bTaken - aTaken;
+      } else {
+        // Sort by DPS (default for DPS mode and advanced mode)
+        const aDamage = a.totalDamage?.total || 0;
+        const bDamage = b.totalDamage?.total || 0;
+        return bDamage - aDamage;
+      }
     });
 
     const totalDamage = sorted.reduce((sum, p) => sum + (p.totalDamage?.total || 0), 0);
@@ -702,6 +740,8 @@ export class Gui {
   private handleLiteModeTypeToggle(type: LiteModeType): void {
     this.dpsTable.setLiteModeType(type);
     console.log('[Gui] Lite mode type:', type);
+    // Re-render data to apply new sorting based on mode type
+    this.fetchAndRenderData();
   }
 
   /**
@@ -970,6 +1010,51 @@ export class Gui {
     });
 
     console.log('[Gui] Window close handler registered');
+  }
+
+  /**
+   * Setup keyboard shortcuts
+   */
+  private setupKeyboardShortcuts(): void {
+    document.addEventListener('keydown', async (event: KeyboardEvent) => {
+      // Ctrl+Shift+K - Toggle clickthrough mode
+      if (event.ctrlKey && event.shiftKey && event.key === 'K') {
+        event.preventDefault();
+        await this.toggleClickthrough();
+      }
+    });
+  }
+
+  /**
+   * Toggle clickthrough mode
+   */
+  private async toggleClickthrough(): Promise<void> {
+    if (!this.isElectron) return;
+
+    try {
+      const electron = (window as any).electron;
+      if (!electron || !electron.ipcRenderer) return;
+
+      // Get current settings
+      const response = await fetch('/api/settings');
+      const settings = await response.json();
+      const currentClickthrough = settings.clickthrough || false;
+
+      // Toggle clickthrough
+      const newClickthrough = !currentClickthrough;
+      await electron.ipcRenderer.invoke('set-clickthrough', newClickthrough);
+
+      // Save to settings
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...settings, clickthrough: newClickthrough }),
+      });
+
+      console.log('[Gui] Clickthrough toggled:', newClickthrough);
+    } catch (error) {
+      console.error('[Gui] Error toggling clickthrough:', error);
+    }
   }
 
   /**

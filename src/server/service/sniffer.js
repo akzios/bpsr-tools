@@ -84,6 +84,8 @@ class Sniffer {
     this.tcp_lock = new Lock();
     this.fragmentIpCache = new Map();
     this.FRAGMENT_TIMEOUT = 30000;
+    this.waitingGapSince = null; // Timestamp when gap was first detected
+    this.GAP_TIMEOUT = 2000; // 2 seconds timeout for missing packets (like Star Resonance)
     this.eth_queue = [];
     this.capInstance = null;
     this.packetProcessor = null;
@@ -99,6 +101,7 @@ class Sniffer {
     this.tcp_next_seq = -1;
     this.tcp_last_time = 0;
     this.tcp_cache.clear();
+    this.waitingGapSince = null;
   }
 
   getTCPPacket(frameBuffer, ethOffset) {
@@ -275,6 +278,45 @@ class Sniffer {
         if (buf.length > 4 && buf.readUInt32BE() < 0x0fffff) {
           this.tcp_next_seq = tcpPacket.info.seqno;
         }
+      }
+
+      // Gap detection and forced resync (like Star Resonance DPS)
+      if (this.tcp_next_seq !== -1) {
+        // Calculate sequence difference (handles uint32 wraparound)
+        const seqDiff = (tcpPacket.info.seqno - this.tcp_next_seq) >>> 0;
+
+        // Check if we have a gap (packet arrived ahead of expected sequence)
+        // Use 0x7FFFFFFF (2^31-1) to distinguish forward gap from backward (old/duplicate packets)
+        if (seqDiff > 0 && seqDiff < 0x7FFFFFFF) {
+          // Gap detected - missing packet(s)
+          if (!this.waitingGapSince) {
+            this.waitingGapSince = Date.now();
+            this.logger.warn(
+              `[TCP Gap] Expected seq ${this.tcp_next_seq}, got ${tcpPacket.info.seqno} (gap: ${seqDiff} bytes)`
+            );
+          }
+
+          // Check if we've waited too long for missing packet
+          if (Date.now() - this.waitingGapSince > this.GAP_TIMEOUT) {
+            // Force resync - skip missing packets and continue from current packet
+            this.logger.warn(
+              `[TCP Gap Timeout] Forcing resync to seq ${tcpPacket.info.seqno} (skipping ${seqDiff} bytes)`
+            );
+            this.tcp_cache.clear();
+            this._data = Buffer.alloc(0);
+            this.tcp_next_seq = tcpPacket.info.seqno;
+            this.waitingGapSince = null;
+          }
+        } else if (seqDiff === 0) {
+          // Got the expected packet - clear gap timer
+          if (this.waitingGapSince !== null) {
+            this.logger.info(
+              `[TCP Gap Resolved] Received expected seq ${tcpPacket.info.seqno}`
+            );
+            this.waitingGapSince = null;
+          }
+        }
+        // else: seqDiff < 0 or very large (old/duplicate packet) - will be ignored by cache logic below
       }
 
       if (

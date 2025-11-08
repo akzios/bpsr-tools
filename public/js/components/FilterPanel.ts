@@ -9,11 +9,13 @@ import { MONSTER_FILTER_COLORS } from '@shared/index';
 export interface FilterPanelOptions {
   monsterTypeOptions?: FilterOption[];
   onMonsterFilterChange?: (selected: string[]) => void;
+  onPlayerSearchChange?: (searchTerm: string) => void;
 }
 
 export class FilterPanel {
   private element: HTMLElement;
   private monsterFilter: Filter | null = null;
+  private playerSearchInput: HTMLInputElement | null = null;
 
   /**
    * Create a new FilterPanel
@@ -37,25 +39,48 @@ export class FilterPanel {
     const content = document.createElement('div');
     content.className = 'panel-content';
 
-    // Create filter group
-    const filterGroup = document.createElement('div');
-    filterGroup.className = 'filter-group';
+    // Player Search (at top)
+    const playerSearchGroup = document.createElement('div');
+    playerSearchGroup.className = 'filter-group search-group';
+    const playerSearchInput = document.createElement('input');
+    playerSearchInput.type = 'text';
+    playerSearchInput.id = 'player-search-input';
+    playerSearchInput.className = 'filter-search-input';
+    playerSearchInput.placeholder = 'Search player...';
+    playerSearchInput.setAttribute('autocomplete', 'off');
+    playerSearchInput.setAttribute('spellcheck', 'false');
+    playerSearchGroup.appendChild(playerSearchInput);
+    content.appendChild(playerSearchGroup);
 
-    const label = document.createElement('label');
-    label.setAttribute('for', 'monster-type-filter');
-    label.textContent = 'Monster Type:';
+    // Filter Section
+    const filterSection = document.createElement('div');
+    filterSection.className = 'filter-section';
+    const filterHeading = document.createElement('h4');
+    filterHeading.textContent = 'Filter';
+    filterHeading.className = 'filter-section-heading';
+    filterSection.appendChild(filterHeading);
 
+    // Monster Type Filter
+    const monsterFilterGroup = document.createElement('div');
+    monsterFilterGroup.className = 'filter-group monster-type';
+    const monsterLabel = document.createElement('label');
+    monsterLabel.setAttribute('for', 'monster-type-filter');
+    monsterLabel.textContent = 'Monster Type:';
     const filterContainer = document.createElement('div');
     filterContainer.id = 'monster-type-filter';
     filterContainer.className = 'filter-multiselect';
+    monsterFilterGroup.appendChild(monsterLabel);
+    monsterFilterGroup.appendChild(filterContainer);
+    filterSection.appendChild(monsterFilterGroup);
 
-    filterGroup.appendChild(label);
-    filterGroup.appendChild(filterContainer);
-    content.appendChild(filterGroup);
+    content.appendChild(filterSection);
     panel.appendChild(content);
 
-    // Initialize monster filter after element is created
+    this.playerSearchInput = playerSearchInput;
+
+    // Initialize filters after element is created
     setTimeout(() => {
+      // Monster Type Filter
       const defaultOptions: FilterOption[] = options.monsterTypeOptions || [
         {
           value: 'normal',
@@ -99,6 +124,14 @@ export class FilterPanel {
           options.onMonsterFilterChange?.(selected);
         },
       });
+
+      // Player Search Input (case insensitive)
+      if (this.playerSearchInput) {
+        this.playerSearchInput.addEventListener('input', (e) => {
+          const target = e.target as HTMLInputElement;
+          options.onPlayerSearchChange?.(target.value.toLowerCase());
+        });
+      }
     }, 0);
 
     return panel;
@@ -152,6 +185,13 @@ export class FilterPanel {
    */
   public getElement(): HTMLElement {
     return this.element;
+  }
+
+  /**
+   * Get player search term
+   */
+  public getPlayerSearchTerm(): string {
+    return this.playerSearchInput?.value.toLowerCase() || '';
   }
 
   /**

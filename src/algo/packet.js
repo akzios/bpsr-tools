@@ -713,11 +713,7 @@ class PacketProcessor {
           break;
         case AttrType.AttrRankLevel:
           const playerRankLevel = reader.int32();
-          this.userDataManager.setAttrKV(
-            playerUid,
-            "rank_level",
-            playerRankLevel,
-          );
+          this.userDataManager.setAttrKV(playerUid, "rank_level", playerRankLevel);
           break;
         case AttrType.AttrCri:
           const playerCri = reader.int32();
@@ -760,7 +756,7 @@ class PacketProcessor {
           );
           break;
         default:
-          // this.logger.debug(`Found unknown attrId ${attr.Id} for ${playerUid} ${attr.RawData.toString('base64')}`);
+          // Unknown attribute - ignore
           break;
       }
     }
@@ -878,14 +874,24 @@ class PacketProcessor {
         this._processSyncNearDeltaInfo(msgPayload, isPaused);
         break;
       default:
-        this.logger.debug(`Skipping NotifyMsg with methodId ${methodId}`);
+        // Unknown notify method
         break;
     }
     return;
   }
 
   _processReturnMsg(reader, isZstdCompressed) {
-    this.logger.debug(`Unimplemented processing return`);
+    const serviceUuid = reader.readUInt64();
+    const stubId = reader.readUInt32();
+    const methodId = reader.readUInt32();
+    const errorCode = reader.readInt32();
+
+    let msgPayload = reader.readRemaining();
+    if (isZstdCompressed) {
+      msgPayload = this._decompressPayload(msgPayload);
+    }
+
+    // Return messages not used for master score detection
   }
 
   processPacket(packets, isPaused = false, globalSettings = null) {
@@ -933,8 +939,9 @@ class PacketProcessor {
         }
       } while (packetsReader.remaining() > 0);
     } catch (e) {
-      this.logger.error(
-        `Fail while parsing data for player ${currentUserUuid.shiftRight(16)}.\nErr: ${e}`,
+      // Buffer read errors are common with malformed/incomplete packets - log at debug level
+      this.logger.debug(
+        `Packet parsing error for player ${currentUserUuid.shiftRight(16)}: ${e.message}`,
       );
     }
   }

@@ -27,22 +27,17 @@ export function applyMonsterTypeFilter(
           } else if (filterValue === 'dummy') {
             return target.monsterType === 1;
           } else if (filterValue === 'elite') {
-            // Elite: monsterType 2 with 'elite' in classification
-            if (target.monsterType === 2) {
-              if (target.monsterClassification) {
-                return target.monsterClassification.toLowerCase().includes('elite');
-              }
-              // If no classification but monsterType is 2, treat as elite
-              return true;
+            if (target.monsterType === 2 && target.monsterClassification) {
+              const classification = target.monsterClassification.toLowerCase();
+              return classification.includes('elite');
             }
             return false;
           } else if (filterValue === 'boss') {
-            // Boss: monsterType 2 with 'boss' in classification, or monsterType 3+
-            if (target.monsterClassification && target.monsterClassification.toLowerCase().includes('boss')) {
-              return true;
+            if (target.monsterType === 2 && target.monsterClassification) {
+              const classification = target.monsterClassification.toLowerCase();
+              return classification.includes('boss');
             }
-            // monsterType 3 or higher is typically boss
-            if (target.monsterType >= 3) {
+            if (target.monsterType === 2 && !target.monsterClassification) {
               return true;
             }
             return false;

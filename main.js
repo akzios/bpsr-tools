@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, Tray, globalShortcut } = require("electron");
 const path = require("path");
 const { fork } = require("child_process");
 const autoUpdateManager = require("./src/server/utilities/autoUpdate");
@@ -175,6 +175,15 @@ function createMainWindow() {
 
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();
+    // Apply clickthrough setting if enabled
+    if (settings.clickthrough) {
+      mainWindow.setIgnoreMouseEvents(true, { forward: true });
+    }
+    // Apply always-on-top setting if enabled
+    if (settings.alwaysOnTop) {
+      mainWindow.setAlwaysOnTop(true, "screen-saver", 1);
+      console.log('[Main] Always on top restored from settings');
+    }
   });
 
   mainWindow.on("close", (event) => {
@@ -232,6 +241,13 @@ ipcMain.handle("set-always-on-top", async (event, enabled) => {
     const senderWindow = BrowserWindow.fromWebContents(event.sender);
     if (senderWindow) {
       senderWindow.setAlwaysOnTop(enabled, enabled ? "screen-saver" : "normal", 1);
+
+      // Save to settings for persistence
+      const settings = loadSettings();
+      settings.alwaysOnTop = enabled;
+      saveSettings(settings);
+      console.log('[Main] Always on top saved to settings:', enabled);
+
       return { success: true };
     }
     return { success: false };
@@ -245,7 +261,9 @@ ipcMain.handle("get-always-on-top", async (event) => {
   try {
     const senderWindow = BrowserWindow.fromWebContents(event.sender);
     if (senderWindow) {
-      return { success: true, enabled: senderWindow.isAlwaysOnTop() };
+      // Return actual window state (always authoritative)
+      const actualState = senderWindow.isAlwaysOnTop();
+      return { success: true, enabled: actualState };
     }
     return { success: false };
   } catch (error) {
@@ -277,6 +295,31 @@ ipcMain.handle("get-window-opacity", async (event) => {
     return { success: false };
   } catch (error) {
     console.error('[Main] Error getting window opacity:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("set-clickthrough", async (event, enabled) => {
+  try {
+    const senderWindow = BrowserWindow.fromWebContents(event.sender);
+    if (senderWindow) {
+      senderWindow.setIgnoreMouseEvents(enabled, { forward: true });
+      return { success: true };
+    }
+    return { success: false };
+  } catch (error) {
+    console.error('[Main] Error setting clickthrough:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("get-clickthrough", async (event) => {
+  try {
+    // Reload settings to get current state
+    const currentSettings = loadSettings();
+    return { success: true, enabled: currentSettings.clickthrough || false };
+  } catch (error) {
+    console.error('[Main] Error getting clickthrough:', error);
     return { success: false, error: error.message };
   }
 });
@@ -381,6 +424,35 @@ app.whenReady().then(async () => {
   createMainWindow();
   createTray();
 
+  // Register global shortcut for clickthrough toggle
+  const shortcutRegistered = globalShortcut.register('CommandOrControl+Shift+K', () => {
+    console.log('[Main] Global shortcut Ctrl+Shift+K triggered');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      const settings = loadSettings();
+      const newClickthrough = !settings.clickthrough;
+
+      console.log('[Main] Toggling clickthrough:', settings.clickthrough, '->', newClickthrough);
+
+      // Update window state
+      mainWindow.setIgnoreMouseEvents(newClickthrough, { forward: true });
+
+      // Save to settings
+      settings.clickthrough = newClickthrough;
+      saveSettings(settings);
+
+      // Notify renderer
+      mainWindow.webContents.send('clickthrough-changed', newClickthrough);
+
+      console.log('[Main] Clickthrough toggled successfully to:', newClickthrough);
+    }
+  });
+
+  if (shortcutRegistered) {
+    console.log('[Main] Global shortcut Ctrl+Shift+K registered successfully');
+  } else {
+    console.error('[Main] Failed to register global shortcut Ctrl+Shift+K');
+  }
+
   try {
     const settings = loadSettings();
     if (settings.autoUpdateEnabled !== false) {
@@ -409,6 +481,11 @@ app.on("activate", () => {
 
 app.on("before-quit", () => {
   isQuitting = true;
+
+  // Unregister global shortcuts
+  globalShortcut.unregisterAll();
+  console.log('[Main] Global shortcuts unregistered');
+
   if (backendServerProcess) {
     console.log("[Main] Stopping backend server...");
     backendServerProcess.kill();

@@ -737,6 +737,7 @@ class UserDataManager {
     this.localPlayerUid = uid;
     this.logger.info(`Local player UID set to: ${uid}`);
   }
+
   /** Get or create user
    * @param {number} uid - User ID
    * @returns {UserData} - User data instance

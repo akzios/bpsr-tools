@@ -41,7 +41,7 @@ export class ControlPanel {
   private saveSessionBtn?: Button;
   private parseBtn?: Button;
   private advancedLiteBtn?: Button;
-  private liteDpsHealerBtn?: Button;
+  private liteRoleBtn?: Button;
   private filterBtn?: Button;
   private zoomInBtn?: Button;
   private zoomOutBtn?: Button;
@@ -116,33 +116,33 @@ export class ControlPanel {
 
     // Advanced/Lite toggle
     this.advancedLiteBtn = new Button({
-      text: 'Advanced',
-      size: 'large',
+      icon: 'fa-solid fa-table-list',
+      size: 'medium',
       className: 'control-button',
-      title: 'Toggle Advanced/Lite',
+      title: 'Lite Mode',
       onClick: () => this.handleModeClick(),
     });
-    this.advancedLiteBtn.addClass('btn-large');
+    this.advancedLiteBtn.addClass('btn-medium');
     this.container.appendChild(this.advancedLiteBtn.getElement());
 
-    // DPS/Healer toggle (hidden by default)
-    this.liteDpsHealerBtn = new Button({
+    // DPS/Healer/Tank toggle (hidden by default)
+    this.liteRoleBtn = new Button({
       text: 'DPS',
       size: 'large',
       className: 'control-button mode-dps',
-      title: 'Toggle DPS/Healer',
+      title: 'Cycle DPS/Healer/Tank',
       onClick: () => this.handleLiteModeTypeClick(),
     });
-    this.liteDpsHealerBtn.addClass('btn-large');
-    this.liteDpsHealerBtn.getElement().style.display = 'none';
-    this.container.appendChild(this.liteDpsHealerBtn.getElement());
+    this.liteRoleBtn.addClass('btn-large');
+    this.liteRoleBtn.getElement().style.display = 'none';
+    this.container.appendChild(this.liteRoleBtn.getElement());
 
     // Filter button
     this.filterBtn = new Button({
       id: 'filter-button',
       icon: 'fa-solid fa-filter',
       className: 'control-button',
-      title: 'Filter Options',
+      title: 'Filter/Toggle Options',
       onClick: () => this.options.onFilter?.(),
     });
     this.container.appendChild(this.filterBtn.getElement());
@@ -216,7 +216,13 @@ export class ControlPanel {
    * Handle lite mode type click
    */
   private handleLiteModeTypeClick(): void {
-    this.state.liteModeType = this.state.liteModeType === 'dps' ? 'healer' : 'dps';
+    if (this.state.liteModeType === 'dps') {
+      this.state.liteModeType = 'healer';
+    } else if (this.state.liteModeType === 'healer') {
+      this.state.liteModeType = 'tank';
+    } else {
+      this.state.liteModeType = 'dps';
+    }
     this.updateLiteModeTypeButton();
     this.options.onLiteModeTypeToggle?.(this.state.liteModeType);
   }
@@ -258,33 +264,40 @@ export class ControlPanel {
    * Update Advanced/Lite mode buttons
    */
   private updateModeButtons(): void {
-    if (!this.advancedLiteBtn || !this.liteDpsHealerBtn) return;
+    if (!this.advancedLiteBtn || !this.liteRoleBtn) return;
 
     if (this.state.isLiteMode) {
-      this.advancedLiteBtn.setText('Lite');
+      this.advancedLiteBtn.setIcon('fa-solid fa-chart-simple');
+      this.advancedLiteBtn.getElement().title = 'Advanced Mode';
       this.advancedLiteBtn.addClass('lite');
-      this.liteDpsHealerBtn.getElement().style.display = '';
+      this.liteRoleBtn.getElement().style.display = '';
     } else {
-      this.advancedLiteBtn.setText('Advanced');
+      this.advancedLiteBtn.setIcon('fa-solid fa-table-list');
+      this.advancedLiteBtn.getElement().title = 'Lite Mode';
       this.advancedLiteBtn.removeClass('lite');
-      this.liteDpsHealerBtn.getElement().style.display = 'none';
+      this.liteRoleBtn.getElement().style.display = 'none';
     }
   }
 
   /**
-   * Update Lite mode type button (DPS/Healer)
+   * Update Lite mode type button (DPS/Healer/Tank)
    */
   private updateLiteModeTypeButton(): void {
-    if (!this.liteDpsHealerBtn) return;
+    if (!this.liteRoleBtn) return;
+
+    this.liteRoleBtn.removeClass('mode-dps');
+    this.liteRoleBtn.removeClass('mode-healer');
+    this.liteRoleBtn.removeClass('mode-tank');
 
     if (this.state.liteModeType === 'dps') {
-      this.liteDpsHealerBtn.setText('DPS');
-      this.liteDpsHealerBtn.addClass('mode-dps');
-      this.liteDpsHealerBtn.removeClass('mode-healer');
+      this.liteRoleBtn.setText('DPS');
+      this.liteRoleBtn.addClass('mode-dps');
+    } else if (this.state.liteModeType === 'healer') {
+      this.liteRoleBtn.setText('Healer');
+      this.liteRoleBtn.addClass('mode-healer');
     } else {
-      this.liteDpsHealerBtn.setText('Healer');
-      this.liteDpsHealerBtn.addClass('mode-healer');
-      this.liteDpsHealerBtn.removeClass('mode-dps');
+      this.liteRoleBtn.setText('Tank');
+      this.liteRoleBtn.addClass('mode-tank');
     }
   }
 
@@ -332,6 +345,23 @@ export class ControlPanel {
   }
 
   /**
+   * Update filter button to show active search
+   */
+  public setFilterText(searchTerm: string): void {
+    if (!this.filterBtn) return;
+
+    const isActive = searchTerm && searchTerm.trim() !== '';
+
+    if (isActive) {
+      this.filterBtn.setText(searchTerm);
+      this.filterBtn.getElement().classList.add('active');
+    } else {
+      this.filterBtn.setText('');
+      this.filterBtn.getElement().classList.remove('active');
+    }
+  }
+
+  /**
    * Enable/disable all controls
    */
   public setEnabled(enabled: boolean): void {
@@ -340,7 +370,7 @@ export class ControlPanel {
       this.pauseBtn,
       this.parseBtn,
       this.advancedLiteBtn,
-      this.liteDpsHealerBtn,
+      this.liteRoleBtn,
       this.filterBtn,
       this.zoomInBtn,
       this.zoomOutBtn,
@@ -374,7 +404,7 @@ export class ControlPanel {
       this.pauseBtn,
       this.parseBtn,
       this.advancedLiteBtn,
-      this.liteDpsHealerBtn,
+      this.liteRoleBtn,
       this.filterBtn,
       this.zoomInBtn,
       this.zoomOutBtn,

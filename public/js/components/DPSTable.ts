@@ -171,7 +171,7 @@ export class DPSTable {
       iconHtml = "<span style='font-size:1.1em;margin-right:2px;'>🔥</span>";
       value1 = formatStat(player.totalDamage?.total || 0);
       value2 = `${Math.round(barFillWidth)}%`;
-    } else {
+    } else if (this.liteModeType === 'healer') {
       barFillWidth = player.healingPercent || 0;
       barFillBackground =
         (player.totalHealing?.total || 0) > 0
@@ -179,6 +179,15 @@ export class DPSTable {
           : 'none';
       iconHtml = `<span style='font-size:1.1em;margin-right:2px; color: ${STAT_COLORS.hps}; text-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;'>⛨</span>`;
       value1 = formatStat(player.totalHealing?.total || 0);
+      value2 = `${Math.round(barFillWidth)}%`;
+    } else {
+      barFillWidth = player.damagePercent || 0;
+      barFillBackground =
+        (player.takenDamage || 0) > 0
+          ? `linear-gradient(90deg, transparent, ${STAT_COLORS.takenDamage})`
+          : 'none';
+      iconHtml = `<span style='font-size:1.1em;margin-right:2px; color: ${STAT_COLORS.takenDamage}; text-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;'>🛡</span>`;
+      value1 = formatStat(player.takenDamage || 0);
       value2 = `${Math.round(barFillWidth)}%`;
     }
 
@@ -325,13 +334,21 @@ export class DPSTable {
           : 'none';
       value1 = formatStat(player.totalDamage?.total || 0);
       value2 = `${Math.round(barFillWidth)}%`;
-    } else {
+    } else if (this.liteModeType === 'healer') {
       barFillWidth = player.healingPercent || 0;
       barFillBackground =
         (player.totalHealing?.total || 0) > 0
           ? `linear-gradient(90deg, transparent, ${STAT_COLORS.hps})`
           : 'none';
       value1 = formatStat(player.totalHealing?.total || 0);
+      value2 = `${Math.round(barFillWidth)}%`;
+    } else {
+      barFillWidth = player.damagePercent || 0;
+      barFillBackground =
+        (player.takenDamage || 0) > 0
+          ? `linear-gradient(90deg, transparent, ${STAT_COLORS.takenDamage})`
+          : 'none';
+      value1 = formatStat(player.takenDamage || 0);
       value2 = `${Math.round(barFillWidth)}%`;
     }
 
@@ -349,10 +366,14 @@ export class DPSTable {
     if (iconEl) iconEl.src = `assets/images/icons/${professionIcon}`;
     if (nameEl) nameEl.textContent = player.name?.trim() || 'Unknown';
     if (damageEl) {
-      const iconHtml =
-        this.liteModeType === 'dps'
-          ? "<span style='font-size:1.1em;margin-right:2px;'>🔥</span>"
-          : `<span style='font-size:1.1em;margin-right:2px; color: ${STAT_COLORS.hps}; text-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;'>⛨</span>`;
+      let iconHtml: string;
+      if (this.liteModeType === 'dps') {
+        iconHtml = "<span style='font-size:1.1em;margin-right:2px;'>🔥</span>";
+      } else if (this.liteModeType === 'healer') {
+        iconHtml = `<span style='font-size:1.1em;margin-right:2px; color: ${STAT_COLORS.hps}; text-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;'>⛨</span>`;
+      } else {
+        iconHtml = `<span style='font-size:1.1em;margin-right:2px; color: ${STAT_COLORS.takenDamage}; text-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;'>🛡</span>`;
+      }
       damageEl.innerHTML = `${value1} ${iconHtml}`;
     }
     if (percentEl) percentEl.textContent = value2;
@@ -505,6 +526,20 @@ export class DPSTable {
    */
   public setLiteModeType(type: LiteModeType): void {
     this.liteModeType = type;
+  }
+
+  /**
+   * Get current view mode
+   */
+  public getViewMode(): ViewMode {
+    return this.viewMode;
+  }
+
+  /**
+   * Get current lite mode type
+   */
+  public getLiteModeType(): LiteModeType {
+    return this.liteModeType;
   }
 
   /**

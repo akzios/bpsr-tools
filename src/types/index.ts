@@ -211,7 +211,7 @@ export interface HistorySummary {
 // ============================================================================
 
 export type ViewMode = 'advanced' | 'lite';
-export type LiteModeType = 'dps' | 'healer';
+export type LiteModeType = 'dps' | 'healer' | 'tank';
 export type ZoomLevel = number; // 0.5 - 2.0
 export type Theme = 'light' | 'dark';
 

@@ -111,21 +111,6 @@
     letter-spacing: 0.5px;
     text-shadow: var(--text-shadow);
 }
-/* DPS/Healer button color states */
-.btn-large.mode-dps {
-    background: var(--error) !important;
-    color: #ffffff !important;
-}
-.btn-large.mode-dps:hover {
-    background: var(--error-dark) !important;
-}
-.btn-large.mode-healer {
-    background: var(--success) !important;
-    color: #ffffff !important;
-}
-.btn-large.mode-healer:hover {
-    background: var(--success-dark) !important;
-}
 /* Lite Bars: glassmorphism design */
 .lite-bar {
     background: var(--surface-raised);
@@ -533,6 +518,28 @@
     outline: none;
     background-color: var(--btn-secondary-bg);
 }
+/* DPS/Healer/Tank button color states - MUST come after .control-button rules */
+.btn-large.mode-dps {
+    background: var(--role-dps) !important;
+    color: #ffffff !important;
+}
+.btn-large.mode-dps:hover {
+    background: var(--error-dark) !important;
+}
+.btn-large.mode-healer {
+    background: var(--role-healer) !important;
+    color: #ffffff !important;
+}
+.btn-large.mode-healer:hover {
+    background: var(--success-dark) !important;
+}
+.btn-large.mode-tank {
+    background: var(--role-tank) !important;
+    color: #ffffff !important;
+}
+.btn-large.mode-tank:hover {
+    background: var(--info-dark) !important;
+}
 body {
     background: transparent;
     color: var(--text-primary);
@@ -628,13 +635,29 @@ button,.control-button,.btn-large,[role="button"] {
     margin: 0 auto;
 }
 input[type="text"] {
-    background: #2a2d3a;
-    border: var(--border-soft);
+    padding: 8px 12px;
+    background: transparent;
     color: var(--text-primary);
-    padding: 4px 8px;
-    border-radius: 4px;
-    margin-right: 8px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
     font-size: 0.9rem;
+    outline: none;
+    transition: all var(--duration-normal) var(--ease-standard);
+}
+input[type="text"]:hover {
+    background: rgba(102, 126, 234, 0.05);
+    border-color: var(--border-strong);
+}
+input[type="text"]:focus {
+    border-color: var(--brand-primary);
+    background: rgba(102, 126, 234, 0.08);
+    outline: none;
+}
+[data-theme="dark"] input[type="text"]:focus {
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+[data-theme="light"] input[type="text"]:focus {
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
 }
 * {
     box-sizing: border-box;
@@ -955,19 +978,14 @@ html,body {
     min-width: 20px;
     /* Minimum width for spacer */
 }
-#reset-button,
-#sessions-clear-button {
+#reset-button,#sessions-clear-button {
     background-color: var(--error);
 }
-#reset-button:hover,
-#sessions-clear-button:hover {
+#reset-button:hover,#sessions-clear-button:hover {
     background-color: var(--error-dark);
     box-shadow: var(--shadow-md), var(--glow-error);
 }
-#reset-button:active,
-#reset-button:focus,
-#sessions-clear-button:active,
-#sessions-clear-button:focus {
+#reset-button:active,#reset-button:focus,#sessions-clear-button:active,#sessions-clear-button:focus {
     background-color: var(--error);
     outline: none;
 }
@@ -996,6 +1014,8 @@ html,body {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+.filter-group.monster-type:has(.filter-multiselect-button.open) {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
@@ -1005,6 +1025,36 @@ html,body {
     color: var(--text-primary);
     font-size: 0.9rem;
     font-weight: 500;
+}
+.filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 0;
+}
+.filter-section:has(.filter-multiselect-button.open) {
+    flex: 1;
+    min-height: 0;
+}
+.filter-section:not(:last-child) {
+    border-bottom: 1px solid var(--border-subtle);
+}
+.filter-section-heading {
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.search-group {
+    flex: 0 0 auto;
+    padding: 0 0 16px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 4px;
+}
+#player-search-input {
+    width: 100%;
 }
 .filter-dropdown {
     padding: 8px 12px;
@@ -1072,7 +1122,7 @@ html,body {
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     z-index: var(--layer-overlay);
-    max-height: 120px;
+    max-height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 8px;
@@ -2969,7 +3019,6 @@ body.skill-analysis-window {
     height: 100%;
     overflow-y: auto;
 }
-
 /* Route transition animations */
 @keyframes fadeIn {
     from {
@@ -2981,7 +3030,6 @@ body.skill-analysis-window {
         transform: translateY(0);
     }
 }
-
 @keyframes fadeOut {
     from {
         opacity: 1;
@@ -2992,11 +3040,9 @@ body.skill-analysis-window {
         transform: translateY(-10px);
     }
 }
-
 .app-content.view-enter {
     animation: fadeIn 0.3s ease-out forwards;
 }
-
 .app-content.view-exit {
     animation: fadeOut 0.2s ease-in forwards;
 }
@@ -3119,9 +3165,7 @@ body.skill-analysis-window {
 .settings-content .section-content {
     display: grid;
     grid-template-rows: 1fr;
-    transition: grid-template-rows var(--duration-normal) var(--ease-emphasized),
-                opacity var(--duration-normal) var(--ease-standard),
-                padding var(--duration-normal) var(--ease-standard);
+    transition: grid-template-rows var(--duration-normal) var(--ease-emphasized),opacity var(--duration-normal) var(--ease-standard),padding var(--duration-normal) var(--ease-standard);
     opacity: 1;
     padding-top: 16px;
 }
@@ -3742,7 +3786,6 @@ body.skill-analysis-window {
     display: flex;
     gap: 8px;
 }
-
 /* Session History Table - Scrollable */
 .session-history .skill-table-section {
     max-height: 600px;
@@ -3753,27 +3796,19 @@ body.skill-analysis-window {
     border-radius: 8px;
     background: var(--surface-raised);
 }
-
 /* Chart Controls */
 .chart-controls {
     display: flex;
     gap: 8px;
 }
-
 .chart-filter-btn.active {
     background: var(--brand-primary) !important;
     color: var(--text-inverse) !important;
 }
-
 .chart-filter-btn.active:hover {
     background: var(--brand-primary-dark) !important;
 }
-
-/* Responsive adjustments
- * Desktop (>1024px): 3 columns - DPS chart spans 2, Top 5 Skills spans 1
- * Tablet (768-1024px): 2 columns - DPS chart spans 2 (full width), Top 5 Skills spans 2 (full width below)
- * Mobile (<768px): 1 column - Everything stacks vertically
- */
+/* Responsive adjustments* Desktop (>1024px): 3 columns - DPS chart spans 2, Top 5 Skills spans 1* Tablet (768-1024px): 2 columns - DPS chart spans 2 (full width), Top 5 Skills spans 2 (full width below)* Mobile (<768px): 1 column - Everything stacks vertically*/
 @media (max-width: 1024px) {
     .session-stats-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -3814,14 +3849,12 @@ body.skill-analysis-window {
     text-align: center;
     min-height: 400px;
 }
-
 /* Session Detail View */
 .session-detail-view {
     padding: 24px;
     max-width: 1600px;
     margin: 0 auto;
 }
-
 .session-detail-header {
     position: sticky;
     top: 0;
@@ -3833,39 +3866,33 @@ body.skill-analysis-window {
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-default);
 }
-
 .session-detail-header-content {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
-
 .session-detail-title-section {
     display: flex;
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
 }
-
 .session-detail-title-wrapper {
     display: flex;
     align-items: center;
     gap: 8px;
 }
-
 .session-detail-title {
     margin: 0;
     font-size: 1.75rem;
     font-weight: 700;
     color: var(--text-primary);
 }
-
 .session-detail-meta {
     display: flex;
     gap: 24px;
     flex-wrap: wrap;
 }
-
 .session-detail-meta-item {
     display: flex;
     align-items: center;
@@ -3873,17 +3900,14 @@ body.skill-analysis-window {
     color: var(--text-secondary);
     font-size: 0.9rem;
 }
-
 .session-detail-meta-item i {
     color: var(--brand-primary);
 }
-
 .session-detail-actions {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
 }
-
 /* Status/Type badges - used in both sessions and sessionDetail */
 .status-badge {
     display: inline-flex;
@@ -3894,26 +3918,22 @@ body.skill-analysis-window {
     font-size: 0.85rem;
     font-weight: 600;
 }
-
 .status-badge.status-active {
     background: rgba(16, 185, 129, 0.15);
     color: var(--success);
     border: 1px solid var(--success);
 }
-
 .status-badge.status-completed {
     background: rgba(59, 130, 246, 0.15);
     color: var(--info);
     border: 1px solid var(--info);
 }
-
 .session-detail-view .session-summary-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-bottom: 24px;
 }
-
 .session-detail-view .stats-card {
     background: var(--surface-raised);
     border-radius: 12px;
@@ -3925,12 +3945,10 @@ body.skill-analysis-window {
     border: 1px solid var(--border-default);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
 .session-detail-view .stats-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
-
 .session-detail-view .stat-icon {
     width: 48px;
     height: 48px;
@@ -3940,32 +3958,26 @@ body.skill-analysis-window {
     justify-content: center;
     font-size: 1.5rem;
 }
-
 .session-detail-view .stat-content {
     flex: 1;
 }
-
 .session-detail-view .stat-label {
     font-size: 0.85rem;
     color: var(--text-secondary);
     margin-bottom: 4px;
 }
-
 .session-detail-view .stat-value {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
 }
-
 .session-detail-view .session-charts-row {
     margin-bottom: 24px;
 }
-
 /* In sessionDetail, make DPS chart full width */
 .session-detail-view .session-charts-row {
     display: block;
 }
-
 .session-detail-view .chart-card {
     background: var(--surface-raised);
     border-radius: 12px;
@@ -3973,19 +3985,15 @@ body.skill-analysis-window {
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-default);
 }
-
 .session-detail-view .dps-chart-card {
     height: 500px;
 }
-
 .session-detail-view .dps-chart-card canvas {
     height: 100% !important;
 }
-
 .session-detail-view #chart-container {
     height: calc(100% - 60px);
 }
-
 /* Scope chart-title and section-title to session detail view only */
 .session-detail-view .chart-title {
     margin: 0 0 20px 0;
@@ -3993,9 +4001,7 @@ body.skill-analysis-window {
     font-weight: 600;
     color: var(--text-primary);
 }
-
-.session-players-section,
-.session-notes-section {
+.session-players-section,.session-notes-section {
     background: var(--surface-raised);
     border-radius: 12px;
     padding: 24px;
@@ -4003,27 +4009,23 @@ body.skill-analysis-window {
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-default);
 }
-
 .session-players-section #players-table-container {
     max-height: 600px;
     overflow-y: auto;
     overflow-x: hidden;
 }
-
 .session-detail-view .section-title {
     margin: 0 0 20px 0;
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
 }
-
 /* Session Detail: Player table cells */
 .session-detail-view .player-name-cell {
     display: flex;
     align-items: center;
     gap: 10px;
 }
-
 .session-detail-view .profession-icon {
     width: 32px;
     height: 32px;
@@ -4031,41 +4033,33 @@ body.skill-analysis-window {
     border: 2px solid;
     object-fit: cover;
 }
-
 .session-detail-view .player-rank {
     font-weight: 700;
     color: var(--text-secondary);
 }
-
 .session-detail-view .stat-value.dps-value {
     color: var(--error);
 }
-
 .session-detail-view .stat-value.hps-value {
     color: var(--success);
 }
-
 .session-detail-view .skill-breakdown-cell {
     padding: 0 !important;
 }
-
 .session-detail-view .skill-breakdown-container {
     padding: 24px;
 }
-
 .session-detail-view .skill-breakdown-title {
     margin: 0 0 16px 0;
     font-size: 1.1rem;
     font-weight: 600;
     color: var(--text-primary);
 }
-
 .session-detail-view .skill-breakdown-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 12px;
 }
-
 /* Session Detail: Skill items in breakdown */
 .session-detail-view .skill-item {
     display: flex;
@@ -4077,12 +4071,10 @@ body.skill-analysis-window {
     border: 1px solid var(--border-default);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
 .session-detail-view .skill-item:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
 }
-
 .session-detail-view .skill-icon {
     width: 40px;
     height: 40px;
@@ -4093,12 +4085,10 @@ body.skill-analysis-window {
     font-size: 1.25rem;
     flex-shrink: 0;
 }
-
 .session-detail-view .skill-info {
     flex: 1;
     min-width: 0;
 }
-
 .session-detail-view .skill-name {
     font-weight: 600;
     color: var(--text-primary);
@@ -4107,7 +4097,6 @@ body.skill-analysis-window {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
 .session-detail-view .skill-stats {
     display: flex;
     align-items: center;
@@ -4115,11 +4104,9 @@ body.skill-analysis-window {
     font-size: 0.85rem;
     color: var(--text-secondary);
 }
-
 .session-detail-view .skill-stat-divider {
     color: var(--text-tertiary);
 }
-
 /* Session Detail: Notes editor */
 .session-detail-view .session-notes-editor {
     width: 100%;
@@ -4134,22 +4121,18 @@ body.skill-analysis-window {
     resize: vertical;
     transition: border-color 0.2s ease;
 }
-
 .session-detail-view .session-notes-editor:focus {
     outline: none;
     border-color: var(--brand-primary);
 }
-
 .session-detail-view .notes-status {
     margin-top: 8px;
     text-align: right;
 }
-
 .session-detail-view .notes-status-text {
     font-size: 0.85rem;
     font-style: italic;
 }
-
 /* Session Detail: Error container */
 .session-detail-view .error-container {
     display: flex;
@@ -4160,32 +4143,24 @@ body.skill-analysis-window {
     text-align: center;
     min-height: 400px;
 }
-
 .session-detail-view .error-container h2 {
     margin: 16px 0;
     color: var(--text-primary);
 }
-
 .session-detail-view .error-container p {
     color: var(--text-secondary);
     margin-bottom: 24px;
 }
-
 /* Global form label styles */
-.input-label,
-label.input-label {
+.input-label,label.input-label {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
     font-size: 0.9rem;
     color: var(--text-primary);
 }
-
 /* Global input field and select styles (for modals and forms) */
-.input-field,
-input.input-field,
-select.input-field,
-textarea.input-field {
+.input-field,input.input-field,select.input-field,textarea.input-field {
     width: 100%;
     padding: 10px 12px;
     background: var(--surface-raised);
@@ -4196,23 +4171,14 @@ textarea.input-field {
     font-size: 0.95rem;
     transition: all 0.2s ease;
 }
-
-.input-field:hover,
-input.input-field:hover,
-select.input-field:hover,
-textarea.input-field:hover {
+.input-field:hover,input.input-field:hover,select.input-field:hover,textarea.input-field:hover {
     border-color: var(--border-strong);
 }
-
-.input-field:focus,
-input.input-field:focus,
-select.input-field:focus,
-textarea.input-field:focus {
+.input-field:focus,input.input-field:focus,select.input-field:focus,textarea.input-field:focus {
     outline: none;
     border-color: var(--brand-primary);
     background: var(--surface-overlay);
 }
-
 /* Select-specific styling */
 select.input-field {
     cursor: pointer;
@@ -4225,69 +4191,54 @@ select.input-field {
     background-position: right 12px center !important;
     background-size: 12px 12px !important;
 }
-
 /* Remove IE10+ arrow */
 select.input-field::-ms-expand {
     display: none;
 }
-
 /* Dark theme dropdown arrow */
 [data-theme="dark"] select.input-field {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a0a0a0' d='M6 9L1 4h10z'/%3E%3C/svg%3E") !important;
 }
-
 /* Light theme dropdown arrow */
 [data-theme="light"] select.input-field {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666666' d='M6 9L1 4h10z'/%3E%3C/svg%3E") !important;
 }
-
 select.input-field option {
     background: var(--surface-raised);
     color: var(--text-primary);
     padding: 8px 12px;
 }
-
 @media (max-width: 1024px) {
     .session-detail-view .session-summary-stats {
         grid-template-columns: repeat(2, 1fr);
     }
-
     .session-detail-view .skill-breakdown-grid {
         grid-template-columns: 1fr;
     }
-
     .session-detail-view .session-detail-header-content {
         gap: 12px;
     }
-
     .session-detail-view .session-detail-actions {
         width: 100%;
     }
-
     .session-detail-view .session-detail-actions button {
         flex: 1;
     }
 }
-
 @media (max-width: 768px) {
     .session-detail-view {
         padding: 16px;
     }
-
     .session-detail-view .session-summary-stats {
         grid-template-columns: 1fr;
     }
-
     .session-detail-view .stats-card {
         padding: 16px;
     }
-
     .session-detail-view .stat-value {
         font-size: 1.25rem;
     }
-
     .session-detail-view .dps-chart-card {
         height: 300px;
     }
 }
-
