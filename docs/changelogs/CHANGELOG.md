@@ -5,6 +5,15 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.4] - 2025-11-11
+
+### Fixed
+
+- **API Endpoint Update** - Updated player data fetch endpoint
+  - Changed from `blueprotocol.lunixx.de` to `bp-db.de/neu`
+  - Affects real-time player lookups and Google Sheets sync
+  - Ensures continued functionality with new API provider
+
 ## [2.0.3] - 2025-11-08
 
 ### Added

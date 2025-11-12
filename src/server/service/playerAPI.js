@@ -42,7 +42,7 @@ class PlayerAPIService {
     this.pendingFetches.add(playerId);
 
     try {
-      const url = `https://blueprotocol.lunixx.de/api/players?q=${playerId}`;
+      const url = `https://bp-db.de/neu/api/players?q=${playerId}`;
 
       this.logger.debug(`Fetching player data from API for ID ${playerId}`);
 

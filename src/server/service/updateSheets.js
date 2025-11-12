@@ -57,7 +57,7 @@ const PLAYER_LIST = [
  */
 function fetchPlayerData(uid) {
   return new Promise((resolve, reject) => {
-    const url = `https://blueprotocol.lunixx.de/api/players?q=${uid}`;
+    const url = `https://bp-db.de/neu/api/players?q=${uid}`;
 
     https
       .get(url, (res) => {
