@@ -145,6 +145,7 @@ class App {
       },
     ];
 
+    // Add CLI above Settings if sheets configured
     if (this.sheetsConfigured) {
       menuItems.push({
         id: 'cli',
@@ -154,6 +155,7 @@ class App {
       });
     }
 
+    // Settings always at the bottom
     menuItems.push({
       id: 'settings',
       label: 'Settings',
@@ -295,6 +297,57 @@ class App {
     } catch (error) {
       console.error('[App] Error checking sheets config:', error);
       this.sheetsConfigured = false;
+    }
+  }
+
+  /**
+   * Refresh sidebar menu items (re-checks sheets config)
+   * Called when sheets configuration changes
+   */
+  public async refreshSidebar(): Promise<void> {
+    console.log('[App] Refreshing sidebar...');
+
+    // Re-check sheets configuration
+    await this.checkSheetsConfigured();
+
+    // Rebuild menu items
+    const menuItems: MenuItem[] = [
+      {
+        id: 'dpsmeter',
+        label: 'dpsmeter',
+        icon: 'fa-solid fa-gauge-high',
+        route: '/dpsmeter',
+      },
+      {
+        id: 'sessions',
+        label: 'Sessions',
+        icon: 'fa-solid fa-clock-rotate-left',
+        route: '/sessions',
+      },
+    ];
+
+    // Add CLI above Settings if sheets configured
+    if (this.sheetsConfigured) {
+      menuItems.push({
+        id: 'cli',
+        label: 'CLI',
+        icon: 'fa-solid fa-terminal',
+        route: '/cli',
+      });
+    }
+
+    // Settings always at the bottom
+    menuItems.push({
+      id: 'settings',
+      label: 'Settings',
+      icon: 'fa-solid fa-gear',
+      route: '/settings',
+    });
+
+    // Update sidebar with new items
+    if (this.sidebar) {
+      this.sidebar.setItems(menuItems);
+      console.log('[App] Sidebar refreshed, sheets configured:', this.sheetsConfigured);
     }
   }
 
@@ -537,5 +590,8 @@ class App {
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  new App();
+  const app = new App();
+
+  // Expose app instance globally for other views to access
+  (window as any).appInstance = app;
 });

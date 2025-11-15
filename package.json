@@ -1,6 +1,6 @@
 {
   "name": "bpsr-tools",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "BPSR Tools - DPS Meter with Web, Electron Overlay, and CLI modes",
   "main": "main.js",
   "bin": {

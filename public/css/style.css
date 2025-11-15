@@ -2946,11 +2946,10 @@ body.skill-analysis-window {
     visibility: hidden;
     pointer-events: none;
 }
-/* Push CLI and settings to bottom */
 .sidebar-menu-item[data-route="/cli"] {
     margin-top: auto;
 }
-.sidebar-menu-item[data-route="/settings"] {
+.sidebar-menu:not(:has([data-route="/cli"])) .sidebar-menu-item[data-route="/settings"] {
     margin-top: auto;
 }
 .sidebar-menu-item {

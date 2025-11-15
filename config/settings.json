@@ -1,18 +1,18 @@
 {
   "autoUpdateEnabled": true,
-  "autoClearOnChannelChange": false,
+  "autoClearOnChannelChange": true,
   "enableFightLog": false,
   "enableDpsLog": false,
   "enableHistorySave": false,
   "playerDataSyncProgress": null,
   "guiWindowBounds": {
-    "x": null,
-    "y": null,
-    "width": 700,
-    "height": 400
+    "x": 39,
+    "y": -596,
+    "width": 450,
+    "height": 571
   },
   "clickthrough": false,
-  "alwaysOnTop": true,
+  "alwaysOnTop": false,
   "autoSave": {
     "enabled": false,
     "onClear": false,
@@ -28,7 +28,7 @@
   "theme": "dark",
   "sidebarCollapsed": false,
   "lastRoute": "/dpsmeter",
-  "windowOpacity": 0.5,
+  "windowOpacity": 1,
   "code": 0,
   "data": {
     "autoUpdateEnabled": true,

@@ -276,16 +276,9 @@ export class Cli {
     const duration = data.data?.duration || 0;
     const durationStr = formatDuration(duration);
 
-    // Convert to array and filter/sort by damage
+    // Convert to array and sort by damage
     let userArray: CombatData[] = Object.values(userData);
-    userArray = userArray.filter((u) => u.totalDamage && u.totalDamage.total > 0);
     userArray.sort((a, b) => (b.totalDamage?.total || 0) - (a.totalDamage?.total || 0));
-
-    if (userArray.length === 0) {
-      return `<div style="color: ${COLORS.gray}; padding: 20px;">
-        Waiting for combat data...
-      </div>`;
-    }
 
     let output = `<div style="padding: 20px; font-family: 'Courier New', monospace;">`;
     output += `<div style="color: ${COLORS.primary}; font-weight: bold; font-size: 1.2em; margin-bottom: 10px;">BPSR Tools - CLI Mode</div>`;

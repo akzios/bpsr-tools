@@ -576,6 +576,86 @@ function initializeApi(
     }
   });
 
+  // Get Google Sheets configuration
+  app.get("/api/sheets-config", (req, res) => {
+    try {
+      const sheetsPath = configPaths.getConfigPath("sheets.json");
+      if (!fs.existsSync(sheetsPath)) {
+        return res.json({
+          code: 0,
+          data: null,
+        });
+      }
+      const config = fs.readFileSync(sheetsPath, "utf8");
+      res.json({
+        code: 0,
+        data: config,
+      });
+    } catch (error) {
+      logger.error("[API] Error loading sheets config:", error);
+      res.status(500).json({
+        code: 1,
+        msg: "Error loading sheets configuration: " + error.message,
+      });
+    }
+  });
+
+  // Save Google Sheets configuration
+  app.post("/api/sheets-config", async (req, res) => {
+    try {
+      const { config } = req.body;
+
+      if (!config) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Configuration is required",
+        });
+      }
+
+      // Validate JSON
+      let parsedConfig;
+      try {
+        parsedConfig = JSON.parse(config);
+      } catch (parseError) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Invalid JSON: " + parseError.message,
+        });
+      }
+
+      // Validate required fields
+      if (!parsedConfig.credentials || !parsedConfig.spreadsheetId) {
+        return res.status(400).json({
+          code: 1,
+          msg: "Configuration must include 'credentials' and 'spreadsheetId'",
+        });
+      }
+
+      // Save to sheets.json
+      const sheetsPath = configPaths.getConfigPath("sheets.json");
+      const configDir = path.dirname(sheetsPath);
+
+      // Ensure config directory exists
+      if (!fs.existsSync(configDir)) {
+        fs.mkdirSync(configDir, { recursive: true });
+      }
+
+      fs.writeFileSync(sheetsPath, JSON.stringify(parsedConfig, null, 2), "utf8");
+      logger.info(`[API] Sheets configuration saved to: ${sheetsPath}`);
+
+      res.json({
+        code: 0,
+        msg: "Sheets configuration saved successfully",
+      });
+    } catch (error) {
+      logger.error("[API] Error saving sheets config:", error);
+      res.status(500).json({
+        code: 1,
+        msg: "Error saving sheets configuration: " + error.message,
+      });
+    }
+  });
+
   // Update database with fresh seed data
   app.post("/api/update-database", async (req, res) => {
     try {

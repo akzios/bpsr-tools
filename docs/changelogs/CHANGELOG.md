@@ -5,6 +5,29 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.5] - 2025-11-14
+
+### Fixed
+
+- **Google Sheets Configuration Saving** - Restored sheets config save functionality after v2.0 migration
+  - Added HTTP API endpoints: `GET /api/sheets-config` and `POST /api/sheets-config`
+  - Auto-save with 2-second debounce after user stops typing
+  - Real-time JSON validation with visual status indicators (✓/⚠/✗)
+  - Auto-loads existing configuration when opening settings
+  - Replaces removed IPC handlers from TypeScript migration
+- **CLI Menu Item Display** - Fixed CLI mode visibility in sidebar navigation
+  - CLI menu item now appears immediately after saving sheets config
+  - No app reload required to see CLI option
+  - Sidebar refreshes automatically when sheets configuration changes
+- **CLI Menu Item Positioning** - Fixed spacing issues in sidebar layout
+  - CLI positioned directly above Settings button at bottom
+  - Removed excessive margin gap between CLI and Settings
+  - Settings stays at bottom when CLI is not present
+- **CLI Player Display** - Show all party members in CLI table
+  - Removed filter that hid players with zero damage
+  - All players now visible even if not actively attacking
+  - Better visibility for healers and support roles before combat starts
+
 ## [2.0.4] - 2025-11-11
 
 ### Fixed

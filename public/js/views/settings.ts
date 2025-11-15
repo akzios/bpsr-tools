@@ -409,6 +409,42 @@ export class Settings {
     jsonStatus.id = 'jsonStatus';
     jsonStatus.className = 'json-status';
 
+    // Auto-save on input with debounce
+    let debounceTimer: number;
+    textarea.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+
+      // Validate JSON and show status
+      const value = textarea.value.trim();
+      if (!value) {
+        jsonStatus.textContent = '';
+        jsonStatus.className = 'json-status';
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(value);
+
+        // Check for required fields
+        if (!parsed.credentials || !parsed.spreadsheetId) {
+          jsonStatus.textContent = '⚠ Missing required fields: credentials and spreadsheetId';
+          jsonStatus.className = 'json-status warning';
+          return;
+        }
+
+        jsonStatus.textContent = '✓ Valid JSON';
+        jsonStatus.className = 'json-status success';
+
+        // Debounced save (2 seconds after user stops typing)
+        debounceTimer = window.setTimeout(() => {
+          this.saveSheetsConfig(value);
+        }, 2000);
+      } catch (error) {
+        jsonStatus.textContent = '✗ Invalid JSON: ' + (error as Error).message;
+        jsonStatus.className = 'json-status error';
+      }
+    });
+
     container.appendChild(textarea);
     container.appendChild(jsonStatus);
 
@@ -566,8 +602,84 @@ export class Settings {
       };
 
       this.populateForm(this.currentSettings);
+
+      // Load sheets config
+      await this.loadSheetsConfig();
     } catch (error) {
       console.error('[Settings] Error loading settings:', error);
+    }
+  }
+
+  /**
+   * Load Google Sheets configuration
+   */
+  private async loadSheetsConfig(): Promise<void> {
+    try {
+      const response = await fetch('/api/sheets-config');
+      const result = await response.json();
+
+      if (result.code === 0 && result.data) {
+        const textarea = document.getElementById('sheetsConfig') as HTMLTextAreaElement;
+        const jsonStatus = document.getElementById('jsonStatus');
+        if (textarea) {
+          // Pretty-print the JSON
+          const parsed = JSON.parse(result.data);
+          textarea.value = JSON.stringify(parsed, null, 2);
+
+          // Show validation status
+          if (jsonStatus) {
+            if (!parsed.credentials || !parsed.spreadsheetId) {
+              jsonStatus.textContent = '⚠ Missing required fields: credentials and spreadsheetId';
+              jsonStatus.className = 'json-status warning';
+            } else {
+              jsonStatus.textContent = '✓ Valid JSON';
+              jsonStatus.className = 'json-status success';
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.log('[Settings] No sheets config found (this is normal if not configured)');
+    }
+  }
+
+  /**
+   * Save Google Sheets configuration
+   */
+  private async saveSheetsConfig(config: string): Promise<void> {
+    try {
+      const response = await fetch('/api/sheets-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config }),
+      });
+
+      const result = await response.json();
+
+      if (result.code === 0) {
+        console.log('[Settings] Sheets configuration saved successfully');
+
+        // Refresh sidebar to show CLI mode if it's now configured
+        const appInstance = (window as any).appInstance;
+        if (appInstance && typeof appInstance.refreshSidebar === 'function') {
+          await appInstance.refreshSidebar();
+          console.log('[Settings] Sidebar refreshed after sheets config save');
+        }
+      } else {
+        console.error('[Settings] Error saving sheets config:', result.msg);
+        const jsonStatus = document.getElementById('jsonStatus');
+        if (jsonStatus) {
+          jsonStatus.textContent = '✗ Save failed: ' + result.msg;
+          jsonStatus.className = 'json-status error';
+        }
+      }
+    } catch (error) {
+      console.error('[Settings] Error saving sheets config:', error);
+      const jsonStatus = document.getElementById('jsonStatus');
+      if (jsonStatus) {
+        jsonStatus.textContent = '✗ Save failed: ' + (error as Error).message;
+        jsonStatus.className = 'json-status error';
+      }
     }
   }
 
