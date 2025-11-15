@@ -52,6 +52,36 @@ function initializeApi(
     res.status(200).json({ status: "ok" });
   });
 
+  // Version endpoint
+  app.get("/api/version", (req, res) => {
+    try {
+      let packageJsonPath;
+
+      if (isDevMode) {
+        // Dev mode: use process.cwd() to get project root
+        packageJsonPath = path.join(process.cwd(), "package.json");
+      } else {
+        // Packaged mode: package.json is inside app.asar
+        packageJsonPath = path.join(process.resourcesPath, "app.asar", "package.json");
+      }
+
+      // Read file directly instead of using require() to avoid caching/path issues
+      const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf8');
+      const packageJson = JSON.parse(packageJsonContent);
+
+      res.json({
+        code: 0,
+        data: {
+          version: packageJson.version,
+          name: packageJson.name,
+        },
+      });
+    } catch (error) {
+      logger.error(`[Version] Error (isDevMode=${isDevMode}): ${error.message}`);
+      res.status(500).json({ code: -1, msg: "Failed to get version" });
+    }
+  });
+
   // Serve app.html as the default page
   app.get("/", (req, res) => {
     const appHtmlPath = path.join(__dirname, "..", "..", "public", "app.html");

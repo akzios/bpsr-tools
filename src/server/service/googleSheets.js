@@ -60,12 +60,8 @@ class GoogleSheetsService {
   }
 
   /**
-   * Update player data in Google Sheets intelligently
-   * Format: UID, NAME, GS, CLASS, DISCORD
-   * - Only updates rows where GS actually increased
-   * - Only appends new players (not already in sheet)
-   * - Does NOT touch existing rows with no changes
-   * - Preserves Discord column data
+   * Update player data in Google Sheets
+   * Only updates rows where GS increased, appends new players, preserves Discord column
    * @param {string} spreadsheetId - The Google Sheets spreadsheet ID
    * @param {string} sheetName - The sheet name (tab name)
    * @param {Array} playerData - Array of player objects with uid, name, fightPoint, profession
@@ -82,18 +78,15 @@ class GoogleSheetsService {
       // Get existing data from sheet
       const existingData = await this.getSheetData(sheetId, `${sheetName}!A:E`);
 
-      // Build map of existing players: UID -> {rowNumber, name, gs, class, discord}
       const existingPlayers = new Map();
 
       if (existingData && existingData.length > 1) {
-        // Skip header row (index 0)
         for (let i = 1; i < existingData.length; i++) {
           const row = existingData[i];
           if (row[0]) {
-            // Has UID - convert to string for consistent comparison
             const uid = String(row[0]);
             existingPlayers.set(uid, {
-              rowNumber: i + 1, // Sheet rows are 1-indexed
+              rowNumber: i + 1,
               name: row[1] || "",
               gs: row[2] || "",
               class: row[3] || "",
@@ -103,38 +96,47 @@ class GoogleSheetsService {
         }
       }
 
-      // Prepare batch updates for rows where GS increased
       const updateRequests = [];
       const actuallyUpdated = new Set();
       const newPlayers = [];
 
       for (const player of playerData) {
-        // Ensure UID is string for consistent comparison
         const uid = String(player.uid);
         const existing = existingPlayers.get(uid);
 
         if (existing) {
-          // Player exists - check if GS increased
           const newGS = player.fightPoint || 0;
-          const existingGS = existing.gs ? parseInt(existing.gs) : 0;
+          // Strip commas from formatted numbers (e.g., "21,513" → 21513)
+          const existingGS = existing.gs
+            ? parseInt(String(existing.gs).replace(/,/g, ""))
+            : 0;
 
           if (newGS > existingGS) {
-            // GS increased - update GS, NAME, and CLASS
+            // GS increased - update all fields except Discord
+            const updatedName =
+              player.name && player.name !== "Unknown"
+                ? player.name
+                : existing.name || "Unknown";
+            const updatedClass =
+              player.profession && player.profession !== "Unknown"
+                ? player.profession
+                : existing.class || "Unknown";
+
             updateRequests.push({
               range: `${sheetName}!A${existing.rowNumber}:E${existing.rowNumber}`,
               values: [
                 [
                   uid,
-                  player.name || existing.name || "Unknown",
+                  updatedName,
                   newGS,
-                  player.profession || existing.class || "Unknown",
-                  existing.discord || "", // Preserve Discord
+                  updatedClass,
+                  existing.discord || "",
                 ],
               ],
             });
             actuallyUpdated.add(uid);
             this.logger.debug(
-              `Updating row ${existing.rowNumber} for ${player.name} (${uid}): GS ${existingGS} → ${newGS}, Class: ${player.profession}`,
+              `Updating row ${existing.rowNumber} for ${updatedName} (${uid}): GS ${existingGS} → ${newGS}, Class: ${updatedClass}`,
             );
           } else if (
             newGS === existingGS &&
@@ -142,16 +144,16 @@ class GoogleSheetsService {
             player.name !== "Unknown" &&
             player.name !== existing.name
           ) {
-            // GS same but name changed - update only UID, NAME, preserve GS and CLASS
+            // Name changed but GS same - update name only
             updateRequests.push({
               range: `${sheetName}!A${existing.rowNumber}:E${existing.rowNumber}`,
               values: [
                 [
                   uid,
                   player.name,
-                  existing.gs, // Keep existing GS
-                  existing.class, // Keep existing CLASS
-                  existing.discord || "", // Preserve Discord
+                  existing.gs,
+                  existing.class,
+                  existing.discord || "",
                 ],
               ],
             });
@@ -160,9 +162,7 @@ class GoogleSheetsService {
               `Updating row ${existing.rowNumber} for ${player.name} (${uid}): Name changed from "${existing.name}" to "${player.name}"`,
             );
           }
-          // If GS didn't increase and name didn't change, don't touch this row at all
         } else {
-          // New player - add to append list
           if (
             player.name &&
             player.name !== "Unknown" &&
@@ -175,7 +175,7 @@ class GoogleSheetsService {
               player.name,
               player.fightPoint,
               player.profession,
-              "", // Empty Discord for new entries
+              "",
             ]);
             this.logger.debug(
               `Adding new player ${player.name} (${uid}) with GS ${player.fightPoint}`,
@@ -184,7 +184,6 @@ class GoogleSheetsService {
         }
       }
 
-      // Execute batch update for changed rows (if any)
       if (updateRequests.length > 0) {
         await this.sheets.spreadsheets.values.batchUpdate({
           spreadsheetId: sheetId,
@@ -198,7 +197,6 @@ class GoogleSheetsService {
         );
       }
 
-      // Append new players (if any)
       if (newPlayers.length > 0) {
         await this.sheets.spreadsheets.values.append({
           spreadsheetId: sheetId,
@@ -248,18 +246,16 @@ class GoogleSheetsService {
     try {
       const sheetId = this.extractSheetId(spreadsheetId);
 
-      // Format data for sheets: [UID, NAME, GS, CLASS, DISCORD]
       const rows = playerData.map((player) => [
         player.uid,
         player.name || "Unknown",
         player.fightPoint || 0,
         player.profession || "Unknown",
-        "", // Empty Discord column for new entries
+        "",
       ]);
 
       const range = `${sheetName}!A:E`;
 
-      // Append the data
       const response = await this.sheets.spreadsheets.values.append({
         spreadsheetId: sheetId,
         range,
@@ -278,22 +274,14 @@ class GoogleSheetsService {
     }
   }
 
-  /**
-   * Extract spreadsheet ID from URL or return as-is if already an ID
-   */
   extractSheetId(input) {
-    // If it's a URL, extract the ID
     const match = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
     if (match) {
       return match[1];
     }
-    // Otherwise assume it's already an ID
     return input;
   }
 
-  /**
-   * Get current data from sheet
-   */
   async getSheetData(spreadsheetId, range) {
     if (!this.initialized) {
       return null;

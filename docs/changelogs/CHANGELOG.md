@@ -5,6 +5,23 @@ All notable changes to BPSR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.6] - 2025-01-15
+
+### Fixed
+
+- **Google Sheets Update Logic** - Critical fixes for data integrity
+  - Fixed GS comparison parsing for comma-formatted numbers (e.g., "21,513" was incorrectly parsed as 21)
+  - Fixed name/class preservation to prevent overwriting real data with "Unknown" placeholder values
+  - Only updates rows when GS actually increases (prevents downgrades)
+  - Preserves existing player names and professions when API returns empty/unknown values
+
+### Added
+
+- **Version Info Display** - Shows current app version in Settings page
+  - Added `/api/version` API endpoint to retrieve version from package.json
+  - Displays "Current version: vX.X.X" in Settings → App Updates section
+  - Works correctly in both development and packaged/production modes
+
 ## [2.0.5] - 2025-11-14
 
 ### Fixed

@@ -329,7 +329,40 @@ export class Settings {
     container.appendChild(checkBtn);
     container.appendChild(updateStatus);
 
+    // Load version info after DOM is ready
+    setTimeout(() => this.loadVersionInfo(), 0);
+
     return container;
+  }
+
+  /**
+   * Load and display version info
+   */
+  private async loadVersionInfo(): Promise<void> {
+    const updateInfoEl = document.getElementById('updateInfo');
+    if (!updateInfoEl) {
+      console.error('[Settings] updateInfo element not found');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/version');
+      const result = await response.json();
+
+      console.log('[Settings] Version response:', result);
+
+      if (result.code === 0 && result.data) {
+        updateInfoEl.textContent = `Current version: v${result.data.version}`;
+        updateInfoEl.className = 'update-info success';
+      } else {
+        updateInfoEl.textContent = 'Failed to load version info';
+        updateInfoEl.className = 'update-info error';
+      }
+    } catch (error) {
+      console.error('[Settings] Error loading version:', error);
+      updateInfoEl.textContent = 'Failed to load version info';
+      updateInfoEl.className = 'update-info error';
+    }
   }
 
   /**

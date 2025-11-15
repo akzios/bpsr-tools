@@ -4,12 +4,6 @@ const fs = require("fs");
 const GoogleSheetsService = require("./googleSheets");
 const configPaths = require("../utilities/configPaths");
 
-/**
- * Fetches player data from external API and updates Google Sheets
- * Only updates if GS is higher, appends if player not found
- * Format: UID, NAME, GS, CLASS, DISCORD
- */
-
 // List of players to query (username,uid)
 const PLAYER_LIST = [
   { username: "Lollercoaster", uid: "4526575" },
@@ -52,9 +46,6 @@ const PLAYER_LIST = [
   { username: "Clash", uid: "48744530" },
 ];
 
-/**
- * Fetch player data from external API using native https module
- */
 function fetchPlayerData(uid) {
   return new Promise((resolve, reject) => {
     const url = `https://bp-db.de/neu/api/players?q=${uid}`;
@@ -109,13 +100,9 @@ function fetchPlayerData(uid) {
   });
 }
 
-/**
- * Main function to update Google Sheets with player data
- */
 async function updateSheetsWithPlayers() {
   console.log("=== Starting Google Sheets Update ===\n");
 
-  // Initialize Google Sheets service
   const logger = {
     info: (msg) => console.log(`[INFO] ${msg}`),
     warn: (msg) => console.warn(`[WARN] ${msg}`),
@@ -133,7 +120,6 @@ async function updateSheetsWithPlayers() {
     return;
   }
 
-  // Load sheets config to get spreadsheet ID and sheet name
   const sheetsConfigPath = configPaths.getConfigPath("sheets.json");
   const sheetsConfig = JSON.parse(fs.readFileSync(sheetsConfigPath, "utf8"));
   const spreadsheetId = sheetsConfig.spreadsheetId;
@@ -142,7 +128,6 @@ async function updateSheetsWithPlayers() {
   console.log(`Target: Spreadsheet ID: ${spreadsheetId}`);
   console.log(`Target: Sheet Name: ${sheetName}\n`);
 
-  // Fetch data for all players
   console.log(`Fetching data for ${PLAYER_LIST.length} players...\n`);
   const playerDataPromises = PLAYER_LIST.map(async (player) => {
     console.log(`Fetching ${player.username} (${player.uid})...`);
@@ -161,7 +146,6 @@ async function updateSheetsWithPlayers() {
     return;
   }
 
-  // Update Google Sheets
   console.log("Updating Google Sheets...\n");
   const result = await sheetsService.updatePlayerData(
     spreadsheetId,
@@ -179,7 +163,6 @@ async function updateSheetsWithPlayers() {
   }
 }
 
-// Run if executed directly
 if (require.main === module) {
   updateSheetsWithPlayers().catch((error) => {
     console.error("Fatal error:", error);
